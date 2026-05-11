@@ -39,23 +39,23 @@ private struct PanelHeader: View {
     private var lang: Language { appState.language }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             // 金色 5 角星图标
             Image(systemName: "star.fill")
-                .font(.system(size: 12))
+                .font(.system(size: 15))
                 .foregroundStyle(Color.piloGold)
 
             Text(lang == .zh ? "Pilo · 我的小邮局" : "Pilo · My Post Office")
-                .font(.piloSerifLabel.weight(.medium))
+                .font(.piloSerifTitle)
                 .foregroundStyle(Color.inkPrimary)
-                .tracking(0.3)
+                .tracking(0.5)
 
             Spacer()
 
             healthPill
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
         .background(Color("CreamBg").opacity(0.35))
     }
 
@@ -66,16 +66,16 @@ private struct PanelHeader: View {
             : (lang == .zh ? "未找到 git" : "git missing")
         let tint: Color = healthy ? .stampMint : .roseDanger
 
-        return HStack(spacing: 4) {
+        return HStack(spacing: 5) {
             Image(systemName: healthy ? "checkmark" : "exclamationmark.triangle.fill")
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(size: 12, weight: .semibold))
             Text(text)
-                .font(.system(size: 11))
+                .font(.system(size: 13))
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 5)
         .foregroundStyle(tint)
-        .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
     }
 }
 
@@ -122,9 +122,9 @@ private struct PanelSidebar: View {
 
     private func sidebarLabel(text: String) -> some View {
         Text(text)
-            .font(.piloSerifCaption)
+            .font(.piloSerifSubtitle)
             .foregroundStyle(Color.inkSecondary)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 18)
     }
 
     private func sidebarItem(_ repo: Repository) -> some View {
@@ -132,24 +132,24 @@ private struct PanelSidebar: View {
         return Button {
             appState.selectRepo(repo.id)
         } label: {
-            HStack(spacing: 7) {
+            HStack(spacing: 10) {
                 Circle()
                     .fill(dotColor(for: repo))
-                    .frame(width: 7, height: 7)
+                    .frame(width: 9, height: 9)
                 Text(repo.name)
-                    .font(.system(size: 12))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(Color.inkPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 4)
                 if let count = countLabel(for: repo) {
                     Text(count)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.piloBlue)
                 }
             }
-            .padding(.horizontal, isActive ? 12 : 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, isActive ? 16 : 18)
+            .padding(.vertical, 11)
             .background(
                 isActive
                     ? Color.piloBlue.opacity(0.12)
@@ -159,12 +159,13 @@ private struct PanelSidebar: View {
                 if isActive {
                     Rectangle()
                         .fill(Color.piloBlue)
-                        .frame(width: 2)
+                        .frame(width: 3)
                 }
             }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .hoverable(highlight: isActive ? .clear : Color.piloBlue.opacity(0.06))
     }
 
     private func dotColor(for repo: Repository) -> Color {
@@ -197,29 +198,29 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // 衬线标题
+                    // 衬线标题（大号）
                     Text(repo.name)
-                        .font(.piloSerifTitle)
-                        .tracking(0.3)
+                        .font(.piloSerifHero)
+                        .tracking(0.5)
                         .foregroundStyle(Color.inkPrimary)
 
-                    // mono 元信息
+                    // mono 元信息（大一号 + 行间空气）
                     Text(metaLine(for: repo))
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 4)
+                        .padding(.top, 8)
 
                     SectionDivider(label: sectionLabel(for: repo))
-                        .padding(.top, 18)
-                        .padding(.bottom, 8)
+                        .padding(.top, 26)
+                        .padding(.bottom, 12)
 
                     commitsList(for: repo)
 
                     actionsRow(for: repo)
-                        .padding(.top, 16)
+                        .padding(.top, 24)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 24)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
@@ -295,49 +296,49 @@ private struct PanelDetail: View {
     }
 
     private func commitRow(_ c: CommitSummary) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
             Text(c.hash)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(Color.piloGoldDark)
             Text(c.subject)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(size: 14, design: .monospaced))
                 .foregroundStyle(Color.inkPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
-            Spacer(minLength: 6)
+            Spacer(minLength: 8)
             Text(RepoCard.relativeFormatter.localizedString(for: c.date, relativeTo: Date()))
-                .font(.piloSerifCaption)
+                .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkTertiary)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Color.piloPaper)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .stroke(Color.piloPaperBorder, lineWidth: 0.5)
         )
     }
 
     private func actionsRow(for repo: Repository) -> some View {
-        HStack(spacing: 8) {
-            // 推送（primary mini）
+        HStack(spacing: 10) {
+            // 推送（primary）
             Button {
                 Task { await appState.beginPushSession(for: repo) }
             } label: {
-                HStack(spacing: 3) {
+                HStack(spacing: 5) {
                     Image(systemName: "paperplane.fill")
-                        .font(.system(size: 11))
+                        .font(.system(size: 13))
                     Text(lang == .zh ? "推送" : "Push")
                 }
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 14, weight: .medium))
             }
             .buttonStyle(MiniPrimaryButtonStyle())
             .disabled(repo.aheadCount == 0 || repo.currentBranch == nil)
 
-            // 拉取（ghost）— 仅打开终端给用户跑 pull
+            // 拉取（ghost）
             Button(lang == .zh ? "拉取" : "Pull") {
                 openTerminal(at: repo.path)
             }
@@ -379,14 +380,14 @@ private struct MiniPrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 10)
             .background(
                 (configuration.isPressed ? Color.piloBlueDark : Color.piloBlue)
                     .opacity(enabled ? 1 : 0.5)
             )
             .foregroundStyle(.white)
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             .animation(.spring(response: 0.18, dampingFraction: 0.7), value: configuration.isPressed)
     }
 }
@@ -394,17 +395,17 @@ private struct MiniPrimaryButtonStyle: ButtonStyle {
 private struct MiniGhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 12))
-            .padding(.horizontal, 12)
-            .padding(.vertical, 7)
+            .font(.system(size: 14))
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
             .foregroundStyle(Color.inkSecondary)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
                     .fill(configuration.isPressed
                           ? Color.cloudDivider.opacity(0.4)
                           : Color.clear)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: 9, style: .continuous)
                             .stroke(Color.cloudDivider, lineWidth: 0.5)
                     )
             )
