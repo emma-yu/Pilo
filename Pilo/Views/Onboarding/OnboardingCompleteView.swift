@@ -6,6 +6,8 @@ struct OnboardingCompleteView: View {
     @Environment(\.tone) private var tone
     let onFinish: () -> Void
 
+    private var lang: Language { appState.language }
+
     var body: some View {
         VStack(spacing: PiloSpacing.l) {
             Spacer(minLength: PiloSpacing.s)
@@ -19,13 +21,13 @@ struct OnboardingCompleteView: View {
             primaryText
 
             if let v = appState.gitVersion, let p = appState.gitExecutablePath {
-                Text(String(format: Copy.Onboarding.completeGitInfo, v, p))
+                Text(String(format: Copy.Onboarding.completeGitInfo(lang), v, p))
                     .font(.piloCaption)
                     .foregroundStyle(Color.inkTertiary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
             } else {
-                Text(Copy.Onboarding.completeNoGit)
+                Text(Copy.Onboarding.completeNoGit(lang))
                     .font(.piloCaption)
                     .foregroundStyle(Color.amberWarn)
             }
@@ -34,14 +36,14 @@ struct OnboardingCompleteView: View {
 
             VStack(spacing: 8) {
                 Button(action: onFinish) {
-                    Text(Copy.Onboarding.completeOpen)
+                    Text(Copy.Onboarding.completeOpen(lang))
                         .font(.piloSection)
                         .frame(minWidth: 140)
                 }
                 .buttonStyle(.piloPrimary)
                 .keyboardShortcut(.defaultAction)
 
-                Text(Copy.Onboarding.completeStayInMenubar)
+                Text(Copy.Onboarding.completeStayInMenubar(lang))
                     .font(.piloCaption)
                     .foregroundStyle(Color.inkTertiary)
             }
@@ -59,12 +61,12 @@ struct OnboardingCompleteView: View {
                     .foregroundStyle(Color.inkPrimary)
                     .minimumScaleFactor(0.8)
             } else if appState.repositories.isEmpty {
-                Text(Copy.Onboarding.completeTitleEmpty)
+                Text(Copy.Onboarding.completeTitleEmpty(lang))
                     .font(.piloHero)
                     .foregroundStyle(Color.inkPrimary)
                     .minimumScaleFactor(0.8)
             } else {
-                Text(String(format: Copy.Onboarding.completeTitleFound, appState.repositories.count))
+                Text(String(format: Copy.Onboarding.completeTitleFound(lang), appState.repositories.count))
                     .font(.piloHero)
                     .foregroundStyle(Color.inkPrimary)
                     .minimumScaleFactor(0.8)

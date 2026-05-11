@@ -10,13 +10,15 @@ struct OnboardingDirectoriesView: View {
     let onContinue: () -> Void
     let onSkip: () -> Void
 
+    private var lang: Language { appState.language }
+
     var body: some View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
             PiloMascot(mood: .alert, size: 110, breathing: true)
 
-            Text(Copy.Onboarding.directoriesTitle)
+            Text(Copy.Onboarding.directoriesTitle(lang))
                 .font(.piloHero)
                 .tracking(-0.5)
                 .foregroundStyle(Color.inkPrimary)
@@ -25,7 +27,7 @@ struct OnboardingDirectoriesView: View {
 
             directoryList
 
-            Text(Copy.Onboarding.directoriesHint)
+            Text(Copy.Onboarding.directoriesHint(lang))
                 .font(.piloCaption)
                 .foregroundStyle(Color.inkTertiary)
                 .multilineTextAlignment(.center)
@@ -34,13 +36,13 @@ struct OnboardingDirectoriesView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                Button(Copy.Onboarding.directoriesSkip, action: onSkip)
+                Button(Copy.Onboarding.directoriesSkip(lang), action: onSkip)
                     .buttonStyle(.piloSecondary)
 
                 Spacer()
 
                 Button(action: onContinue) {
-                    Text(Copy.Onboarding.directoriesNext + " →")
+                    Text(Copy.Onboarding.directoriesNext(lang) + " →")
                         .frame(minWidth: 120)
                 }
                 .buttonStyle(.piloPrimary)
@@ -67,7 +69,7 @@ struct OnboardingDirectoriesView: View {
                 }
             }
             Button(action: addDirectory) {
-                Label(Copy.Onboarding.directoriesAdd, systemImage: "plus")
+                Label(Copy.Onboarding.directoriesAdd(lang), systemImage: "plus")
                     .font(.piloBody)
             }
             .buttonStyle(.borderless)
@@ -81,7 +83,7 @@ struct OnboardingDirectoriesView: View {
         HStack(spacing: 8) {
             Image(systemName: "folder")
                 .foregroundStyle(Color.inkTertiary)
-            Text(Copy.Onboarding.directoriesEmpty)
+            Text(Copy.Onboarding.directoriesEmpty(lang))
                 .font(.piloBody)
                 .foregroundStyle(Color.inkTertiary)
         }

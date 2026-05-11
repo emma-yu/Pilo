@@ -5,6 +5,7 @@ import SwiftUI
 enum SettingsKey: String {
     case hasCompletedOnboarding
     case tone
+    case language                 // .zh / .en
     case watchDirectoryPaths      // [String] — 编码成 JSON 后存
     case fetchIntervalMinutes
     case enableSecretScan

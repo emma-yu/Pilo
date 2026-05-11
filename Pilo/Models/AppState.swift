@@ -95,6 +95,7 @@ final class AppState {
     // MARK: - 设置（镜像 UserDefaults）
 
     var tone: Tone = AppSettingsDefaults.tone
+    var language: Language = .systemDefault
 
     // MARK: - 启动
 
@@ -199,11 +200,21 @@ final class AppState {
            let parsed = Tone(rawValue: raw) {
             self.tone = parsed
         }
+        if let raw = UserDefaults.standard.string(forKey: SettingsKey.language.rawValue),
+           let parsed = Language(rawValue: raw) {
+            self.language = parsed
+        }
+        // 首次启动没存过则按系统 Locale 推断；已经在 property 默认值里处理过
     }
 
     func updateTone(_ newTone: Tone) {
         self.tone = newTone
         UserDefaults.standard.set(newTone.rawValue, forKey: SettingsKey.tone.rawValue)
+    }
+
+    func updateLanguage(_ newLanguage: Language) {
+        self.language = newLanguage
+        UserDefaults.standard.set(newLanguage.rawValue, forKey: SettingsKey.language.rawValue)
     }
 
     // MARK: - Watch directories

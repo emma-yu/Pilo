@@ -9,6 +9,8 @@ struct PushConfirmDialog: View {
     @Environment(\.tone) private var tone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    private var lang: Language { appState.language }
+
     @Binding var session: PushSession?
     let onDismiss: () -> Void
 
@@ -89,12 +91,12 @@ struct PushConfirmDialog: View {
     private func preflightHeader(_ pre: PushSession.Preflight) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(Copy.Push.preflightTitle(tone))
+                Text(Copy.Push.preflightTitle(tone, lang))
                     .font(.piloTitle)
                     .foregroundStyle(Color.inkPrimary)
                 Spacer()
             }
-            Text(Copy.Push.preflightSubtitle(tone, count: pre.commits.count))
+            Text(Copy.Push.preflightSubtitle(tone, lang, count: pre.commits.count))
                 .font(.piloBody)
                 .foregroundStyle(Color.inkSecondary)
 
@@ -488,7 +490,7 @@ struct PushConfirmDialog: View {
     private func preflightFooter(_ pre: PushSession.Preflight) -> some View {
         VStack(alignment: .trailing, spacing: 6) {
             HStack {
-                Button(Copy.Push.cancelButton(tone), action: onDismiss)
+                Button(Copy.Push.cancelButton(tone, lang), action: onDismiss)
                     .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
                 Spacer()
@@ -505,7 +507,7 @@ struct PushConfirmDialog: View {
                     Button {
                         Task { await appState.executePush() }
                     } label: {
-                        Text(Copy.Scan.pushBypassButton(tone))
+                        Text(Copy.Scan.pushBypassButton)
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.piloDestructive)
@@ -514,7 +516,7 @@ struct PushConfirmDialog: View {
                     Button {
                         Task { await appState.executePush() }
                     } label: {
-                        Text(Copy.Push.pushButton(tone))
+                        Text(Copy.Push.pushButton(tone, lang))
                             .frame(minWidth: 110)
                     }
                     .buttonStyle(.piloPrimary)
@@ -548,7 +550,7 @@ struct PushConfirmDialog: View {
             } else {
                 FlyingPiloAnimation()
             }
-            Text(Copy.Push.runningTitle(tone, remote: remote))
+            Text(Copy.Push.runningTitle(tone, lang, remote: remote))
                 .font(.piloTitle)
                 .foregroundStyle(Color.inkPrimary)
             Spacer()
@@ -579,11 +581,11 @@ struct PushConfirmDialog: View {
             .padding(.bottom, PiloSpacing.s)
 
             VStack(spacing: PiloSpacing.s) {
-                Text(Copy.Push.successTitle(tone))
+                Text(Copy.Push.successTitle(tone, lang))
                     .font(.piloHero)
                     .tracking(-0.3)
                     .foregroundStyle(Color.inkPrimary)
-                Text(Copy.Push.successSubtitle(tone, count: report.commitCount))
+                Text(Copy.Push.successSubtitle(tone, lang, count: report.commitCount))
                     .font(.piloBody)
                     .foregroundStyle(Color.inkSecondary)
             }

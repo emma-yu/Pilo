@@ -93,23 +93,46 @@ struct MenuBarView: View {
     }
 
     private var heroTitle: String {
-        if appState.isKillSwitchActive { return "安全检查暂停" }
-        if appState.gitExecutablePath == nil { return "找不到 git" }
-        if !appState.isInitialScanComplete && appState.repositories.isEmpty { return "正在找你的仓库" }
-        if appState.repositories.isEmpty { return "咕咕～" }
-        if appState.pendingRepos.isEmpty { return "都同步啦" }
-        return "咕咕～"
+        let lang = appState.language
+        if appState.isKillSwitchActive {
+            return lang == .zh ? "安全检查暂停" : "Watch mode paused"
+        }
+        if appState.gitExecutablePath == nil {
+            return lang == .zh ? "找不到 git" : "Can't find git"
+        }
+        if !appState.isInitialScanComplete && appState.repositories.isEmpty {
+            return lang == .zh ? "找你的仓库中..." : "Finding your repos..."
+        }
+        if appState.repositories.isEmpty {
+            return lang == .zh ? "咕咕～" : "Coo coo~"
+        }
+        if appState.pendingRepos.isEmpty {
+            return lang == .zh ? "都同步啦" : "All caught up"
+        }
+        return lang == .zh ? "咕咕～" : "Coo coo~"
     }
 
     private var heroSubtitle: String {
+        let lang = appState.language
+        let tone = appState.tone
         if appState.isKillSwitchActive {
-            return "\(appState.killSwitchRemainingHours) 小时后自动恢复"
+            return lang == .zh
+                ? "\(appState.killSwitchRemainingHours) 小时后自动恢复"
+                : "Auto-restoring in \(appState.killSwitchRemainingHours)h"
         }
-        if appState.gitExecutablePath == nil { return "在终端运行 xcode-select --install" }
-        if !appState.isInitialScanComplete && appState.repositories.isEmpty { return "马上就好" }
-        if appState.repositories.isEmpty { return "去设置里添加扫描目录吧" }
-        if appState.pendingRepos.isEmpty { return "所有仓库都同步啦 ✨" }
-        return "\(appState.pendingRepos.count) 个仓库等着飞出去"
+        if appState.gitExecutablePath == nil {
+            return Copy.gitNotFound(tone, lang).components(separatedBy: "\n").last ?? ""
+        }
+        if !appState.isInitialScanComplete && appState.repositories.isEmpty {
+            return lang == .zh ? "马上就好" : "Almost there"
+        }
+        if appState.repositories.isEmpty {
+            return Copy.emptyNoRepos(tone, lang).components(separatedBy: "\n").last ?? ""
+        }
+        if appState.pendingRepos.isEmpty {
+            return Copy.menubarAllSynced(tone, lang).components(separatedBy: "\n").last ?? ""
+        }
+        return Copy.menubarPendingHeader(tone, lang, count: appState.pendingRepos.count)
     }
 
     // MARK: - Content（仓库列表）
@@ -173,18 +196,18 @@ struct MenuBarView: View {
         VStack(spacing: 0) {
             MenuActionRow(
                 icon: "macwindow",
-                title: Copy.menubarOpenMainWindow,
+                title: Copy.menubarOpenMainWindow(appState.language),
                 shortcut: "⌘↑",
                 action: { openWindow(id: "main") }
             )
             MenuActionRowWithSettingsLink(
                 icon: "gearshape",
-                title: Copy.menubarSettings,
+                title: Copy.menubarSettings(appState.language),
                 shortcut: "⌘,"
             )
             MenuActionRow(
                 icon: "power",
-                title: Copy.menubarQuit,
+                title: Copy.menubarQuit(appState.language),
                 shortcut: "⌘Q",
                 isDestructive: true,
                 action: { NSApplication.shared.terminate(nil) }

@@ -23,7 +23,7 @@ struct BypassConfirmDialog: View {
             HStack(alignment: .top, spacing: 12) {
                 PiloMascot(mood: .worried, size: 64, breathing: true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(Copy.Scan.bypassConfirmTitle(tone))
+                    Text(Copy.Scan.bypassConfirmTitle)
                         .font(.piloTitle)
                         .foregroundStyle(Color.inkPrimary)
                     Text("发现 \(criticalCount) 项高危内容仍未处理")

@@ -2,7 +2,10 @@ import SwiftUI
 
 struct OnboardingPrivacyView: View {
 
+    @Environment(AppState.self) private var appState
     let onContinue: () -> Void
+
+    private var lang: Language { appState.language }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -10,14 +13,14 @@ struct OnboardingPrivacyView: View {
 
             PiloMascot(mood: .alert, size: 110, breathing: true)
 
-            Text(Copy.Onboarding.privacyTitle)
+            Text(Copy.Onboarding.privacyTitle(lang))
                 .font(.piloHero)
                 .tracking(-0.5)
                 .foregroundStyle(Color.inkPrimary)
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.7)
 
-            Text(Copy.Onboarding.privacyBody)
+            Text(Copy.Onboarding.privacyBody(lang))
                 .font(.piloBody)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.leading)
@@ -34,7 +37,7 @@ struct OnboardingPrivacyView: View {
             Spacer()
 
             Button(action: onContinue) {
-                Text(Copy.Onboarding.privacyAck + " →")
+                Text(Copy.Onboarding.privacyAck(lang) + " →")
                     .font(.piloSection)
                     .frame(minWidth: 120)
             }

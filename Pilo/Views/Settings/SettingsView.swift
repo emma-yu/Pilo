@@ -128,8 +128,27 @@ struct SettingsView: View {
 
     private var generalTab: some View {
         Form {
-            Section("语调") {
-                Picker("语调", selection: Binding(
+            Section("语言 / Language") {
+                Picker("", selection: Binding(
+                    get: { appState.language },
+                    set: { appState.updateLanguage($0) }
+                )) {
+                    ForEach(Language.allCases, id: \.self) { lang in
+                        Text(lang.nativeName).tag(lang)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+
+                Text(appState.language == .zh
+                    ? "界面文字会立即切换；初次启动时按系统语言推断"
+                    : "UI text switches immediately; defaults to your system language on first launch")
+                    .font(.piloCaption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section(appState.language == .zh ? "语调" : "Tone") {
+                Picker("", selection: Binding(
                     get: { appState.tone },
                     set: { appState.updateTone($0) }
                 )) {
@@ -140,7 +159,9 @@ struct SettingsView: View {
                 .pickerStyle(.inline)
                 .labelsHidden()
 
-                Text("Friendly 模式带温柔语气，Minimal 模式信息密度优先")
+                Text(appState.language == .zh
+                    ? "Friendly 模式带温柔可爱语气（「咕咕～」），Minimal 模式信息密度优先"
+                    : "Friendly mode uses warm playful tone (\"Coo coo~\"). Minimal mode prioritises density.")
                     .font(.piloCaption)
                     .foregroundStyle(.secondary)
             }

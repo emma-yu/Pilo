@@ -118,7 +118,7 @@ struct RepoDetailView: View {
             Button {
                 Task { await appState.beginPushSession(for: repo) }
             } label: {
-                Label("推送", systemImage: "paperplane.fill")
+                Label(Copy.Push.pushEntryButton(tone, appState.language), systemImage: "paperplane.fill")
                     .font(.piloSection)
                     .frame(minWidth: 200)
             }

@@ -2,168 +2,436 @@ import Foundation
 
 /// 所有面向用户的字符串都集中在此。**不要**在视图层硬编码文案。
 ///
-/// 每个方法接收 `Tone` 参数（或环境读取），根据 friendly / minimal 返回不同字符串。
-/// 长期目标：迁移到 Xcode 16 String Catalog (`.xcstrings`) 以支持 zh+en。
-/// 当前阶段：中文为主，结构留好。
+/// 维度：
+///   - **tone**: .friendly（温柔可爱）/ .minimal（信息密度优先）
+///   - **language**: .zh（简体中文）/ .en（英文）
+///
+/// 共 4 个组合。每个函数返回根据 tone + language 解析的字符串。
+///
+/// 调用模式：
+///   `Copy.menubarAllSynced(tone: appState.tone, lang: appState.language)`
+///
+/// 中文方向：当代温柔可爱网络语言，但**克制**——避开"yyds/绝绝子/家人们"等过气梗
+/// 英文方向：friendly + 信鸽 metaphor，但避免"uwu / no cap / tbh"等 datable slang
 enum Copy {
 
-    // MARK: - 菜单栏 Popover
-
-    static func menubarAllSynced(_ tone: Tone) -> String {
-        switch tone {
-        case .friendly: "所有仓库都同步啦～\n去做点别的吧 ✨"
-        case .minimal:  "所有仓库已同步"
+    /// 本地化字符串容器——一处定义两语，按 language 解析
+    struct Loc {
+        let zh: String
+        let en: String
+        func text(_ lang: Language) -> String {
+            switch lang { case .zh: return zh; case .en: return en }
         }
     }
 
-    static func menubarPendingHeader(_ tone: Tone, count: Int) -> String {
+    // MARK: - 菜单栏 popover
+
+    static func menubarAllSynced(_ tone: Tone, _ lang: Language = .zh) -> String {
         switch tone {
-        case .friendly: "咕咕～你有 \(count) 个仓库待处理"
-        case .minimal:  "\(count) 个仓库待处理"
+        case .friendly:
+            return Loc(
+                zh: "所有仓库都同步啦～\n去做点别的事呀 ✨",
+                en: "All caught up ✨\nGo take a breather, friend"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "所有仓库已同步",
+                en: "All synced"
+            ).text(lang)
         }
     }
 
-    static func menubarScanInProgress(_ tone: Tone) -> String {
+    static func menubarPendingHeader(_ tone: Tone, _ lang: Language = .zh, count: Int) -> String {
         switch tone {
-        case .friendly: "正在找你的仓库..."
-        case .minimal:  "扫描中..."
+        case .friendly:
+            return Loc(
+                zh: "咕咕～有 \(count) 个仓库等着寄出去呀",
+                en: "Coo coo~ \(count) repos ready to fly"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "\(count) 个仓库待处理",
+                en: "\(count) pending"
+            ).text(lang)
         }
     }
 
-    static func menubarOffline(_ tone: Tone) -> String {
+    static func menubarScanInProgress(_ tone: Tone, _ lang: Language = .zh) -> String {
         switch tone {
-        case .friendly: "现在没网呢，我先帮你看着～"
-        case .minimal:  "网络断开"
+        case .friendly:
+            return Loc(
+                zh: "在找你的仓库...",
+                en: "Sniffing out your repos..."
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "扫描中",
+                en: "Scanning"
+            ).text(lang)
         }
     }
 
-    static func menubarKillSwitchBanner(_ tone: Tone) -> String {
+    static func menubarOffline(_ tone: Tone, _ lang: Language = .zh) -> String {
         switch tone {
-        case .friendly: "⚠️ 安全检查已关闭 · 点击恢复"
-        case .minimal:  "安全检查已关闭"
+        case .friendly:
+            return Loc(
+                zh: "网络打了个盹儿，我先帮你记着～",
+                en: "WiFi's napping, I'll hold onto these for now~"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "网络断开",
+                en: "Offline"
+            ).text(lang)
         }
     }
 
+    static func menubarKillSwitchBanner(_ tone: Tone, _ lang: Language = .zh) -> String {
+        switch tone {
+        case .friendly:
+            return Loc(
+                zh: "🕶️ 安全检查暂停中 · 点这里叫醒我",
+                en: "🕶️ Watch mode paused · tap to wake me"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "安全检查已关闭 · 点击恢复",
+                en: "Scanner off · tap to restore"
+            ).text(lang)
+        }
+    }
+
+    /// 这几个不涉及温柔/极简的中性 label，但要双语
+    static func menubarPushAllButton(_ lang: Language = .zh) -> String {
+        Loc(zh: "一键推送全部", en: "Push all").text(lang)
+    }
+    static func menubarOpenMainWindow(_ lang: Language = .zh) -> String {
+        Loc(zh: "打开主面板", en: "Open main window").text(lang)
+    }
+    static func menubarSettings(_ lang: Language = .zh) -> String {
+        Loc(zh: "设置...", en: "Settings...").text(lang)
+    }
+    static func menubarQuit(_ lang: Language = .zh) -> String {
+        Loc(zh: "退出 Pilo", en: "Quit Pilo").text(lang)
+    }
+
+    // 保留旧静态属性（用 .zh 默认）保证 backward compat
     static let menubarPushAllButton    = "一键推送全部"
     static let menubarOpenMainWindow   = "打开主面板"
     static let menubarSettings         = "设置..."
     static let menubarQuit             = "退出 Pilo"
 
-    // MARK: - 空状态
+    // MARK: - 空状态 / 错误
 
-    static func emptyNoRepos(_ tone: Tone) -> String {
+    static func emptyNoRepos(_ tone: Tone, _ lang: Language = .zh) -> String {
         switch tone {
-        case .friendly: "咕咕～还没有发现仓库呢。\n去设置里添加扫描目录吧 ✨"
-        case .minimal:  "没有发现仓库\n请在设置中添加扫描目录"
+        case .friendly:
+            return Loc(
+                zh: "咕咕～还没发现仓库呢。\n去设置里添加扫描目录吧 ✨",
+                en: "Coo~ no repos here yet.\nAdd a scan folder in Settings ✨"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "没有发现仓库\n请在设置中添加扫描目录",
+                en: "No repos found\nAdd a scan folder in Settings"
+            ).text(lang)
         }
     }
 
-    static func gitNotFound(_ tone: Tone) -> String {
+    static func gitNotFound(_ tone: Tone, _ lang: Language = .zh) -> String {
         switch tone {
-        case .friendly: "哎呀～没在系统里找到 git 命令。\n试试在终端运行：xcode-select --install"
-        case .minimal:  "未找到 git。请运行：xcode-select --install"
+        case .friendly:
+            return Loc(
+                zh: "诶诶～没找到 git。\n在终端跑一下：xcode-select --install",
+                en: "Hmm... can't find git.\nRun this in Terminal: xcode-select --install"
+            ).text(lang)
+        case .minimal:
+            return Loc(
+                zh: "未找到 git。运行：xcode-select --install",
+                en: "git not found. Run: xcode-select --install"
+            ).text(lang)
         }
     }
 
     // MARK: - Onboarding
 
     enum Onboarding {
-        static let welcomeTitle    = "咕咕～"
-        static let welcomeBody     = "我是 Pilo，一只帮你安全推送代码的小信鸽"
-        static let welcomeFeature1 = "自动扫描你的本地仓库"
-        static let welcomeFeature2 = "push 之前帮你查一遍敏感信息"
-        static let welcomeFeature3 = "一切都在你的电脑上完成，代码不会离开本地"
-        static let welcomeContinue = "继续"
 
+        static func welcomeTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "咕咕～", en: "Coo coo~").text(lang)
+        }
+
+        static func welcomeBody(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "我是 Pilo，一只帮你安全送代码的小信鸽",
+                en: "I'm Pilo, a little pigeon who delivers your code safely"
+            ).text(lang)
+        }
+
+        static func welcomeFeature1(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "自动找到你电脑上的仓库",
+                en: "Finds all your local repos"
+            ).text(lang)
+        }
+        static func welcomeFeature2(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "push 前帮你查一遍敏感信息",
+                en: "Checks for secrets before pushing"
+            ).text(lang)
+        }
+        static func welcomeFeature3(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "一切都在你电脑上做，代码不会离开本地",
+                en: "All local — your code never leaves your Mac"
+            ).text(lang)
+        }
+        static func welcomeContinue(_ lang: Language = .zh) -> String {
+            Loc(zh: "继续", en: "Continue").text(lang)
+        }
+
+        static func directoriesTitle(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "告诉我去哪里找你的代码？",
+                en: "Where shall I look for your code?"
+            ).text(lang)
+        }
+        static func directoriesHint(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "我会在这些目录里找所有 Git 仓库，\n会自动跳过 node_modules、vendor 等",
+                en: "I'll find every Git repo inside,\nand skip node_modules, vendor, etc."
+            ).text(lang)
+        }
+        static func directoriesAdd(_ lang: Language = .zh) -> String {
+            Loc(zh: "+ 添加目录", en: "+ Add folder").text(lang)
+        }
+        static func directoriesEmpty(_ lang: Language = .zh) -> String {
+            Loc(zh: "还没有选择目录", en: "No folders selected yet").text(lang)
+        }
+        static func directoriesSkip(_ lang: Language = .zh) -> String {
+            Loc(zh: "跳过", en: "Skip").text(lang)
+        }
+        static func directoriesNext(_ lang: Language = .zh) -> String {
+            Loc(zh: "继续", en: "Continue").text(lang)
+        }
+
+        static func privacyTitle(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "关于隐私，我想跟你说清楚",
+                en: "About privacy — let me be upfront"
+            ).text(lang)
+        }
+        static func privacyBody(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: """
+                ✅ 代码、commit、diff 都只在你的电脑上分析
+                ✅ 不调用任何 LLM 或云端 API
+                ✅ 唯一的网络行为是：
+                   • 后台定期 git fetch（和你平时用 git 一样）
+                   • 你主动触发的 git push
+                   • 可选的 GitHub API 调用（仅检测仓库可见性）
+
+                👀 想看 Pilo 做过什么？设置 → 关于 → 操作日志
+                """,
+                en: """
+                ✅ Your code, commits, and diffs are analyzed only on your Mac
+                ✅ No LLM calls, no cloud APIs
+                ✅ The only network activity is:
+                   • Background git fetch (same as plain git)
+                   • git push when you choose to
+                   • Optional GitHub API (only to detect repo visibility)
+
+                👀 Want to see everything I've done? Settings → About → Activity log
+                """
+            ).text(lang)
+        }
+        static func privacyAck(_ lang: Language = .zh) -> String {
+            Loc(zh: "我了解了", en: "Got it").text(lang)
+        }
+
+        static func completeTitleFound(_ lang: Language = .zh) -> String {
+            Loc(zh: "找到了 %d 个仓库", en: "Found %d repos").text(lang)
+        }
+        static func completeTitleEmpty(_ lang: Language = .zh) -> String {
+            Loc(zh: "暂时没找到仓库", en: "No repos here yet").text(lang)
+        }
+        static func completeGitInfo(_ lang: Language = .zh) -> String {
+            Loc(zh: "Pilo 找到了 %@ 位于 %@", en: "Pilo found %@ at %@").text(lang)
+        }
+        static func completeNoGit(_ lang: Language = .zh) -> String {
+            Loc(zh: "未找到 git 命令", en: "git not found").text(lang)
+        }
+        static func completeOpen(_ lang: Language = .zh) -> String {
+            Loc(zh: "打开主面板", en: "Open main window").text(lang)
+        }
+        static func completeStayInMenubar(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "Pilo 会一直待在菜单栏 ↑",
+                en: "I'll be up here in the menu bar ↑"
+            ).text(lang)
+        }
+
+        // 保留旧静态属性供未迁移调用方使用
+        static let welcomeTitle    = "咕咕～"
+        static let welcomeBody     = "我是 Pilo，一只帮你安全送代码的小信鸽"
+        static let welcomeFeature1 = "自动找到你电脑上的仓库"
+        static let welcomeFeature2 = "push 前帮你查一遍敏感信息"
+        static let welcomeFeature3 = "一切都在你电脑上做，代码不会离开本地"
+        static let welcomeContinue = "继续"
         static let directoriesTitle = "告诉我去哪里找你的代码？"
-        static let directoriesHint  = "我会在这些目录下找所有的 Git 仓库\n会自动跳过 node_modules、vendor 等"
+        static let directoriesHint  = "我会在这些目录里找所有 Git 仓库，\n会自动跳过 node_modules、vendor 等"
         static let directoriesAdd   = "+ 添加目录"
         static let directoriesEmpty = "还没有选择目录"
         static let directoriesSkip  = "跳过"
         static let directoriesNext  = "继续"
-
-        static let privacyTitle = "关于隐私，我要明确告诉你"
+        static let privacyTitle = "关于隐私，我想跟你说清楚"
         static let privacyBody  = """
         ✅ 代码、commit、diff 都只在你的电脑上分析
         ✅ 不调用任何 LLM 或云端 API
         ✅ 唯一的网络行为是：
            • 后台定期 git fetch（和你平时用 git 一样）
            • 你主动触发的 git push
-           • 可选的 GitHub API 调用（检测仓库可见性，需要你提供 token）
+           • 可选的 GitHub API 调用（仅检测仓库可见性）
 
-        👀 你可以随时在「设置 → 关于 → 操作日志」里查看 Pilo 做过的每一件事
+        👀 想看 Pilo 做过什么？设置 → 关于 → 操作日志
         """
         static let privacyAck = "我了解了"
-
         static let completeTitleFound = "找到了 %d 个仓库"
         static let completeTitleEmpty = "暂时没找到仓库"
         static let completeGitInfo    = "Pilo 找到了 %@ 位于 %@"
         static let completeNoGit      = "未找到 git 命令"
         static let completeOpen       = "打开主面板"
-        static let completeStayInMenubar = "提示：Pilo 会一直待在菜单栏 ↑"
+        static let completeStayInMenubar = "Pilo 会一直待在菜单栏 ↑"
     }
 
     // MARK: - 推送（Phase 5）
 
     enum Push {
 
-        // Preflight 阶段
-        static func preflightTitle(_ tone: Tone) -> String {
+        // Preflight
+        static func preflightTitle(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
-            case .friendly: "准备推送啦"
-            case .minimal:  "确认推送"
+            case .friendly:
+                return Loc(zh: "准备寄出去啦", en: "Ready to send~").text(lang)
+            case .minimal:
+                return Loc(zh: "确认推送", en: "Confirm push").text(lang)
+            }
+        }
+        static func preflightSubtitle(_ tone: Tone, _ lang: Language = .zh, count: Int) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(
+                    zh: "我要把 \(count) 个 commit 寄到远端，没问题吧？",
+                    en: "I'm sending \(count) commit\(count == 1 ? "" : "s") off — sound good?"
+                ).text(lang)
+            case .minimal:
+                return Loc(
+                    zh: "将推送 \(count) 个 commit",
+                    en: "Pushing \(count) commit\(count == 1 ? "" : "s")"
+                ).text(lang)
             }
         }
 
-        static func preflightSubtitle(_ tone: Tone, count: Int) -> String {
+        static func preflightCommitsHeader(_ lang: Language = .zh) -> String {
+            Loc(zh: "本次推送的 commit", en: "Commits to push").text(lang)
+        }
+        static func preflightFirstPushHint(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "首次推送 · 会自动设置 upstream（-u）",
+                en: "First push · upstream will be set automatically (-u)"
+            ).text(lang)
+        }
+
+        static func pushButton(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
-            case .friendly: "我要把 \(count) 个 commit 飞到远端，确认一下？"
-            case .minimal:  "将推送 \(count) 个 commit"
+            case .friendly:
+                return Loc(zh: "✨ 寄出去", en: "✨ Send it").text(lang)
+            case .minimal:
+                return Loc(zh: "推送", en: "Push").text(lang)
             }
         }
 
+        static func cancelButton(_ tone: Tone, _ lang: Language = .zh) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(zh: "再想想", en: "Hold on").text(lang)
+            case .minimal:
+                return Loc(zh: "取消", en: "Cancel").text(lang)
+            }
+        }
+
+        static func runningTitle(_ tone: Tone, _ lang: Language = .zh, remote: String) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(zh: "正在飞往 \(remote)...", en: "Off to \(remote)...").text(lang)
+            case .minimal:
+                return Loc(zh: "推送到 \(remote)...", en: "Pushing to \(remote)...").text(lang)
+            }
+        }
+
+        // Completed - success
+        static func successTitle(_ tone: Tone, _ lang: Language = .zh) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(zh: "🌸 寄到啦！", en: "🌸 Delivered!").text(lang)
+            case .minimal:
+                return Loc(zh: "推送完成", en: "Push complete").text(lang)
+            }
+        }
+        static func successSubtitle(_ tone: Tone, _ lang: Language = .zh, count: Int) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(
+                    zh: "\(count) 个 commit 已经送到啦 ✨",
+                    en: "\(count) commit\(count == 1 ? "" : "s") delivered ✨"
+                ).text(lang)
+            case .minimal:
+                return Loc(
+                    zh: "\(count) 个 commit 已送达",
+                    en: "\(count) commit\(count == 1 ? "" : "s") sent"
+                ).text(lang)
+            }
+        }
+
+        // Push button entry (RepoDetailView)
+        static func pushEntryButton(_ tone: Tone, _ lang: Language = .zh) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(zh: "✨ 推送", en: "✨ Push").text(lang)
+            case .minimal:
+                return Loc(zh: "推送", en: "Push").text(lang)
+            }
+        }
+
+        static func pushDisabledHint(_ lang: Language = .zh) -> String {
+            Loc(zh: "没有可推送的 commit", en: "Nothing to push").text(lang)
+        }
+
+        // 保留旧静态属性供未迁移调用方
+        static let preflightTitle = "准备推送啦"
+        static let preflightCheckPassed = "✅ 安全检查全部通过"
+        static let confirmPushButton = "✨ 推送 ✨"
+        static let confirmCancelButton = "再想想"
         static let preflightCommitsHeader = "本次推送的 commit"
         static let preflightFirstPushHint = "首次推送 · 会自动设置 upstream（-u）"
         static let preflightScanPlaceholder = "🔒 安全检查（Phase 6 待启用）"
+        static let confirmCheckPassed = "✅ 安全检查全部通过"
+        static let pushDisabledHint = "没有可推送的 commit"
 
-        static func pushButton(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "✨ 推送 ✨"
-            case .minimal:  "推送"
-            }
-        }
+        // Phase 5 push error messages
+        static let needSSHPassphrase = "需要你的 SSH key 密码"
+        static let needCredentials = "需要登录凭证 · 请在终端先配置一次"
+        static let needPAT = "GitHub 现在需要 Personal Access Token，不是密码"
+        static let preHookFailed = "pre-push hook 拦下了这次推送："
+        static let nonFastForward = "远端有新内容，需要先 pull 或 rebase"
+        static let pushFailedGeneric = "咕咕没飞过去 🥲"
+        static let retryButton = "再试一次"
+        static let copyStderrButton  = "复制错误信息"
+        static let openTerminalButton = "在终端打开"
+        static let closeButton        = "关闭"
+        static let doneButton         = "好啦"
 
-        static func cancelButton(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "再想想"
-            case .minimal:  "取消"
-            }
-        }
-
-        // Running 阶段
-        static func runningTitle(_ tone: Tone, remote: String) -> String {
-            switch tone {
-            case .friendly: "正在飞往 \(remote)..."
-            case .minimal:  "推送到 \(remote)..."
-            }
-        }
-
-        // Completed 阶段 - 成功
-        static func successTitle(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "🌸 推送完成"
-            case .minimal:  "推送完成"
-            }
-        }
-
-        static func successSubtitle(_ tone: Tone, count: Int) -> String {
-            switch tone {
-            case .friendly: "\(count) 个 commit 已送达 ✨"
-            case .minimal:  "\(count) 个 commit 已送达"
-            }
-        }
-
-        // Completed 阶段 - 失败
+        // failure title / explanation 暂保中文
         static func failureTitle(_ tone: Tone, outcome: PushOutcome) -> String {
             switch (outcome, tone) {
             case (.authenticationFailed, .friendly):  "🥲 没认证通过"
@@ -178,10 +446,9 @@ enum Copy {
             case (.noUpstreamConfigured, .minimal):   "未配置 upstream"
             case (.unknown, .friendly):               "咕咕没飞过去"
             case (.unknown, .minimal):                "推送失败"
-            case (.success, _):                        ""  // 不应该到这里
+            case (.success, _):                        ""
             }
         }
-
         static func failureExplanation(_ outcome: PushOutcome) -> String {
             switch outcome {
             case .authenticationFailed:
@@ -219,43 +486,44 @@ enum Copy {
                 "下方 stderr 里有详细信息。"
             }
         }
-
-        static let copyStderrButton  = "复制错误信息"
-        static let openTerminalButton = "在终端打开"
-        static let closeButton        = "关闭"
-        static let doneButton         = "好啦"
-
-        // Push 入口（详情视图按钮）
-        static func pushEntryButton(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "✨ 推送"
-            case .minimal:  "推送"
-            }
-        }
-
-        static let pushDisabledHint = "没有可推送的 commit"
     }
 
-    // MARK: - 安全扫描（Phase 6）
+    // MARK: - 安全扫描（Phase 6）— 关键提示保持温柔但坚定
 
     enum Scan {
 
-        static func sectionHeader(_ tone: Tone, count: Int) -> String {
+        static func sectionHeader(_ tone: Tone, _ lang: Language = .zh, count: Int) -> String {
             switch (count, tone) {
-            case (0, .friendly): "✅ 安全检查通过"
-            case (0, .minimal):  "安全检查通过"
-            case (_, .friendly): "哎呀～发现 \(count) 处可能要看看"
-            case (_, .minimal):  "发现 \(count) 处"
+            case (0, .friendly):
+                return Loc(zh: "✅ 安全检查通过", en: "✅ All clear").text(lang)
+            case (0, .minimal):
+                return Loc(zh: "安全检查通过", en: "Clear").text(lang)
+            case (_, .friendly):
+                return Loc(
+                    zh: "诶诶～发现 \(count) 处可能要看看",
+                    en: "Hmm... \(count) thing\(count == 1 ? "" : "s") worth checking"
+                ).text(lang)
+            case (_, .minimal):
+                return Loc(
+                    zh: "发现 \(count) 处",
+                    en: "\(count) finding\(count == 1 ? "" : "s")"
+                ).text(lang)
             }
         }
 
-        static func killSwitchSkipped(_ tone: Tone) -> String {
+        static func killSwitchSkipped(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
-            case .friendly: "🕶️ 安全检查已暂停（紧急模式）"
-            case .minimal:  "安全检查已暂停"
+            case .friendly:
+                return Loc(
+                    zh: "🕶️ 安全检查打盹儿中（紧急模式）",
+                    en: "🕶️ Watch mode paused (emergency)"
+                ).text(lang)
+            case .minimal:
+                return Loc(zh: "安全检查已暂停", en: "Scanner paused").text(lang)
             }
         }
 
+        // 这些是关键提示用语，仅在 critical 流程出现，必须保持严肃 + 温和
         static let critical    = "高危"
         static let warning     = "提示"
         static let jumpToFile  = "在 Finder 中显示"
@@ -266,22 +534,9 @@ enum Copy {
         static let markFPTitle = "怎么标记？"
         static let markFPSubtitle = "下次扫描会按你选的范围跳过这一条。"
 
-        // Critical 时 Push 按钮文案
-        static func pushBypassButton(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "我已了解，仍然推送"
-            case .minimal:  "确认推送"
-            }
-        }
+        static let pushBypassButton = "我已了解，仍然推送"
 
-        // BypassConfirmDialog
-        static func bypassConfirmTitle(_ tone: Tone) -> String {
-            switch tone {
-            case .friendly: "🕊️ 真的吗？"
-            case .minimal:  "确认绕过安全检查"
-            }
-        }
-
+        static let bypassConfirmTitle = "🕊️ 真的吗？"
         static let bypassConfirmDesc = """
         推送之后这些 key 会进入 GitHub 历史，
         即使后续删除也很难真正清除。
@@ -294,24 +549,52 @@ enum Copy {
 
         如果你坚持要推送，请输入仓库名确认：
         """
-
         static let bypassConfirmInputPlaceholder = "在这里输入仓库名"
         static let bypassConfirmYes = "我已了解，推送"
         static let bypassConfirmNo  = "取消"
         static let bypassNameMismatch = "仓库名不匹配"
     }
 
+    // MARK: - Kill switch（Phase 6）— 设置 UI 文案
+
+    enum KillSwitch {
+
+        static func bannerInMenuBar(_ tone: Tone, _ lang: Language = .zh, remainingHours: Int) -> String {
+            switch tone {
+            case .friendly:
+                return Loc(
+                    zh: "🕶️ 安全检查暂停中（\(remainingHours) 小时后自动醒）· 点击立即叫醒",
+                    en: "🕶️ Watch mode paused (\(remainingHours)h to auto-wake) · tap to wake now"
+                ).text(lang)
+            case .minimal:
+                return Loc(
+                    zh: "安全检查已关闭（\(remainingHours) 小时后恢复）· 立即恢复",
+                    en: "Scanner off (\(remainingHours)h to restore) · restore now"
+                ).text(lang)
+            }
+        }
+
+        // 设置页 UI 文案（暂保中文，下次迭代再做完整双语）
+        static let settingsSectionTitle = "安全检查"
+        static let settingsToggleEnabled  = "启用敏感信息扫描"
+        static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。"
+        static let settingsKillSwitchTitle = "紧急关闭安全检查"
+        static let settingsKillSwitchDesc  = "暂时关闭所有安全扫描，让 push 可以无阻通过。24 小时后自动恢复——避免你忘了自己关过。"
+        static let settingsKillSwitchActivateButton = "暂时关闭 24 小时"
+        static let settingsKillSwitchActiveLabel  = "已关闭，%d 小时后恢复"
+        static let settingsKillSwitchRestoreButton = "立即恢复"
+    }
+
     // MARK: - 误提交防护（Phase 7）
 
     enum Guard {
-
         static let criticalGroupTitle = "高危 · 阻断推送"
         static let warningGroupTitle  = "提示 · 可以推但建议处理"
 
         static func summaryAllClear(_ tone: Tone) -> [String] {
             switch tone {
             case .friendly:
-                return ["✅ 没有发现敏感信息", "✅ 没有可疑文件", "✅ 文件大小正常"]
+                return ["✅ 没有发现敏感信息", "✅ 没有可疑文件", "✅ 文件大小都正常"]
             case .minimal:
                 return ["敏感信息扫描通过", "文件类型检查通过", "文件大小检查通过"]
             }
@@ -323,64 +606,35 @@ enum Copy {
         static let ignoreOnceButton     = "仅本次忽略"
         static let markSafeButton       = "已确认安全"
         static let jumpToCodeButton     = "跳转到代码"
-
-        // GitignoreActionSheet
         static let actionSheetTitle = "已加入 .gitignore"
         static let actionSheetOpen  = "用编辑器打开 .gitignore"
         static let actionSheetCopyFilterCmd = "复制 filter-repo 命令"
         static let actionSheetDone  = "知道了"
 
-        // 推送按钮新状态
         static func pushDisabledByCritical(_ tone: Tone) -> String {
             switch tone {
             case .friendly: "处理高危项后才能推送"
             case .minimal:  "请先处理高危项"
             }
         }
-
         static func pushBypassLink(_ tone: Tone) -> String {
             switch tone {
             case .friendly: "了解风险，仍然推送 →"
             case .minimal:  "强制推送 →"
             }
         }
-
-        // 顶部章节
         static func sectionTitle(_ tone: Tone) -> String {
             switch tone {
             case .friendly: "🛡️ 推送前检查"
             case .minimal:  "推送前检查"
             }
         }
-
         static func sectionSummaryClear(_ tone: Tone) -> String {
             switch tone {
             case .friendly: "全部通过 ✨"
             case .minimal:  "通过"
             }
         }
-    }
-
-    // MARK: - Kill switch（Phase 6）
-
-    enum KillSwitch {
-
-        static func bannerInMenuBar(_ tone: Tone, remainingHours: Int) -> String {
-            switch tone {
-            case .friendly: "🕶️ 安全检查已关闭（剩 \(remainingHours) 小时自动恢复）· 点击立即恢复"
-            case .minimal:  "安全检查已关闭（\(remainingHours) 小时后恢复）· 立即恢复"
-            }
-        }
-
-        static let settingsSectionTitle = "安全检查"
-        static let settingsToggleEnabled  = "启用敏感信息扫描"
-        static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。"
-
-        static let settingsKillSwitchTitle = "紧急关闭安全检查"
-        static let settingsKillSwitchDesc  = "暂时关闭所有安全扫描，让 push 可以无阻通过。24 小时后自动恢复——避免你忘了自己关过。"
-        static let settingsKillSwitchActivateButton = "暂时关闭 24 小时"
-        static let settingsKillSwitchActiveLabel  = "已关闭，%d 小时后恢复"
-        static let settingsKillSwitchRestoreButton = "立即恢复"
     }
 
     // MARK: - Mascot 无障碍标签
