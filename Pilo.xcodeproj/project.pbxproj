@@ -64,6 +64,7 @@
 		AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293B1078830934FFC5D83AFD /* Repository.swift */; };
 		B42B56F627ECC537269A664B /* BypassConfirmDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */; };
 		B46E8DDFA74F315E320FB0A1 /* GitignoreEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A00990925CEF1AE1105D3A /* GitignoreEditor.swift */; };
+		CBF60DDE945131CEA21D6E43 /* RepoStatePills.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */; };
 		D175787B9C8F43FB56E4DBE4 /* RepoScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0D7C484861C199FE1F5130 /* RepoScanner.swift */; };
 		E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0866CD77575282C41947BADD /* GitRemote.swift */; };
 		E320322D91974174E383EC5C /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796133FADA4A3765E8AE6859 /* SectionHeader.swift */; };
@@ -93,6 +94,7 @@
 		0866CD77575282C41947BADD /* GitRemote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRemote.swift; sourceTree = "<group>"; };
 		12738ED463FC35FD0587E770 /* DiffParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParser.swift; sourceTree = "<group>"; };
 		1894FF036FBFB212679A29AC /* SecretScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScannerTests.swift; sourceTree = "<group>"; };
+		1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoStatePills.swift; sourceTree = "<group>"; };
 		20E05A4CA192EA6913C4E82F /* SecretScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScanner.swift; sourceTree = "<group>"; };
 		25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
 		25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperDecorations.swift; sourceTree = "<group>"; };
@@ -164,6 +166,7 @@
 			children = (
 				F16B037F569F8B168CAFE426 /* PiloMascot.swift */,
 				EAA834330F2B12036ADEF865 /* RepoCard.swift */,
+				1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */,
 				796133FADA4A3765E8AE6859 /* SectionHeader.swift */,
 				2F1BF50B55825899755F5CF5 /* StatusBadge.swift */,
 			);
@@ -495,6 +498,7 @@
 				5269C86B4F668014D2043EE4 /* RepoDetailView.swift in Sources */,
 				0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */,
 				D175787B9C8F43FB56E4DBE4 /* RepoScanner.swift in Sources */,
+				CBF60DDE945131CEA21D6E43 /* RepoStatePills.swift in Sources */,
 				AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */,
 				24762692BDB1C4A02A5ABB3D /* ScanFinding.swift in Sources */,
 				21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */,

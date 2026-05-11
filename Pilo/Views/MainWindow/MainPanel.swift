@@ -198,23 +198,30 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // 衬线标题（大号）
-                    Text(repo.name)
-                        .font(.piloSerifHero)
-                        .tracking(0.5)
-                        .foregroundStyle(Color.inkPrimary)
+                    // 标题行：repo 名 + 右上 PrivacyPill
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(repo.name)
+                            .font(.piloSerifHero)
+                            .tracking(0.5)
+                            .foregroundStyle(Color.inkPrimary)
+                        Spacer(minLength: 12)
+                        PrivacyPill(isPublic: repo.remotes.first?.isPublic)
+                    }
 
-                    // mono 元信息（大一号 + 行间空气）
+                    // mono 路径 + 分支（按 mock 去掉时间）
                     Text(metaLine(for: repo))
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 8)
 
-                    SectionDivider(label: sectionLabel(for: repo))
-                        .padding(.top, 26)
-                        .padding(.bottom, 12)
+                    // 状态药丸（ahead / uncommitted / synced 三态）
+                    RepoStatusPill(repo: repo)
+                        .padding(.top, 18)
 
-                    commitsList(for: repo)
+                    // 三态 body：ahead → 信件列表；uncommitted → 玫粉单卡；synced → 居中睡 Pilo
+                    bodyContent(for: repo)
+
+                    Spacer(minLength: 24)
 
                     actionsRow(for: repo)
                         .padding(.top, 24)
@@ -228,6 +235,62 @@ private struct PanelDetail: View {
         }
     }
 
+    // MARK: - Three-state body
+
+    @ViewBuilder
+    private func bodyContent(for repo: Repository) -> some View {
+        if repo.aheadCount > 0 {
+            // 状态 1：有待推 commit
+            SectionDivider(label: lang == .zh ? "— 待寄出的小信 —" : "— letters to send —")
+                .padding(.top, 26)
+                .padding(.bottom, 12)
+            commitsList(for: repo)
+        } else if repo.uncommittedCount > 0 {
+            // 状态 2：只有未提交
+            SectionDivider(label: lang == .zh ? "— 等待 commit 的草稿 —" : "— drafts waiting to commit —")
+                .padding(.top, 26)
+                .padding(.bottom, 12)
+            uncommittedCard(for: repo)
+        } else {
+            // 状态 3：已同步——居中睡 Pilo
+            syncedEmptyState
+                .padding(.top, 40)
+        }
+    }
+
+    private func uncommittedCard(for repo: Repository) -> some View {
+        let text = lang == .zh
+            ? "有 \(repo.uncommittedCount) 个未提交的修改 · 请在编辑器里 commit 后再回来推送"
+            : "\(repo.uncommittedCount) uncommitted change\(repo.uncommittedCount == 1 ? "" : "s") · commit them in your editor, then come back to push"
+        return Text(text)
+            .font(.piloSerifSubtitle)
+            .foregroundStyle(Color.roseDanger.opacity(0.85))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.roseDanger.opacity(0.06))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .stroke(Color.roseDanger.opacity(0.25), lineWidth: 0.5)
+            )
+    }
+
+    private var syncedEmptyState: some View {
+        VStack(spacing: PiloSpacing.s) {
+            PiloMascot(mood: .sleeping, size: 80, breathing: true)
+            Text(lang == .zh ? "这个仓库一切都好" : "All good here")
+                .font(.piloSection)
+                .foregroundStyle(Color.inkPrimary)
+            Text(lang == .zh ? "没什么要寄出的" : "nothing to send")
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
     private var currentRepo: Repository? {
         guard let id = appState.selectedRepoId else {
             // 默认选第一个 active
@@ -237,61 +300,32 @@ private struct PanelDetail: View {
     }
 
     private func metaLine(for repo: Repository) -> String {
+        // 按设计稿：只显示 path · branch，时间挪到 commit 卡片或省略
         var parts: [String] = [repo.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")]
         if let b = repo.currentBranch { parts.append(b) }
-        if let d = repo.lastCommitDate {
-            parts.append(
-                (lang == .zh ? "修改于 " : "edited ")
-                + RepoCard.relativeFormatter.localizedString(for: d, relativeTo: Date())
-            )
-        }
         return parts.joined(separator: " · ")
-    }
-
-    private func sectionLabel(for repo: Repository) -> String {
-        if repo.aheadCount > 0 {
-            return lang == .zh ? "— 待寄出的小信 —" : "— letters to send —"
-        }
-        if repo.uncommittedCount > 0 {
-            return lang == .zh ? "— 工作区改动 —" : "— working changes —"
-        }
-        return lang == .zh ? "— 一切安好 —" : "— all is well —"
     }
 
     @ViewBuilder
     private func commitsList(for repo: Repository) -> some View {
-        if repo.aheadCount > 0 {
-            if appState.currentCommits.isEmpty {
-                Text(lang == .zh ? "正在拉取 commit..." : "Loading commits...")
-                    .font(.piloSerifCaption)
-                    .foregroundStyle(Color.inkTertiary)
-                    .padding(.vertical, PiloSpacing.s)
-            } else {
-                VStack(spacing: 7) {
-                    ForEach(appState.currentCommits.prefix(8)) { c in
-                        commitRow(c)
-                    }
-                    if appState.currentCommits.count > 8 {
-                        Text(lang == .zh
-                             ? "…还有 \(appState.currentCommits.count - 8) 个"
-                             : "…and \(appState.currentCommits.count - 8) more")
-                            .font(.piloSerifCaption)
-                            .foregroundStyle(Color.inkTertiary)
-                    }
-                }
-            }
-        } else if repo.uncommittedCount > 0 {
-            Text(lang == .zh
-                 ? "有 \(repo.uncommittedCount) 个改动还没 commit"
-                 : "\(repo.uncommittedCount) change\(repo.uncommittedCount == 1 ? "" : "s") not committed yet")
+        if appState.currentCommits.isEmpty {
+            Text(lang == .zh ? "正在拉取 commit..." : "Loading commits...")
                 .font(.piloSerifSubtitle)
-                .foregroundStyle(Color.inkSecondary)
+                .foregroundStyle(Color.inkTertiary)
                 .padding(.vertical, PiloSpacing.s)
         } else {
-            Text(lang == .zh ? "都同步啦 ✨" : "All caught up ✨")
-                .font(.piloSerifSubtitle)
-                .foregroundStyle(Color.mintSafe)
-                .padding(.vertical, PiloSpacing.s)
+            VStack(spacing: 8) {
+                ForEach(appState.currentCommits.prefix(8)) { c in
+                    commitRow(c)
+                }
+                if appState.currentCommits.count > 8 {
+                    Text(lang == .zh
+                         ? "…还有 \(appState.currentCommits.count - 8) 个"
+                         : "…and \(appState.currentCommits.count - 8) more")
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkTertiary)
+                }
+            }
         }
     }
 

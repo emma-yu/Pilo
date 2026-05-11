@@ -1,0 +1,108 @@
+import SwiftUI
+
+// MARK: - PrivacyPill（右上角 私有 / 公开）
+
+/// 仓库可见性指示。位置：详情页 title 行右上。
+/// 现阶段 isPublic 来自 GitRemote.isPublic（v0.1 永远 nil → 默认显示「私有」）。
+/// Phase 5+ 接入 GitHub API 后会真实反映。
+struct PrivacyPill: View {
+    let isPublic: Bool?
+    @Environment(AppState.self) private var appState
+
+    private var lang: Language { appState.language }
+
+    var body: some View {
+        let resolved = isPublic ?? false
+        let text = resolved
+            ? (lang == .zh ? "公开" : "Public")
+            : (lang == .zh ? "私有" : "Private")
+        let bg: Color = resolved
+            ? Color.piloAccent.opacity(0.22)
+            : Color.cloudDivider.opacity(0.55)
+        let fg: Color = resolved
+            ? Color.roseDanger
+            : Color.inkSecondary
+
+        return Text(text)
+            .font(.piloSerifSubtitle)
+            .foregroundStyle(fg)
+            .padding(.horizontal, 11)
+            .padding(.vertical, 4)
+            .background(bg, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+}
+
+// MARK: - RepoStatusPill（path 下方大状态药丸）
+
+/// 仓库整体状态，按优先级：uncommitted > ahead > synced。
+/// 三种 tint：
+///   - ahead（金棕 on cream paper）："N 个待推送 commit"
+///   - uncommitted（rose）："N 个未提交变更"
+///   - synced（mint）："已同步"
+struct RepoStatusPill: View {
+    let repo: Repository
+    @Environment(AppState.self) private var appState
+
+    private var lang: Language { appState.language }
+
+    var body: some View {
+        let style = pillStyle()
+        return Text(style.text)
+            .font(.system(size: 14, weight: .regular))
+            .foregroundStyle(style.fg)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 9)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(style.bg)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(style.border, lineWidth: 0.5)
+            )
+    }
+
+    private func pillStyle() -> (text: String, bg: Color, fg: Color, border: Color) {
+        // 注意顺序：uncommitted 优先级最高（"先提交才能推"），其次 ahead，最后 synced
+        if repo.aheadCount == 0 && repo.uncommittedCount > 0 {
+            let text = lang == .zh
+                ? "\(repo.uncommittedCount) 个未提交变更"
+                : "\(repo.uncommittedCount) uncommitted change\(repo.uncommittedCount == 1 ? "" : "s")"
+            return (text,
+                    Color.roseDanger.opacity(0.10),
+                    Color.roseDanger,
+                    Color.roseDanger.opacity(0.30))
+        }
+        if repo.aheadCount > 0 {
+            let text = lang == .zh
+                ? "\(repo.aheadCount) 个待推送 commit"
+                : "\(repo.aheadCount) commit\(repo.aheadCount == 1 ? "" : "s") to push"
+            return (text,
+                    Color.piloPaper,
+                    Color.piloGoldDark,
+                    Color.piloPaperBorder)
+        }
+        let text = lang == .zh ? "已同步" : "Synced"
+        return (text,
+                Color.mintSafe.opacity(0.18),
+                Color.stampMint,
+                Color.mintSafe.opacity(0.45))
+    }
+}
+
+#Preview {
+    VStack(alignment: .leading, spacing: 14) {
+        HStack {
+            Text("uvpeek-android").font(.piloSerifHero)
+            Spacer()
+            PrivacyPill(isPublic: false)
+        }
+        HStack {
+            Text("my-blog").font(.piloSerifHero)
+            Spacer()
+            PrivacyPill(isPublic: true)
+        }
+    }
+    .padding(28)
+    .background(Color.paperCard)
+}
