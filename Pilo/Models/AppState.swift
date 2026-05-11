@@ -88,22 +88,37 @@ final class AppState {
     var currentCommits: [CommitSummary] = []
     private var commitsFetchTask: Task<Void, Never>?
 
-    /// 按"活跃 / 沉睡"分组（HTML 参考 panel 左栏的两组）
-    /// 活跃：有 work（待推/待提交）或最近 30 天有提交
-    /// 沉睡：最近 commit 早于 30 天
+    /// Phase B (Project Inventory) 三段分组：活跃 / 静默 / 沉寂
+    /// 优先级原则：**任何有 work 的仓库都是 active**（用户需要做事），不论 mood。
+    /// 没 work 的按 mood 切分到三档。
+
+    /// 活跃 —— 有 work（待推/未提交）或最近 7 天有 commit。
     var activeRepos: [Repository] {
         sortedRepos.filter { repo in
             if repo.hasWork { return true }
-            guard let last = repo.lastCommitDate else { return true }
-            return Date().timeIntervalSince(last) < 30 * 24 * 3600
+            return repo.mood == .active
         }
     }
-    var sleepingRepos: [Repository] {
+
+    /// 静默 —— 没 work，最近 7-30 天有过 commit（暂时没动但还活着）。
+    var idleRepos: [Repository] {
         sortedRepos.filter { repo in
             if repo.hasWork { return false }
-            guard let last = repo.lastCommitDate else { return false }
-            return Date().timeIntervalSince(last) >= 30 * 24 * 3600
+            return repo.mood == .idle
         }
+    }
+
+    /// 沉寂 —— 没 work，30 天以上没动过（dying + abandoned 合并展示）。
+    var dormantRepos: [Repository] {
+        sortedRepos.filter { repo in
+            if repo.hasWork { return false }
+            return repo.mood == .dying || repo.mood == .abandoned
+        }
+    }
+
+    /// 向后兼容：旧代码（如 dotColor）仍使用 sleepingRepos = idle + dormant。
+    var sleepingRepos: [Repository] {
+        idleRepos + dormantRepos
     }
 
     var pendingRepos: [Repository] {
@@ -569,6 +584,14 @@ final class AppState {
         }
     }
 
+    /// Phase B: 给仓库贴 / 改 / 撕"投递箱"标签。立即持久化。
+    func setCategory(_ category: RepoCategory, repoId: UUID) {
+        guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }
+        guard repositories[idx].category != category else { return }
+        repositories[idx].category = category
+        saveRepositoriesToDisk()
+    }
+
     func setHidden(_ hidden: Bool, repoId: UUID) {
         guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }
         repositories[idx].isHidden = hidden
@@ -593,7 +616,8 @@ final class AppState {
     }
 
     func applyScanResult(_ scanned: [Repository]) {
-        // 按 pathHash 合并：保留旧条目的 customTags / isHidden / skipFetch / skipMainBranchWarning
+        // 按 pathHash 合并：保留旧条目的用户手设字段（category / customTags / isHidden / skipFetch 等）。
+        // fresh 提供的字段：git 状态、health 检测、remotes。
         var byHash = Dictionary(uniqueKeysWithValues: repositories.map { ($0.pathHash, $0) })
         for var fresh in scanned {
             if let prior = byHash[fresh.pathHash] {
@@ -616,7 +640,11 @@ final class AppState {
                     lastScanDate: Date(),
                     skipFetch: prior.skipFetch,
                     skipMainBranchWarning: prior.skipMainBranchWarning,
-                    falsePositiveMarks: prior.falsePositiveMarks
+                    falsePositiveMarks: prior.falsePositiveMarks,
+                    // Phase B: category 用户手设保留；hasReadme/hasTests 从 fresh 取最新值
+                    category: prior.category,
+                    hasReadme: fresh.hasReadme,
+                    hasTests: fresh.hasTests
                 )
             }
             byHash[fresh.pathHash] = fresh

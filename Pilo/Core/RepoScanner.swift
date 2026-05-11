@@ -123,6 +123,9 @@ actor RepoScanner {
             behind = ab.behind
         }
 
+        // Phase B (Project Inventory)：扫盘时一并 detect 健康信号
+        let health = RepoHealthDetector.detect(repoPath: url.path)
+
         return Repository(
             path: url.path,
             currentBranch: b,
@@ -131,7 +134,9 @@ actor RepoScanner {
             uncommittedCount: unc,
             lastCommitDate: last,
             remotes: rem,
-            firstCommitHash: first
+            firstCommitHash: first,
+            hasReadme: health.hasReadme,
+            hasTests: health.hasTests
         )
     }
 }

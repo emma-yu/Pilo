@@ -90,33 +90,50 @@ private struct PanelSidebar: View {
             // 微微 tint 的 cream 背景（HTML: rgba(238,234,228,0.22)）
             Color("CreamBg").opacity(0.22)
 
-            VStack(alignment: .leading, spacing: 0) {
-                if !appState.activeRepos.isEmpty {
-                    sidebarLabel(
-                        text: (lang == .zh ? "活跃 · " : "Active · ") + "\(appState.activeRepos.count)"
-                    )
-                    .padding(.top, PiloSpacing.s)
-                    .padding(.bottom, PiloSpacing.xs)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Phase B: 三段分组——活跃 / 静默 / 沉寂
 
-                    ForEach(appState.activeRepos) { repo in
-                        sidebarItem(repo)
+                    if !appState.activeRepos.isEmpty {
+                        sidebarLabel(
+                            text: Copy.Inventory.sidebarActive(lang) + " · \(appState.activeRepos.count)"
+                        )
+                        .padding(.top, PiloSpacing.s)
+                        .padding(.bottom, PiloSpacing.xs)
+
+                        ForEach(appState.activeRepos) { repo in
+                            sidebarItem(repo)
+                        }
                     }
-                }
 
-                if !appState.sleepingRepos.isEmpty {
-                    sidebarLabel(
-                        text: (lang == .zh ? "沉睡 · " : "Sleeping · ") + "\(appState.sleepingRepos.count)"
-                    )
-                    .padding(.top, PiloSpacing.m)
-                    .padding(.bottom, PiloSpacing.xs)
+                    if !appState.idleRepos.isEmpty {
+                        sidebarLabel(
+                            text: Copy.Inventory.sidebarIdle(lang) + " · \(appState.idleRepos.count)"
+                        )
+                        .padding(.top, PiloSpacing.m)
+                        .padding(.bottom, PiloSpacing.xs)
 
-                    ForEach(appState.sleepingRepos) { repo in
-                        sidebarItem(repo)
+                        ForEach(appState.idleRepos) { repo in
+                            sidebarItem(repo)
+                        }
                     }
-                }
 
-                Spacer(minLength: 0)
+                    if !appState.dormantRepos.isEmpty {
+                        sidebarLabel(
+                            text: Copy.Inventory.sidebarDormant(lang) + " · \(appState.dormantRepos.count)"
+                        )
+                        .padding(.top, PiloSpacing.m)
+                        .padding(.bottom, PiloSpacing.xs)
+
+                        ForEach(appState.dormantRepos) { repo in
+                            sidebarItem(repo)
+                        }
+                    }
+
+                    Spacer(minLength: 0)
+                }
             }
+            .scrollIndicators(.hidden)
         }
     }
 
@@ -129,6 +146,7 @@ private struct PanelSidebar: View {
 
     private func sidebarItem(_ repo: Repository) -> some View {
         let isActive = repo.id == appState.selectedRepoId
+        let stamp = Copy.Inventory.categoryStamp(repo.category, lang)
         return Button {
             appState.selectRepo(repo.id)
         } label: {
@@ -141,6 +159,17 @@ private struct PanelSidebar: View {
                     .foregroundStyle(Color.inkPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
+                if !stamp.isEmpty {
+                    Text(stamp)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(categoryStampColor(repo.category))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .stroke(categoryStampColor(repo.category).opacity(0.5), lineWidth: 0.6)
+                        )
+                }
                 Spacer(minLength: 4)
                 if let count = countLabel(for: repo) {
                     Text(count)
@@ -168,15 +197,28 @@ private struct PanelSidebar: View {
         .hoverable(highlight: isActive ? .clear : Color.piloBlue.opacity(0.06))
     }
 
+    /// 按 mood 区分 synced 状态下的颜色（Phase B：让"沉寂"项目视觉上更暗）。
     private func dotColor(for repo: Repository) -> Color {
         switch repo.statusSummary {
         case .ahead:       return .amberWarn
         case .behind:      return .lavenderInfo
         case .uncommitted: return .roseDanger
         case .synced:
-            return appState.sleepingRepos.contains(where: { $0.id == repo.id })
-                ? .inkTertiary
-                : .mintSafe
+            switch repo.mood {
+            case .active:    return .mintSafe
+            case .idle:      return .lavenderInfo.opacity(0.7)
+            case .dying:     return .inkTertiary
+            case .abandoned: return .inkTertiary.opacity(0.55)
+            }
+        }
+    }
+
+    private func categoryStampColor(_ cat: RepoCategory) -> Color {
+        switch cat {
+        case .work:       return .piloBlueDark
+        case .personal:   return .piloGoldDark
+        case .experiment: return .lavenderInfo
+        case .unset:      return .inkTertiary
         }
     }
 
@@ -198,27 +240,38 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // 标题行：repo 名 + 右上 PrivacyPill
-                    HStack(alignment: .firstTextBaseline) {
+                    // 标题行：repo 名 + category chip + 右上 PrivacyPill
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Text(repo.name)
                             .font(.piloSerifHero)
                             .tracking(0.5)
                             .foregroundStyle(Color.inkPrimary)
+                        categoryChip(for: repo)
                         Spacer(minLength: 12)
                         PrivacyPill(repoId: repo.id)
                     }
 
-                    // mono 路径 + 分支（按 mock 去掉时间）
+                    // mono 路径 + 分支
                     Text(metaLine(for: repo))
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 8)
 
-                    // 状态药丸（ahead / uncommitted / synced 三态）
+                    // 状态药丸
                     RepoStatusPill(repo: repo)
                         .padding(.top, 18)
 
-                    // 三态 body：ahead → 信件列表；uncommitted → 玫粉单卡；synced → 居中睡 Pilo
+                    // Phase B: 项目体检行（mood + README + tests）
+                    healthRow(for: repo)
+                        .padding(.top, 12)
+
+                    // Phase B: abandoned 温和提醒（仅 abandoned 且无 work 显示）
+                    if repo.mood == .abandoned && !repo.hasWork {
+                        abandonedBanner(for: repo)
+                            .padding(.top, 18)
+                    }
+
+                    // 三态 body
                     bodyContent(for: repo)
 
                     Spacer(minLength: 24)
@@ -233,6 +286,167 @@ private struct PanelDetail: View {
         } else {
             emptyDetail
         }
+    }
+
+    // MARK: - Phase B: Project Inventory pieces
+
+    /// 标题行右侧的 category chip（含 menu 选择器）。
+    @ViewBuilder
+    private func categoryChip(for repo: Repository) -> some View {
+        Menu {
+            ForEach(RepoCategory.allCases.filter { $0 != .unset }, id: \.self) { cat in
+                Button {
+                    appState.setCategory(cat, repoId: repo.id)
+                } label: {
+                    HStack {
+                        Text(Copy.Inventory.categoryLabel(cat, lang))
+                        if repo.category == cat { Image(systemName: "checkmark") }
+                    }
+                }
+            }
+            if repo.category != .unset {
+                Divider()
+                Button(Copy.Inventory.categoryPickerUnset(lang)) {
+                    appState.setCategory(.unset, repoId: repo.id)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "tag.fill")
+                    .font(.system(size: 9))
+                Text(repo.category == .unset
+                     ? Copy.Inventory.categoryPickerPrompt(lang)
+                     : Copy.Inventory.categoryLabel(repo.category, lang))
+                    .font(.piloSerifCaption)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .foregroundStyle(categoryChipForeground(repo.category))
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .stroke(categoryChipForeground(repo.category).opacity(0.45), lineWidth: 0.6)
+            )
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+    }
+
+    private func categoryChipForeground(_ cat: RepoCategory) -> Color {
+        switch cat {
+        case .work:       return .piloBlueDark
+        case .personal:   return .piloGoldDark
+        case .experiment: return .lavenderInfo
+        case .unset:      return .inkTertiary
+        }
+    }
+
+    /// 健康体检行：mood / README 缺失 / 无测试 三类 chip。
+    @ViewBuilder
+    private func healthRow(for repo: Repository) -> some View {
+        let pills = healthPills(for: repo)
+        if !pills.isEmpty {
+            HStack(spacing: 6) {
+                ForEach(Array(pills.enumerated()), id: \.offset) { _, pill in
+                    healthPill(text: pill.text, tint: pill.tint)
+                }
+            }
+        }
+    }
+
+    private struct HealthPill: Hashable {
+        let text: String
+        let tint: HealthTint
+        enum HealthTint: Hashable { case mood, missing, neutral }
+    }
+
+    private func healthPills(for repo: Repository) -> [HealthPill] {
+        var pills: [HealthPill] = []
+        // mood pill —— active 不显示（默认状态，留白）
+        if repo.mood != .active, let days = repo.daysSinceLastCommit {
+            let label = Copy.Inventory.moodLabel(repo.mood, lang) + " · " + Copy.Inventory.dormantDays(days: days, lang)
+            pills.append(.init(text: label, tint: repo.mood == .abandoned ? .missing : .mood))
+        }
+        if !repo.hasReadme {
+            pills.append(.init(text: Copy.Inventory.missingReadme(lang), tint: .missing))
+        }
+        if !repo.hasTests {
+            pills.append(.init(text: Copy.Inventory.missingTests(lang), tint: .neutral))
+        }
+        return pills
+    }
+
+    private func healthPill(text: String, tint: HealthPill.HealthTint) -> some View {
+        let (fg, bg): (Color, Color) = {
+            switch tint {
+            case .mood:    return (.piloGoldDark, Color.piloPaper)
+            case .missing: return (.roseDanger.opacity(0.85), .roseDanger.opacity(0.08))
+            case .neutral: return (.inkSecondary, .cloudDivider.opacity(0.4))
+            }
+        }()
+        return Text(text)
+            .font(.piloSerifCaption)
+            .foregroundStyle(fg)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .fill(bg)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    .stroke(fg.opacity(0.25), lineWidth: 0.5)
+            )
+    }
+
+    /// Abandoned 温和提醒卡。三个温和动作：保留 / 隐藏 / 在 Finder 里打开。
+    private func abandonedBanner(for repo: Repository) -> some View {
+        let days = repo.daysSinceLastCommit ?? 0
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "moon.stars")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.piloGoldDark)
+                Text(Copy.Inventory.abandonedTitle(tone, lang))
+                    .font(.piloSerifTitle)
+                    .foregroundStyle(Color.inkPrimary)
+            }
+            Text(Copy.Inventory.abandonedBody(tone, lang, days: days))
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+
+            HStack(spacing: 10) {
+                Button(Copy.Inventory.abandonedActionKeep(lang)) {
+                    // 不需要做什么，纯展示用户的"忽略"动作
+                }
+                .buttonStyle(MiniGhostButtonStyle())
+
+                Button(Copy.Inventory.abandonedActionHide(lang)) {
+                    appState.setHidden(true, repoId: repo.id)
+                }
+                .buttonStyle(MiniGhostButtonStyle())
+
+                Button(Copy.Inventory.abandonedActionOpenFinder(lang)) {
+                    NSWorkspace.shared.activateFileViewerSelecting(
+                        [URL(fileURLWithPath: repo.path)]
+                    )
+                }
+                .buttonStyle(MiniGhostButtonStyle())
+            }
+            .padding(.top, 4)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.piloPaper.opacity(0.7))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.piloGold.opacity(0.4), lineWidth: 0.6)
+        )
     }
 
     // MARK: - Three-state body

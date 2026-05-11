@@ -754,4 +754,115 @@ enum Copy {
             }
         }
     }
+
+    // MARK: - Phase B: Project Inventory
+
+    enum Inventory {
+
+        // Sidebar 三段标题（活跃 / 静默 / 沉寂）
+        static func sidebarActive(_ lang: Language) -> String {
+            lang == .zh ? "活跃" : "Active"
+        }
+        static func sidebarIdle(_ lang: Language) -> String {
+            lang == .zh ? "静默" : "Idle"
+        }
+        static func sidebarDormant(_ lang: Language) -> String {
+            lang == .zh ? "沉寂" : "Dormant"
+        }
+
+        // Mood label（用在 health row / a11y / mood chip）
+        static func moodLabel(_ mood: RepoMood, _ lang: Language) -> String {
+            switch (mood, lang) {
+            case (.active, .zh):    return "活跃"
+            case (.active, .en):    return "Active"
+            case (.idle, .zh):      return "静默"
+            case (.idle, .en):      return "Idle"
+            case (.dying, .zh):     return "渐凉"
+            case (.dying, .en):     return "Dying"
+            case (.abandoned, .zh): return "搁置"
+            case (.abandoned, .en): return "Abandoned"
+            }
+        }
+
+        // Category label（信件上的分拣戳）
+        static func categoryLabel(_ cat: RepoCategory, _ lang: Language) -> String {
+            switch (cat, lang) {
+            case (.work, .zh):        return "工作"
+            case (.work, .en):        return "Work"
+            case (.personal, .zh):    return "个人"
+            case (.personal, .en):    return "Personal"
+            case (.experiment, .zh):  return "实验"
+            case (.experiment, .en):  return "Experiment"
+            case (.unset, .zh):       return "未分类"
+            case (.unset, .en):       return "Unsorted"
+            }
+        }
+
+        // Category 单字符印章（贴在 repo row 上的小标记，节省空间）
+        static func categoryStamp(_ cat: RepoCategory, _ lang: Language) -> String {
+            switch cat {
+            case .work:        return lang == .zh ? "工" : "W"
+            case .personal:    return lang == .zh ? "私" : "P"
+            case .experiment:  return lang == .zh ? "试" : "E"
+            case .unset:       return ""
+            }
+        }
+
+        // 健康信号 pills
+        static func missingReadme(_ lang: Language) -> String {
+            lang == .zh ? "缺 README" : "No README"
+        }
+        static func missingTests(_ lang: Language) -> String {
+            lang == .zh ? "无测试" : "No tests"
+        }
+
+        /// "N 天没动了"
+        static func dormantDays(days: Int, _ lang: Language) -> String {
+            if lang == .zh {
+                return "\(days) 天没动了"
+            } else {
+                return days == 1 ? "1 day idle" : "\(days) days idle"
+            }
+        }
+
+        // 详情面板 abandoned 提醒卡
+        static func abandonedTitle(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "这个仓库睡了好久了"
+            case (.friendly, .en): return "This one's been sleeping for a while"
+            case (.minimal, .zh):  return "已闲置 90+ 天"
+            case (.minimal, .en):  return "Inactive for 90+ days"
+            }
+        }
+        static func abandonedBody(_ tone: Tone, _ lang: Language, days: Int) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "已经 \(days) 天没动它了。要不要给它一个去处？"
+            case (.friendly, .en): return "Untouched for \(days) days. Want to give it a home?"
+            case (.minimal, .zh):  return "最后改动 \(days) 天前"
+            case (.minimal, .en):  return "Last activity \(days) days ago"
+            }
+        }
+        static func abandonedActionKeep(_ lang: Language) -> String {
+            lang == .zh ? "继续保留" : "Keep it"
+        }
+        static func abandonedActionHide(_ lang: Language) -> String {
+            lang == .zh ? "藏起来不再提醒" : "Hide from list"
+        }
+        static func abandonedActionOpenFinder(_ lang: Language) -> String {
+            lang == .zh ? "在 Finder 里打开" : "Show in Finder"
+        }
+
+        // Category picker 提示
+        static func categoryPickerPrompt(_ lang: Language) -> String {
+            lang == .zh ? "贴上一枚邮戳" : "Stamp it"
+        }
+        static func categoryPickerUnset(_ lang: Language) -> String {
+            lang == .zh ? "撕掉邮戳" : "Remove stamp"
+        }
+
+        // Health row 标题（详情面板那行 chips 上方的小 label）
+        static func healthRowLabel(_ lang: Language) -> String {
+            lang == .zh ? "项目体检" : "Project health"
+        }
+    }
 }
