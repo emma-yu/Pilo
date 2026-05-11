@@ -1,0 +1,88 @@
+name: Pilo
+options:
+  bundleIdPrefix: dev.pilo
+  deploymentTarget:
+    macOS: '14.0'
+  developmentLanguage: zh-Hans
+  createIntermediateGroups: true
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: '6.0'
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: '14.0'
+    ENABLE_HARDENED_RUNTIME: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    DEAD_CODE_STRIPPING: YES
+    CLANG_ENABLE_MODULES: YES
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    OTHER_SWIFT_FLAGS[config=Debug]: -enable-actor-data-race-checks
+    DEVELOPMENT_TEAM: ''
+    CODE_SIGN_STYLE: Automatic
+    CODE_SIGN_IDENTITY: '-'
+
+targets:
+  Pilo:
+    type: application
+    platform: macOS
+    sources:
+      - path: Pilo
+        excludes:
+          - 'Info.plist'
+          - 'Pilo.entitlements'
+    resources:
+      - path: Pilo/Resources/Assets.xcassets
+    info:
+      path: Pilo/Info.plist
+      properties:
+        CFBundleDisplayName: Pilo
+        CFBundleShortVersionString: '0.1.0'
+        CFBundleVersion: '1'
+        NSHumanReadableCopyright: 'Made with 🕊️ by Emma'
+        NSDocumentsFolderUsageDescription: 'Pilo 需要读取你选择的目录里的 Git 仓库信息。代码不会离开你的电脑。'
+        NSDesktopFolderUsageDescription: 'Pilo 需要读取你选择的目录里的 Git 仓库信息。代码不会离开你的电脑。'
+        NSDownloadsFolderUsageDescription: 'Pilo 需要读取你选择的目录里的 Git 仓库信息。代码不会离开你的电脑。'
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.pilo.Pilo
+        PRODUCT_NAME: Pilo
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: PiloBlue
+        INFOPLIST_KEY_LSUIElement: YES
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        INFOPLIST_KEY_NSHighResolutionCapable: YES
+        CODE_SIGN_ENTITLEMENTS: Pilo/Pilo.entitlements
+        ENABLE_PREVIEWS: YES
+        MARKETING_VERSION: '0.1.0'
+        CURRENT_PROJECT_VERSION: '1'
+
+  PiloTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: PiloTests
+    dependencies:
+      - target: Pilo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.pilo.PiloTests
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: $(TEST_HOST)
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Pilo.app/Contents/MacOS/Pilo
+
+schemes:
+  Pilo:
+    build:
+      targets:
+        Pilo: all
+        PiloTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - PiloTests
+    archive:
+      config: Release

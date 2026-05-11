@@ -1,0 +1,624 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */; };
+		0AFCF84CEDE16D222E15DBE7 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */; };
+		0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E9C40F45449667A059ED60 /* RepoListView.swift */; };
+		0E1538465A5BD686A7C29164 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5540EAC6848024D2E4873663 /* Copy.swift */; };
+		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
+		22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16B037F569F8B168CAFE426 /* PiloMascot.swift */; };
+		2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528911A1AB11C78391AEF846 /* Colors.swift */; };
+		38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */; };
+		40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */; };
+		43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1BF50B55825899755F5CF5 /* StatusBadge.swift */; };
+		49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */; };
+		5269C86B4F668014D2043EE4 /* RepoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */; };
+		591FFE9210B63BC604181E34 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF98D24AA2AC6D89E2FE38D /* Animations.swift */; };
+		631B21574C12FE201AA08061 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A11D640FBE8823567CB8EF4 /* AppPaths.swift */; };
+		633B853592053727D02E7284 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE88C8A171ED935AA6B683B /* Typography.swift */; };
+		6415F36F53444D6B42524D80 /* CopyToneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66D0C526983B516A167203C /* CopyToneTests.swift */; };
+		688E2B734BCE5E1286C0624E /* RepositoryCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */; };
+		7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35D2150EBF5CAA277F01214 /* PiloApp.swift */; };
+		8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9599F1E6035D5ECFE609460 /* AppSettings.swift */; };
+		A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EC3C4B71E63346D274F034 /* SettingsView.swift */; };
+		A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */; };
+		AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071C8F4E44898A6B17DA6ABE /* AppState.swift */; };
+		AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293B1078830934FFC5D83AFD /* Repository.swift */; };
+		D175787B9C8F43FB56E4DBE4 /* RepoScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0D7C484861C199FE1F5130 /* RepoScanner.swift */; };
+		E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0866CD77575282C41947BADD /* GitRemote.swift */; };
+		E320322D91974174E383EC5C /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796133FADA4A3765E8AE6859 /* SectionHeader.swift */; };
+		E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */; };
+		E9CD0AAD574561F095D8946A /* GitClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9C13BCCED7CDF23020AF7B /* GitClient.swift */; };
+		EE7D1C10A4803C61E8C57FAD /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F804131774A1192A06DF985 /* Tone.swift */; };
+		F20E8494F4D1C43CBD60C2FC /* RepoCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAA834330F2B12036ADEF865 /* RepoCard.swift */; };
+		F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B511655D28B12989BAB8A01 /* MainWindowView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0230747BCCE37F29819DE61E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A7F75782254581C90CDE8AE7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = EB13087C635CAA007C351E83;
+			remoteInfo = Pilo;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryCodableTests.swift; sourceTree = "<group>"; };
+		071C8F4E44898A6B17DA6ABE /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		0866CD77575282C41947BADD /* GitRemote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRemote.swift; sourceTree = "<group>"; };
+		25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
+		293B1078830934FFC5D83AFD /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		2F1BF50B55825899755F5CF5 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
+		39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPrivacyView.swift; sourceTree = "<group>"; };
+		49D4B0350924B1B73E0796E9 /* Pilo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pilo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4A11D640FBE8823567CB8EF4 /* AppPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPaths.swift; sourceTree = "<group>"; };
+		4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		4F804131774A1192A06DF985 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
+		528911A1AB11C78391AEF846 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		5540EAC6848024D2E4873663 /* Copy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Copy.swift; sourceTree = "<group>"; };
+		5C0D7C484861C199FE1F5130 /* RepoScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoScanner.swift; sourceTree = "<group>"; };
+		60E9C40F45449667A059ED60 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
+		6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
+		707C36571A6F9C184754C4BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSEventMonitor.swift; sourceTree = "<group>"; };
+		74EC3C4B71E63346D274F034 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		796133FADA4A3765E8AE6859 /* SectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeader.swift; sourceTree = "<group>"; };
+		7AF98D24AA2AC6D89E2FE38D /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
+		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+		901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
+		A66D0C526983B516A167203C /* CopyToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyToneTests.swift; sourceTree = "<group>"; };
+		B9599F1E6035D5ECFE609460 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		BB0D64F8E2855C976F030C4D /* PiloTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PiloTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C35D2150EBF5CAA277F01214 /* PiloApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloApp.swift; sourceTree = "<group>"; };
+		C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDirectoriesView.swift; sourceTree = "<group>"; };
+		CCE88C8A171ED935AA6B683B /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDetailView.swift; sourceTree = "<group>"; };
+		DE9C13BCCED7CDF23020AF7B /* GitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitClient.swift; sourceTree = "<group>"; };
+		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
+		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		01A4489C48B5FB83C761326D /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				F16B037F569F8B168CAFE426 /* PiloMascot.swift */,
+				EAA834330F2B12036ADEF865 /* RepoCard.swift */,
+				796133FADA4A3765E8AE6859 /* SectionHeader.swift */,
+				2F1BF50B55825899755F5CF5 /* StatusBadge.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		353047D2205A5A9E8D45F688 /* MainWindow */ = {
+			isa = PBXGroup;
+			children = (
+				8B511655D28B12989BAB8A01 /* MainWindowView.swift */,
+				DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */,
+				60E9C40F45449667A059ED60 /* RepoListView.swift */,
+			);
+			path = MainWindow;
+			sourceTree = "<group>";
+		};
+		48166F3FC0B6C070E8F31B8B /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				4A11D640FBE8823567CB8EF4 /* AppPaths.swift */,
+				74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */,
+				DE9C13BCCED7CDF23020AF7B /* GitClient.swift */,
+				5C0D7C484861C199FE1F5130 /* RepoScanner.swift */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		6175A7383FE1C7D081D4A43D /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				7AF98D24AA2AC6D89E2FE38D /* Animations.swift */,
+				528911A1AB11C78391AEF846 /* Colors.swift */,
+				5540EAC6848024D2E4873663 /* Copy.swift */,
+				4F804131774A1192A06DF985 /* Tone.swift */,
+				CCE88C8A171ED935AA6B683B /* Typography.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		66E23722FCD5C18A34E43356 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				49D4B0350924B1B73E0796E9 /* Pilo.app */,
+				BB0D64F8E2855C976F030C4D /* PiloTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7C481121D8539884305EBE09 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */,
+				01A4489C48B5FB83C761326D /* Components */,
+				353047D2205A5A9E8D45F688 /* MainWindow */,
+				F68AA1FA4F2B8FAC35FE2476 /* Onboarding */,
+				DEC3E1750C594E28E436EBE3 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		850A1849062627E097552C0B /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				707C36571A6F9C184754C4BB /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		9C12770C713B7E32BFC95022 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B9599F1E6035D5ECFE609460 /* AppSettings.swift */,
+				071C8F4E44898A6B17DA6ABE /* AppState.swift */,
+				0866CD77575282C41947BADD /* GitRemote.swift */,
+				293B1078830934FFC5D83AFD /* Repository.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		BE3E39CECECB067AD9535696 /* PiloTests */ = {
+			isa = PBXGroup;
+			children = (
+				A66D0C526983B516A167203C /* CopyToneTests.swift */,
+				02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */,
+			);
+			path = PiloTests;
+			sourceTree = "<group>";
+		};
+		D33EB58FE50025464236F46A /* Pilo */ = {
+			isa = PBXGroup;
+			children = (
+				C35D2150EBF5CAA277F01214 /* PiloApp.swift */,
+				48166F3FC0B6C070E8F31B8B /* Core */,
+				6175A7383FE1C7D081D4A43D /* DesignSystem */,
+				9C12770C713B7E32BFC95022 /* Models */,
+				850A1849062627E097552C0B /* Resources */,
+				7C481121D8539884305EBE09 /* Views */,
+			);
+			path = Pilo;
+			sourceTree = "<group>";
+		};
+		D37616C63DCC6C1A42F00DD6 = {
+			isa = PBXGroup;
+			children = (
+				D33EB58FE50025464236F46A /* Pilo */,
+				BE3E39CECECB067AD9535696 /* PiloTests */,
+				66E23722FCD5C18A34E43356 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		DEC3E1750C594E28E436EBE3 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				74EC3C4B71E63346D274F034 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		F68AA1FA4F2B8FAC35FE2476 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */,
+				C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */,
+				901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */,
+				39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */,
+				25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		781409D7C84DD58C70788914 /* PiloTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 765C7D2CC1952666CAEB0951 /* Build configuration list for PBXNativeTarget "PiloTests" */;
+			buildPhases = (
+				9F0EFA4EB97526B919022B7C /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C0EDF34F668F94DB0DAD9656 /* PBXTargetDependency */,
+			);
+			name = PiloTests;
+			packageProductDependencies = (
+			);
+			productName = PiloTests;
+			productReference = BB0D64F8E2855C976F030C4D /* PiloTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		EB13087C635CAA007C351E83 /* Pilo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DDFEB7A2B1433E9771879AE2 /* Build configuration list for PBXNativeTarget "Pilo" */;
+			buildPhases = (
+				DC5771D623B89003F99F022D /* Sources */,
+				F5B279447EE0875F048408EF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Pilo;
+			packageProductDependencies = (
+			);
+			productName = Pilo;
+			productReference = 49D4B0350924B1B73E0796E9 /* Pilo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A7F75782254581C90CDE8AE7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					781409D7C84DD58C70788914 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					EB13087C635CAA007C351E83 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 5217ED39CE85B0E68DC10609 /* Build configuration list for PBXProject "Pilo" */;
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = D37616C63DCC6C1A42F00DD6;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 66E23722FCD5C18A34E43356 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				EB13087C635CAA007C351E83 /* Pilo */,
+				781409D7C84DD58C70788914 /* PiloTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F5B279447EE0875F048408EF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9F0EFA4EB97526B919022B7C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6415F36F53444D6B42524D80 /* CopyToneTests.swift in Sources */,
+				688E2B734BCE5E1286C0624E /* RepositoryCodableTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5771D623B89003F99F022D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				591FFE9210B63BC604181E34 /* Animations.swift in Sources */,
+				631B21574C12FE201AA08061 /* AppPaths.swift in Sources */,
+				8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */,
+				AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */,
+				2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */,
+				0E1538465A5BD686A7C29164 /* Copy.swift in Sources */,
+				40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */,
+				E9CD0AAD574561F095D8946A /* GitClient.swift in Sources */,
+				E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */,
+				F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */,
+				E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */,
+				A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */,
+				38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */,
+				0AFCF84CEDE16D222E15DBE7 /* OnboardingFlow.swift in Sources */,
+				060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */,
+				49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */,
+				7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */,
+				22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */,
+				F20E8494F4D1C43CBD60C2FC /* RepoCard.swift in Sources */,
+				5269C86B4F668014D2043EE4 /* RepoDetailView.swift in Sources */,
+				0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */,
+				D175787B9C8F43FB56E4DBE4 /* RepoScanner.swift in Sources */,
+				AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */,
+				E320322D91974174E383EC5C /* SectionHeader.swift in Sources */,
+				A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */,
+				43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */,
+				EE7D1C10A4803C61E8C57FAD /* Tone.swift in Sources */,
+				633B853592053727D02E7284 /* Typography.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C0EDF34F668F94DB0DAD9656 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = EB13087C635CAA007C351E83 /* Pilo */;
+			targetProxy = 0230747BCCE37F29819DE61E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0D284B1C134C6050E0B12CCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = PiloBlue;
+				CODE_SIGN_ENTITLEMENTS = Pilo/Pilo.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Pilo/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.pilo.Pilo;
+				PRODUCT_NAME = Pilo;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4D1F82D74B331AFF77491B6F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.pilo.PiloTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pilo.app/Contents/MacOS/Pilo";
+			};
+			name = Debug;
+		};
+		92F8D87109A7E8D3F90A15E0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				"OTHER_SWIFT_FLAGS[config=Debug]" = "-enable-actor-data-race-checks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		A145ED0DC12C1C01B9B91A72 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				"OTHER_SWIFT_FLAGS[config=Debug]" = "-enable-actor-data-race-checks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_TREAT_WARNINGS_AS_ERRORS = NO;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		D2D7425A3FF97A585C1673F9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = dev.pilo.PiloTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Pilo.app/Contents/MacOS/Pilo";
+			};
+			name = Release;
+		};
+		F7D8DAB4256117D5F515E1FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = PiloBlue;
+				CODE_SIGN_ENTITLEMENTS = Pilo/Pilo.entitlements;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Pilo/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHighResolutionCapable = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.pilo.Pilo;
+				PRODUCT_NAME = Pilo;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		5217ED39CE85B0E68DC10609 /* Build configuration list for PBXProject "Pilo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A145ED0DC12C1C01B9B91A72 /* Debug */,
+				92F8D87109A7E8D3F90A15E0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		765C7D2CC1952666CAEB0951 /* Build configuration list for PBXNativeTarget "PiloTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D1F82D74B331AFF77491B6F /* Debug */,
+				D2D7425A3FF97A585C1673F9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DDFEB7A2B1433E9771879AE2 /* Build configuration list for PBXNativeTarget "Pilo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D284B1C134C6050E0B12CCA /* Debug */,
+				F7D8DAB4256117D5F515E1FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A7F75782254581C90CDE8AE7 /* Project object */;
+}

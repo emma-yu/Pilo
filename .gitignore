@@ -1,0 +1,38 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# XcodeGen — project.yml is source of truth; the generated .xcodeproj is committed
+# but xcuserdata inside it must be ignored (handled above)
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+Packages/
+
+# Carthage / CocoaPods (not used, but defensive)
+Carthage/Build/
+Pods/
+
+# Pilo runtime state (lives in ~/Library/Application Support/Pilo)
+# never inside repo
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
