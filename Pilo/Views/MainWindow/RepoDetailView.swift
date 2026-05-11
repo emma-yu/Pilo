@@ -10,19 +10,15 @@ struct RepoDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                heroSection
-                    .padding(.top, PiloSpacing.xxxl + 8)
-                    .padding(.bottom, PiloSpacing.xl)
+            VStack(alignment: .leading, spacing: PiloSpacing.xl) {
+                heroCard
+                    .padding(.top, PiloSpacing.xl)
 
-                actionSection
-                    .padding(.bottom, PiloSpacing.xxl)
-
-                hairline
-                    .padding(.bottom, PiloSpacing.xl)
+                actionCard
 
                 metaSection
-                    .padding(.bottom, PiloSpacing.xxxl)
+
+                Spacer(minLength: PiloSpacing.xxxl)
             }
             .frame(maxWidth: 680)
             .frame(maxWidth: .infinity, alignment: .center)
@@ -42,23 +38,38 @@ struct RepoDetailView: View {
         }
     }
 
-    // MARK: - Hero（仓库名 + 元信息居中）
+    // MARK: - Hero card（信纸般的封面卡片 + 角落折角装饰）
 
-    private var heroSection: some View {
-        VStack(alignment: .center, spacing: PiloSpacing.s) {
-            Text(repo.name)
-                .font(.piloHero)
-                .tracking(-0.5)
-                .foregroundStyle(Color.inkPrimary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.7)
-            Text(heroSubtitle)
-                .font(.piloBody)
-                .foregroundStyle(Color.inkSecondary)
-                .multilineTextAlignment(.center)
+    private var heroCard: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .center, spacing: PiloSpacing.s) {
+                Text(repo.name)
+                    .font(.piloHero)
+                    .tracking(-0.5)
+                    .foregroundStyle(Color.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
+                Text(heroSubtitle)
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.vertical, PiloSpacing.xl)
+            .piloCard(padding: PiloSpacing.xl, elevation: .elevated)
+
+            // 右上角：信封折角装饰
+            EnvelopeCorner(size: 32, fillColor: Color.piloCream, foldColor: Color.piloBlueLight)
+                .clipShape(UnevenRoundedRectangle(
+                    topLeadingRadius: 0,
+                    bottomLeadingRadius: 0,
+                    bottomTrailingRadius: 0,
+                    topTrailingRadius: PiloRadius.card
+                ))
+                .padding(.top, 0)
+                .padding(.trailing, 0)
         }
-        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var heroSubtitle: String {
@@ -72,7 +83,12 @@ struct RepoDetailView: View {
         return parts.joined(separator: " · ")
     }
 
-    // MARK: - 主操作区（居中大 CTA + 次要 text-link）
+    // MARK: - 主操作 card（居中大 CTA + 次要 text-link）
+
+    private var actionCard: some View {
+        actionSection
+            .piloCard(padding: PiloSpacing.xl, elevation: .normal)
+    }
 
     private var actionSection: some View {
         VStack(spacing: PiloSpacing.l) {
@@ -129,9 +145,14 @@ struct RepoDetailView: View {
         repo.currentBranch != nil && repo.aheadCount > 0 && !repo.remotes.isEmpty
     }
 
-    // MARK: - Meta 信息（label + 内容编辑器样式）
+    // MARK: - Meta 信息卡片（label + 内容编辑器样式）
 
     private var metaSection: some View {
+        metaContent
+            .piloCard(padding: PiloSpacing.xl, elevation: .normal)
+    }
+
+    private var metaContent: some View {
         VStack(alignment: .leading, spacing: PiloSpacing.xl) {
             metaRow(label: "路径", content: Text(repo.path).font(.piloMono))
 

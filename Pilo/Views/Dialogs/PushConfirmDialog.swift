@@ -570,13 +570,24 @@ struct PushConfirmDialog: View {
     private func successView(_ report: PushReport) -> some View {
         VStack(spacing: PiloSpacing.l) {
             Spacer()
-            PiloHero(
-                mood: .happy,
-                title: Copy.Push.successTitle(tone),
-                subtitle: Copy.Push.successSubtitle(tone, count: report.commitCount),
-                mascotSize: 88,
-                decorations: true
-            )
+            // 真鸽子 + 右上角蜡封"SENT"——"信已寄达"的仪式
+            ZStack(alignment: .topTrailing) {
+                PiloMascot(mood: .happy, size: 120, breathing: true)
+                WaxSeal(size: 56, label: "SENT")
+                    .offset(x: 18, y: -8)
+            }
+            .padding(.bottom, PiloSpacing.s)
+
+            VStack(spacing: PiloSpacing.s) {
+                Text(Copy.Push.successTitle(tone))
+                    .font(.piloHero)
+                    .tracking(-0.3)
+                    .foregroundStyle(Color.inkPrimary)
+                Text(Copy.Push.successSubtitle(tone, count: report.commitCount))
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+            }
+
             Spacer()
             Button(Copy.Push.doneButton, action: onDismiss)
                 .buttonStyle(.piloPrimary)

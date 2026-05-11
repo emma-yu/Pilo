@@ -42,12 +42,13 @@ struct PiloCardModifier: ViewModifier {
 }
 
 extension View {
-    /// 默认 Bear-vibe：hairline border 无阴影。要"浮起"显式传 elevation。
+    /// v3.1：默认带暖蓝 tinted shadow，"信纸放桌上"的层次感。
+    /// 显式传 `elevation: nil` 才退回 hairline-only。
     func piloCard(
         accent: Color? = nil,
         cornerRadius: CGFloat = PiloRadius.card,
         padding: CGFloat = PiloSpacing.xl,
-        elevation: Elevation? = nil
+        elevation: Elevation? = .normal
     ) -> some View {
         modifier(PiloCardModifier(
             accent: accent,

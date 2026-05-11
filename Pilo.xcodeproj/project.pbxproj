@@ -55,6 +55,7 @@
 		A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */; };
 		AA0D9C0590E28AEC610A6060 /* HoverableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */; };
 		AC7E07777AC1338AB98AC1E6 /* PushSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D256A3FEACF71EA243019F /* PushSession.swift */; };
+		AE611EE75DD1E085EF076959 /* PaperDecorations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */; };
 		AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071C8F4E44898A6B17DA6ABE /* AppState.swift */; };
 		AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293B1078830934FFC5D83AFD /* Repository.swift */; };
 		B42B56F627ECC537269A664B /* BypassConfirmDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */; };
@@ -90,6 +91,7 @@
 		1894FF036FBFB212679A29AC /* SecretScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScannerTests.swift; sourceTree = "<group>"; };
 		20E05A4CA192EA6913C4E82F /* SecretScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScanner.swift; sourceTree = "<group>"; };
 		25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
+		25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperDecorations.swift; sourceTree = "<group>"; };
 		293B1078830934FFC5D83AFD /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		2F1BF50B55825899755F5CF5 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
 		336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffHunk.swift; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 				5540EAC6848024D2E4873663 /* Copy.swift */,
 				A369CBEDE26B7838355849C5 /* Elevation.swift */,
 				782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */,
+				25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */,
 				C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */,
 				ADF558DE48A0E93A22420D9A /* PiloChip.swift */,
 				BA6AB9592230B7D21B964718 /* PiloHero.swift */,
@@ -461,6 +464,7 @@
 				0AFCF84CEDE16D222E15DBE7 /* OnboardingFlow.swift in Sources */,
 				060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */,
 				49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */,
+				AE611EE75DD1E085EF076959 /* PaperDecorations.swift in Sources */,
 				7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */,
 				1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */,
 				46D020C0E664D11AF6B1A2C6 /* PiloChip.swift in Sources */,

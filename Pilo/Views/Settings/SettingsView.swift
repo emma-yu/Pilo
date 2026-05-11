@@ -202,13 +202,26 @@ struct SettingsView: View {
             Color.piloCream.opacity(0.5)
                 .ignoresSafeArea()
             VStack(spacing: PiloSpacing.l) {
-                PiloHero(
-                    mood: .happy,
-                    title: "Pilo",
-                    subtitle: "v0.1.0 · MIT License\nMade with 🕊️ by Emma",
-                    mascotSize: 88,
-                    decorations: true
-                )
+                ZStack(alignment: .topTrailing) {
+                    PiloMascot(mood: .happy, size: 110, breathing: true)
+                    WaxSeal(size: 40)
+                        .offset(x: 8, y: -2)
+                }
+
+                VStack(spacing: PiloSpacing.s) {
+                    Text("Pilo")
+                        .font(.piloHero)
+                        .tracking(-0.5)
+                        .foregroundStyle(Color.inkPrimary)
+                    HandDrawnUnderline(width: 60, color: .piloAccent)
+                    Text("v0.1.0 · MIT License")
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkSecondary)
+                    Text("Made with 🕊️ by Emma")
+                        .font(.piloBody)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+
                 if let v = appState.gitVersion, let p = appState.gitExecutablePath {
                     Divider().padding(.horizontal, PiloSpacing.xxl)
                     VStack(spacing: PiloSpacing.xs) {

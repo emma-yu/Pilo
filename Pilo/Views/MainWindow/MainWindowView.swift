@@ -32,13 +32,22 @@ struct MainWindowView: View {
     }
 
     private var emptyDetail: some View {
-        PiloHero(
-            mood: .sleeping,
-            title: "还没有发现仓库",
-            subtitle: Copy.emptyNoRepos(appState.tone),
-            mascotSize: 104,
-            decorations: true
-        )
+        VStack(spacing: PiloSpacing.xl) {
+            Spacer()
+            PiloMascot(mood: .sleeping, size: 140, breathing: true)
+            VStack(spacing: PiloSpacing.s) {
+                Text("还没有发现仓库")
+                    .font(.piloHero)
+                    .tracking(-0.5)
+                    .foregroundStyle(Color.inkPrimary)
+                Text(Copy.emptyNoRepos(appState.tone))
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 400)
+            }
+            Spacer()
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
