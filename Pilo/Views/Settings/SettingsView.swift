@@ -5,6 +5,8 @@ import SwiftUI
 struct SettingsView: View {
 
     @Environment(AppState.self) private var appState
+    @State private var pasteText: String = ""
+    @State private var pasteError: String? = nil
 
     var body: some View {
         TabView {
@@ -111,12 +113,84 @@ struct SettingsView: View {
                         action: addDirectory
                     )
                     .padding(.top, PiloSpacing.xs)
+
+                    pasteDirectoryRow
+                        .padding(.top, PiloSpacing.xs)
                 }
                 .padding(PiloSpacing.xl)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .background(Color.creamBg)
+    }
+
+    private var pasteDirectoryRow: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 8) {
+                Rectangle()
+                    .fill(Color.piloGold.opacity(0.35))
+                    .frame(height: 0.5)
+                Text(lang == .zh ? "或直接粘贴路径" : "or paste a path")
+                    .font(.piloSerifCaption)
+                    .foregroundStyle(Color.piloGoldDark)
+                    .fixedSize()
+                Rectangle()
+                    .fill(Color.piloGold.opacity(0.35))
+                    .frame(height: 0.5)
+            }
+            .padding(.vertical, 2)
+
+            HStack(spacing: 8) {
+                Image(systemName: "doc.on.clipboard")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.piloGoldDark)
+                TextField(
+                    lang == .zh ? "例如 ~/Code 或 /Users/you/projects" : "e.g. ~/Code or /Users/you/projects",
+                    text: $pasteText
+                )
+                .textFieldStyle(.plain)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(Color.inkPrimary)
+                .onSubmit(addFromPasteText)
+                .onChange(of: pasteText) { _, _ in pasteError = nil }
+
+                if !pasteText.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Button(action: addFromPasteText) {
+                        Image(systemName: "return")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.piloGoldDark)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .fill(Color.piloGold.opacity(0.18))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(.return, modifiers: [])
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.7))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.45), lineWidth: 0.5)
+            )
+
+            if let err = pasteError {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 10))
+                    Text(err)
+                        .font(.piloSerifCaption)
+                }
+                .foregroundStyle(Color.roseDanger)
+            }
+        }
     }
 
     private func watchDirRow(url: URL) -> some View {
@@ -157,6 +231,43 @@ struct SettingsView: View {
         if panel.runModal() == .OK, let url = panel.url {
             appState.addWatchDirectory(url)
         }
+    }
+
+    private func addFromPasteText() {
+        let raw = pasteText
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+
+        guard !raw.isEmpty else { return }
+
+        let expanded: String = {
+            if raw.hasPrefix("~") {
+                return (raw as NSString).expandingTildeInPath
+            }
+            return raw
+        }()
+
+        let url = URL(fileURLWithPath: expanded).standardizedFileURL
+
+        var isDir: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
+
+        if !exists {
+            pasteError = lang == .zh ? "这个路径找不到呢" : "Can't find this path"
+            return
+        }
+        if !isDir.boolValue {
+            pasteError = lang == .zh ? "这是个文件，不是目录" : "That's a file, not a folder"
+            return
+        }
+        if appState.watchDirectories.contains(where: { $0.standardizedFileURL == url }) {
+            pasteError = lang == .zh ? "已经在扫描清单里啦" : "Already in your watch list"
+            return
+        }
+
+        appState.addWatchDirectory(url)
+        pasteText = ""
+        pasteError = nil
     }
 
     // MARK: - 安全（Phase 6）
