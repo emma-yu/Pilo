@@ -5,15 +5,17 @@ struct SectionHeader: View {
     var trailing: String?
 
     var body: some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
             Text(title)
                 .font(.piloSection)
+                .fontWeight(.semibold)
                 .foregroundStyle(Color.inkPrimary)
             Spacer()
             if let trailing {
                 Text(trailing)
                     .font(.piloCaption)
-                    .foregroundStyle(Color.inkTertiary)
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.inkSecondary)
             }
         }
     }

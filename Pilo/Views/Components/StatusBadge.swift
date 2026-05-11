@@ -42,19 +42,20 @@ struct StatusBadge: View {
     let kind: Kind
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 5) {
             Circle()
                 .fill(kind.tint)
-                .frame(width: 6, height: 6)
+                .frame(width: 8, height: 8)
             Text(kind.label)
                 .font(.piloCaption)
-                .foregroundStyle(.secondary)
+                .fontWeight(.medium)
+                .foregroundStyle(kind.tint.opacity(0.95))
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 2)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(kind.tint.opacity(0.12))
+                .fill(kind.tint.opacity(0.16))
         )
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(kind.accessibilityLabel)

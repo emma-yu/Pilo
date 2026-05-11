@@ -12,7 +12,7 @@ struct GitignoreActionSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
-                PiloMascot(mood: action.kind.isCritical ? .worried : .alert, size: 48)
+                PiloMascot(mood: action.kind.isCritical ? .worried : .alert, size: 56, breathing: true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Guard.actionSheetTitle)
                         .font(.piloTitle)
@@ -39,15 +39,14 @@ struct GitignoreActionSheet: View {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(action.kind.isCritical
                               ? Color.roseDanger.opacity(0.08)
-                              : Color.lavenderInfo.opacity(0.12))
+                              : Color.piloCream.opacity(0.6))
                 )
 
             HStack(spacing: 10) {
                 Button(Copy.Guard.actionSheetOpen) {
                     NSWorkspace.shared.open(URL(fileURLWithPath: action.gitignorePath))
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
+                .buttonStyle(.piloSecondary)
 
                 if action.kind == .envFile || action.kind == .privateKey {
                     Button(Copy.Guard.actionSheetCopyFilterCmd) {
@@ -56,15 +55,13 @@ struct GitignoreActionSheet: View {
                         pb.clearContents()
                         pb.setString(cmd, forType: .string)
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
+                    .buttonStyle(.piloSecondary)
                 }
 
                 Spacer()
 
                 Button(Copy.Guard.actionSheetDone, action: onDismiss)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.piloBlue)
+                    .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
             }
         }

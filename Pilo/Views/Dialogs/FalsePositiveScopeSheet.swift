@@ -37,6 +37,7 @@ struct FalsePositiveScopeSheet: View {
             HStack {
                 Spacer()
                 Button(Copy.Scan.markFPCancel, action: onCancel)
+                    .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
             }
         }
@@ -74,5 +75,6 @@ struct FalsePositiveScopeSheet: View {
             )
         }
         .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloBlue.opacity(0.06), cornerRadius: 10)
     }
 }

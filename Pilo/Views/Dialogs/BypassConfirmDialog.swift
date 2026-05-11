@@ -21,7 +21,7 @@ struct BypassConfirmDialog: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
-                PiloMascot(mood: .worried, size: 56)
+                PiloMascot(mood: .worried, size: 64, breathing: true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Copy.Scan.bypassConfirmTitle(tone))
                         .font(.piloTitle)
@@ -62,11 +62,11 @@ struct BypassConfirmDialog: View {
 
             HStack {
                 Button(Copy.Scan.bypassConfirmNo, action: onCancel)
+                    .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
                 Spacer()
                 Button(Copy.Scan.bypassConfirmYes, action: onConfirm)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.roseDanger)
+                    .buttonStyle(.piloDestructive)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!matches)
             }

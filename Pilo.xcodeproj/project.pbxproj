@@ -13,6 +13,7 @@
 		0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E9C40F45449667A059ED60 /* RepoListView.swift */; };
 		0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */; };
 		0E1538465A5BD686A7C29164 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5540EAC6848024D2E4873663 /* Copy.swift */; };
+		1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */; };
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
 		202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */; };
 		21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E05A4CA192EA6913C4E82F /* SecretScanner.swift */; };
@@ -43,9 +44,11 @@
 		8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9599F1E6035D5ECFE609460 /* AppSettings.swift */; };
 		8D26D59EC29DFACD7BF4E59B /* CommitGuardScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */; };
 		8F4FCBC600D92304B724494C /* DiffHunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */; };
+		9514737609E4AA9A0389A177 /* CardContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396601D98F4B17ECA50E2B49 /* CardContainer.swift */; };
 		9DEEC0DADF8BD727564A530D /* secret-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = 930E45B5488623F43A9DDDCC /* secret-rules.json */; };
 		A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EC3C4B71E63346D274F034 /* SettingsView.swift */; };
 		A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */; };
+		AA0D9C0590E28AEC610A6060 /* HoverableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */; };
 		AC7E07777AC1338AB98AC1E6 /* PushSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D256A3FEACF71EA243019F /* PushSession.swift */; };
 		AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071C8F4E44898A6B17DA6ABE /* AppState.swift */; };
 		AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293B1078830934FFC5D83AFD /* Repository.swift */; };
@@ -86,6 +89,7 @@
 		2F1BF50B55825899755F5CF5 /* StatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusBadge.swift; sourceTree = "<group>"; };
 		336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffHunk.swift; sourceTree = "<group>"; };
 		380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitignoreActionSheet.swift; sourceTree = "<group>"; };
+		396601D98F4B17ECA50E2B49 /* CardContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContainer.swift; sourceTree = "<group>"; };
 		39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPrivacyView.swift; sourceTree = "<group>"; };
 		3D2A9ADDE4DD19B2703E320E /* CommitSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitSummary.swift; sourceTree = "<group>"; };
 		3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassConfirmDialog.swift; sourceTree = "<group>"; };
@@ -109,6 +113,7 @@
 		74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FSEventMonitor.swift; sourceTree = "<group>"; };
 		74EC3C4B71E63346D274F034 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		75A704D753347DA0624F8EE5 /* PushExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushExecutor.swift; sourceTree = "<group>"; };
+		782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoverableRow.swift; sourceTree = "<group>"; };
 		796133FADA4A3765E8AE6859 /* SectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeader.swift; sourceTree = "<group>"; };
 		7AF98D24AA2AC6D89E2FE38D /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
 		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
@@ -120,6 +125,7 @@
 		B9599F1E6035D5ECFE609460 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FalsePositiveScopeSheet.swift; sourceTree = "<group>"; };
 		BB0D64F8E2855C976F030C4D /* PiloTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PiloTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloButtonStyle.swift; sourceTree = "<group>"; };
 		C35D2150EBF5CAA277F01214 /* PiloApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloApp.swift; sourceTree = "<group>"; };
 		C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDirectoriesView.swift; sourceTree = "<group>"; };
 		CCE88C8A171ED935AA6B683B /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
@@ -185,8 +191,11 @@
 			isa = PBXGroup;
 			children = (
 				7AF98D24AA2AC6D89E2FE38D /* Animations.swift */,
+				396601D98F4B17ECA50E2B49 /* CardContainer.swift */,
 				528911A1AB11C78391AEF846 /* Colors.swift */,
 				5540EAC6848024D2E4873663 /* Copy.swift */,
+				782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */,
+				C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */,
 				4F804131774A1192A06DF985 /* Tone.swift */,
 				CCE88C8A171ED935AA6B683B /* Typography.swift */,
 			);
@@ -413,6 +422,7 @@
 				8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */,
 				AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */,
 				B42B56F627ECC537269A664B /* BypassConfirmDialog.swift in Sources */,
+				9514737609E4AA9A0389A177 /* CardContainer.swift in Sources */,
 				2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */,
 				E6DFD3295199C54D49A40D6E /* CommitGuardFinding.swift in Sources */,
 				8224ADF91208A59054770174 /* CommitGuardScanner.swift in Sources */,
@@ -427,6 +437,7 @@
 				E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */,
 				0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */,
 				B46E8DDFA74F315E320FB0A1 /* GitignoreEditor.swift in Sources */,
+				AA0D9C0590E28AEC610A6060 /* HoverableRow.swift in Sources */,
 				F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */,
 				E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */,
 				A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */,
@@ -435,6 +446,7 @@
 				060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */,
 				49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */,
 				7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */,
+				1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */,
 				22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */,
 				FD89DE7ADC1DE65DB0108FFE /* PushConfirmDialog.swift in Sources */,
 				52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */,

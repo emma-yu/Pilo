@@ -135,34 +135,99 @@ struct MenuBarView: View {
 
     private var divider: some View {
         Divider()
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
     }
 
-    // MARK: - Footer
+    // MARK: - Footer (重设计：全宽 row 替代挤压的 HStack)
 
     private var footer: some View {
-        HStack(spacing: 14) {
-            Button(Copy.menubarOpenMainWindow) {
-                openWindow(id: "main")
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
-
-            Spacer()
-
-            SettingsLink {
-                Text(Copy.menubarSettings)
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
-
-            Button(Copy.menubarQuit) {
-                NSApplication.shared.terminate(nil)
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
+        VStack(spacing: 0) {
+            MenuActionRow(
+                icon: "macwindow",
+                title: Copy.menubarOpenMainWindow,
+                shortcut: "⌘↑",
+                action: { openWindow(id: "main") }
+            )
+            MenuActionRowWithSettingsLink(
+                icon: "gearshape",
+                title: Copy.menubarSettings,
+                shortcut: "⌘,"
+            )
+            MenuActionRow(
+                icon: "power",
+                title: Copy.menubarQuit,
+                shortcut: "⌘Q",
+                isDestructive: true,
+                action: { NSApplication.shared.terminate(nil) }
+            )
             .keyboardShortcut("q")
         }
-        .font(.piloCaption)
+    }
+}
+
+// MARK: - Menu action row（全宽可点 + hover bg + icon + 快捷键 hint）
+
+private struct MenuActionRow: View {
+    let icon: String
+    let title: String
+    let shortcut: String?
+    var isDestructive: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .frame(width: 18)
+                    .foregroundStyle(isDestructive ? Color.roseDanger : Color.piloBlue)
+                Text(title)
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer()
+                if let shortcut {
+                    Text(shortcut)
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkTertiary)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: (isDestructive ? Color.roseDanger : Color.piloBlue).opacity(0.08))
+    }
+}
+
+/// macOS Settings scene 必须用 SettingsLink，不能用 Button + openWindow，
+/// 所以单独写一个支持 hover 的 SettingsLink 容器。
+private struct MenuActionRowWithSettingsLink: View {
+    let icon: String
+    let title: String
+    let shortcut: String
+
+    var body: some View {
+        SettingsLink {
+            HStack(spacing: 10) {
+                Image(systemName: icon)
+                    .font(.system(size: 13))
+                    .frame(width: 18)
+                    .foregroundStyle(Color.piloBlue)
+                Text(title)
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer()
+                Text(shortcut)
+                    .font(.piloCaption)
+                    .foregroundStyle(Color.inkTertiary)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloBlue.opacity(0.08))
     }
 }

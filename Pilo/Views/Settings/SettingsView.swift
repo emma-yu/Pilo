@@ -60,8 +60,7 @@ struct SettingsView: View {
                             Button(Copy.KillSwitch.settingsKillSwitchRestoreButton) {
                                 appState.deactivateKillSwitch()
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.small)
+                            .buttonStyle(.piloPrimary)
                         }
                         .padding(.top, 6)
                     } else {
@@ -70,8 +69,7 @@ struct SettingsView: View {
                             Button(Copy.KillSwitch.settingsKillSwitchActivateButton) {
                                 appState.activateKillSwitch()
                             }
-                            .controlSize(.small)
-                            .tint(Color.amberWarn)
+                            .buttonStyle(.piloSecondary)
                         }
                         .padding(.top, 6)
                     }
@@ -200,28 +198,33 @@ struct SettingsView: View {
     // MARK: - 关于
 
     private var aboutTab: some View {
-        VStack(spacing: 14) {
-            PiloMascot(mood: .happy, size: 72)
-            Text("Pilo")
-                .font(.piloTitle)
-            Text("v0.1.0 · MIT License")
-                .font(.piloCaption)
-                .foregroundStyle(.secondary)
-            Text("Made with 🕊️ by Emma")
-                .font(.piloBody)
-                .foregroundStyle(.secondary)
-            if let v = appState.gitVersion, let p = appState.gitExecutablePath {
-                Divider().padding(.vertical, 8)
-                Text("找到 \(v)")
+        ZStack {
+            // 温暖奶油 surface 区别于其它 tab 的中性灰
+            Color.piloCream.opacity(0.5)
+                .ignoresSafeArea()
+            VStack(spacing: 14) {
+                PiloMascot(mood: .happy, size: 88, breathing: true)
+                Text("Pilo")
+                    .font(.piloTitle)
+                Text("v0.1.0 · MIT License")
                     .font(.piloCaption)
-                    .foregroundStyle(.secondary)
-                Text(p)
-                    .font(.piloMono)
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
+                    .foregroundStyle(Color.inkSecondary)
+                Text("Made with 🕊️ by Emma")
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+                if let v = appState.gitVersion, let p = appState.gitExecutablePath {
+                    Divider().padding(.vertical, 8).padding(.horizontal, 40)
+                    Text("找到 \(v)")
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkSecondary)
+                    Text(p)
+                        .font(.piloMono)
+                        .foregroundStyle(Color.inkSecondary)
+                        .textSelection(.enabled)
+                }
             }
+            .padding(24)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .padding(24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

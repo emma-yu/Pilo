@@ -16,12 +16,15 @@ struct RepoListView: View {
                     }
                     .tag(repo.id as UUID?)
                     .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 2, leading: 6, bottom: 2, trailing: 6))
+                    .listRowInsets(EdgeInsets(top: 3, leading: 8, bottom: 3, trailing: 8))
+                    .listRowBackground(Color.clear)   // 让 RepoCard 自己的 hover/selected 背景接管
                 }
             } header: {
                 SectionHeader(title: "仓库", trailing: "\(appState.repositories.count)")
+                    .padding(.bottom, 4)
             }
         }
         .listStyle(.sidebar)
+        .scrollContentBackground(.hidden)
     }
 }

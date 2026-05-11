@@ -9,8 +9,17 @@ struct RepoCard: View {
     @Environment(AppState.self) private var appState
 
     var body: some View {
-        HStack(spacing: 10) {
-            statusDot
+        HStack(spacing: 12) {
+            // 选中态左侧 3px 强调条；用 ZStack 而非边距以保持文本对齐
+            ZStack(alignment: .leading) {
+                Rectangle()
+                    .fill(isSelected ? Color.piloBlue : Color.clear)
+                    .frame(width: 3)
+                    .clipShape(RoundedRectangle(cornerRadius: 1.5))
+                statusDot
+                    .padding(.leading, 8)
+            }
+            .frame(width: 14)
             VStack(alignment: .leading, spacing: 2) {
                 Text(repo.name)
                     .font(.piloSection)
@@ -24,7 +33,7 @@ struct RepoCard: View {
             Spacer(minLength: 8)
             badge
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 10)
         .padding(.horizontal, 10)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -32,6 +41,7 @@ struct RepoCard: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap?() }
+        .hoverable(highlight: isSelected ? .clear : Color.piloBlue.opacity(0.06))
         .contextMenu {
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
@@ -60,7 +70,12 @@ struct RepoCard: View {
     private var statusDot: some View {
         Circle()
             .fill(dotColor)
-            .frame(width: 8, height: 8)
+            .frame(width: 10, height: 10)
+            .overlay(
+                Circle()
+                    .stroke(dotColor.opacity(0.25), lineWidth: 2)
+                    .frame(width: 14, height: 14)
+            )
     }
 
     private var dotColor: Color {

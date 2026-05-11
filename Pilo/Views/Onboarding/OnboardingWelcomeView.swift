@@ -9,7 +9,7 @@ struct OnboardingWelcomeView: View {
         VStack(spacing: 20) {
             Spacer(minLength: 10)
 
-            PiloMascot(mood: .happy, size: 96)
+            PiloMascot(mood: .happy, size: 96, breathing: true)
 
             Text(Copy.Onboarding.welcomeTitle)
                 .font(.piloTitle)
@@ -33,11 +33,10 @@ struct OnboardingWelcomeView: View {
 
             Button(action: onContinue) {
                 Text(Copy.Onboarding.welcomeContinue + " →")
+                    .font(.piloSection)
                     .frame(minWidth: 120)
             }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
-            .tint(Color.piloBlue)
+            .buttonStyle(.piloPrimary)
             .keyboardShortcut(.defaultAction)
 
             Spacer(minLength: 10)

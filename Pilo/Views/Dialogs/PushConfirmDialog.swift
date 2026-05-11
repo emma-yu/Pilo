@@ -489,20 +489,17 @@ struct PushConfirmDialog: View {
         VStack(alignment: .trailing, spacing: 6) {
             HStack {
                 Button(Copy.Push.cancelButton(tone), action: onDismiss)
-                    .controlSize(.large)
+                    .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
                 Spacer()
                 if pre.hasCritical && !pre.bypassConfirmed {
-                    // 主路径是"处理高危项"，按钮 disabled。bypass 降级为下方小号文字链接。
                     Button {
                         // 不可达；按钮已 disabled
                     } label: {
                         Text(Copy.Guard.pushDisabledByCritical(tone))
                             .frame(minWidth: 140)
                     }
-                    .controlSize(.large)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.inkTertiary)
+                    .buttonStyle(.piloPrimary)
                     .disabled(true)
                 } else if pre.bypassConfirmed {
                     Button {
@@ -511,9 +508,7 @@ struct PushConfirmDialog: View {
                         Text(Copy.Scan.pushBypassButton(tone))
                             .frame(minWidth: 140)
                     }
-                    .controlSize(.large)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.roseDanger)
+                    .buttonStyle(.piloDestructive)
                     .keyboardShortcut(.defaultAction)
                 } else {
                     Button {
@@ -522,9 +517,7 @@ struct PushConfirmDialog: View {
                         Text(Copy.Push.pushButton(tone))
                             .frame(minWidth: 110)
                     }
-                    .controlSize(.large)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.piloBlue)
+                    .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
                     .disabled(pre.commits.isEmpty)
                 }
@@ -577,7 +570,7 @@ struct PushConfirmDialog: View {
     private func successView(_ report: PushReport) -> some View {
         VStack(spacing: 14) {
             Spacer()
-            PiloMascot(mood: .happy, size: 80)
+            PiloMascot(mood: .happy, size: 96, breathing: true)
             Text(Copy.Push.successTitle(tone))
                 .font(.piloTitle)
                 .foregroundStyle(Color.inkPrimary)
@@ -586,9 +579,7 @@ struct PushConfirmDialog: View {
                 .foregroundStyle(Color.inkSecondary)
             Spacer()
             Button(Copy.Push.doneButton, action: onDismiss)
-                .controlSize(.large)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.piloBlue)
+                .buttonStyle(.piloPrimary)
                 .keyboardShortcut(.defaultAction)
         }
         .padding(24)
@@ -632,14 +623,15 @@ struct PushConfirmDialog: View {
                     pb.clearContents()
                     pb.setString(report.outcome.stderrTrimmed, forType: .string)
                 }
+                .buttonStyle(.piloSecondary)
                 Button(Copy.Push.openTerminalButton) {
                     openTerminal(at: appState.repositories.first(where: { $0.id == report.repoId })?.path)
                 }
+                .buttonStyle(.piloSecondary)
                 Spacer()
                 Button(Copy.Push.closeButton, action: onDismiss)
+                    .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
-                    .tint(Color.piloBlue)
             }
         }
         .padding(24)

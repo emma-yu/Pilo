@@ -8,7 +8,7 @@ struct OnboardingPrivacyView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 64)
+            PiloMascot(mood: .alert, size: 64, breathing: true)
 
             Text(Copy.Onboarding.privacyTitle)
                 .font(.piloTitle)
@@ -32,11 +32,10 @@ struct OnboardingPrivacyView: View {
 
             Button(action: onContinue) {
                 Text(Copy.Onboarding.privacyAck + " →")
+                    .font(.piloSection)
                     .frame(minWidth: 120)
             }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
-            .tint(Color.piloBlue)
+            .buttonStyle(.piloPrimary)
             .keyboardShortcut(.defaultAction)
 
             Spacer(minLength: 8)

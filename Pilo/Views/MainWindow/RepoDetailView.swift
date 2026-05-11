@@ -9,12 +9,12 @@ struct RepoDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                header
-                actionsRow
-                metaSection
+            VStack(alignment: .leading, spacing: 16) {
+                header.piloCard()
+                actionsRow.piloCard()
+                metaSection.piloCard()
                 remotesSection
-                statusSection
+                statusSection.piloCard()
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -34,17 +34,16 @@ struct RepoDetailView: View {
     }
 
     private var actionsRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
                 Button {
                     Task { await appState.beginPushSession(for: repo) }
                 } label: {
                     Label(Copy.Push.pushEntryButton(tone), systemImage: "paperplane.fill")
-                        .frame(minWidth: 100)
+                        .font(.piloSection)
+                        .frame(minWidth: 110)
                 }
-                .controlSize(.large)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.piloBlue)
+                .buttonStyle(.piloPrimary)
                 .disabled(!canPush)
 
                 Button {
@@ -54,8 +53,9 @@ struct RepoDetailView: View {
                                             completionHandler: nil)
                 } label: {
                     Label("在终端打开", systemImage: "terminal")
+                        .font(.piloBody)
                 }
-                .controlSize(.large)
+                .buttonStyle(.piloSecondary)
             }
 
             if let hint = pushDisabledReason {
@@ -132,15 +132,17 @@ struct RepoDetailView: View {
                     HStack(spacing: 6) {
                         Text(remote.name)
                             .font(.piloMono)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(Color.piloBlueLight.opacity(0.25), in: RoundedRectangle(cornerRadius: 4))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.piloBlueLight.opacity(0.45), in: RoundedRectangle(cornerRadius: 5))
+                            .foregroundStyle(Color.piloBlueDark)
                         Text(remote.displayHost)
                             .font(.piloBody)
                             .foregroundStyle(Color.inkSecondary)
                     }
                 }
             }
+            .piloCard()
         }
     }
 

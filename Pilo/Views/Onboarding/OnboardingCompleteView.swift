@@ -10,7 +10,7 @@ struct OnboardingCompleteView: View {
         VStack(spacing: 18) {
             Spacer(minLength: 10)
 
-            PiloMascot(mood: .happy, size: 96)
+            PiloMascot(mood: .happy, size: 96, breathing: true)
 
             primaryText
 
@@ -31,11 +31,10 @@ struct OnboardingCompleteView: View {
             VStack(spacing: 8) {
                 Button(action: onFinish) {
                     Text(Copy.Onboarding.completeOpen)
+                        .font(.piloSection)
                         .frame(minWidth: 140)
                 }
-                .controlSize(.large)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.piloBlue)
+                .buttonStyle(.piloPrimary)
                 .keyboardShortcut(.defaultAction)
 
                 Text(Copy.Onboarding.completeStayInMenubar)

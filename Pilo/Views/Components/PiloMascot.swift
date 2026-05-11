@@ -40,15 +40,34 @@ struct PiloMascot: View {
 
     let mood: Mood
     var size: CGFloat = 64
+    /// 是否开启 idle 呼吸动画（缩放 ±3%，2.5s loop）。
+    /// 推荐：占据屏幕主位的 Pilo 开（Onboarding hero、主窗口空态）；
+    /// 列表里、badge 旁的小 mascot 关，避免视觉噪声。
+    var breathing: Bool = false
 
     @Environment(\.tone) private var tone
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var breathPhase: Bool = false
 
     var body: some View {
         Image(systemName: mood.sfSymbol)
             .font(.system(size: size * 0.7, weight: .regular))
             .foregroundStyle(mood.tint)
             .frame(width: size, height: size)
+            .scaleEffect(currentScale)
+            .animation(.piloSpring, value: mood)
+            .onAppear {
+                guard breathing, !reduceMotion else { return }
+                withAnimation(.piloBreathing) {
+                    breathPhase = true
+                }
+            }
             .accessibilityLabel(Copy.MascotA11y.label(for: mood, tone: tone))
+    }
+
+    private var currentScale: CGFloat {
+        guard breathing, !reduceMotion else { return 1.0 }
+        return breathPhase ? 1.03 : 1.0
     }
 }
 

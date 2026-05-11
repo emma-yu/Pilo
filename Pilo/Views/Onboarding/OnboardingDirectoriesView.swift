@@ -14,7 +14,7 @@ struct OnboardingDirectoriesView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 64)
+            PiloMascot(mood: .alert, size: 64, breathing: true)
 
             Text(Copy.Onboarding.directoriesTitle)
                 .font(.piloTitle)
@@ -33,7 +33,7 @@ struct OnboardingDirectoriesView: View {
 
             HStack(spacing: 12) {
                 Button(Copy.Onboarding.directoriesSkip, action: onSkip)
-                    .controlSize(.large)
+                    .buttonStyle(.piloSecondary)
 
                 Spacer()
 
@@ -41,9 +41,7 @@ struct OnboardingDirectoriesView: View {
                     Text(Copy.Onboarding.directoriesNext + " →")
                         .frame(minWidth: 120)
                 }
-                .controlSize(.large)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.piloBlue)
+                .buttonStyle(.piloPrimary)
                 .disabled(appState.watchDirectories.isEmpty)
                 .keyboardShortcut(.defaultAction)
             }
