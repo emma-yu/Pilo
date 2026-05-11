@@ -40,12 +40,17 @@ struct RepoListView: View {
 
     private var signatureHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("PILO")
-                .font(.piloLabel)
-                .tracking(2.0)
-                .foregroundStyle(Color.piloBlue)
+            HStack(spacing: 6) {
+                Image(systemName: "star.fill")
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color.piloGold)
+                Text(appState.language == .zh ? "PILO · 我的小邮局" : "PILO · My Post Office")
+                    .font(.piloLabel)
+                    .tracking(2.0)
+                    .foregroundStyle(Color.piloBlue)
+            }
             Text(headerSubtitle)
-                .font(.piloCaption)
+                .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -54,10 +59,15 @@ struct RepoListView: View {
     private var headerSubtitle: String {
         let total = appState.repositories.filter { !$0.isHidden }.count
         let pending = appState.pendingRepos.count
+        let lang = appState.language
         if pending > 0 {
-            return "\(total) 仓库 · 待处理 \(pending)"
+            return lang == .zh
+                ? "\(total) 仓库 · 待寄出 \(pending)"
+                : "\(total) repos · \(pending) to send"
         }
-        return "\(total) 仓库都同步啦"
+        return lang == .zh
+            ? "\(total) 仓库都同步啦"
+            : "\(total) repos, all delivered"
     }
 
     private var hairline: some View {

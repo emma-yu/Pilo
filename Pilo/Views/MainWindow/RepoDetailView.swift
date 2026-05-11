@@ -1,22 +1,28 @@
 import SwiftUI
 import AppKit
 
-/// Bear-vibe RepoDetailView：居中编辑器布局，max-width 680，无 card，靠留白 + hairline。
+/// v3.3 邮局风 RepoDetailView：衬线大标题 + 金色 section 分隔 + 信纸 commit card + 大 CTA。
 struct RepoDetailView: View {
 
     let repo: Repository
     @Environment(AppState.self) private var appState
     @Environment(\.tone) private var tone
 
+    private var lang: Language { appState.language }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: PiloSpacing.xl) {
-                heroCard
+                heroSection
                     .padding(.top, PiloSpacing.xl)
 
-                actionCard
+                SectionDivider(label: lang == .zh ? "— 待寄出的小信 —"
+                                                  : "— letters to send —")
 
-                metaSection
+                commitsList
+
+                actionsRow
+                    .padding(.top, PiloSpacing.s)
 
                 Spacer(minLength: PiloSpacing.xxxl)
             }
@@ -38,94 +44,115 @@ struct RepoDetailView: View {
         }
     }
 
-    // MARK: - Hero card（信纸般的封面卡片 + 角落折角装饰）
+    // MARK: - Hero（衬线大标题 + 路径斜体）
 
-    private var heroCard: some View {
-        ZStack(alignment: .topTrailing) {
-            VStack(alignment: .center, spacing: PiloSpacing.s) {
-                Text(repo.name)
-                    .font(.piloHero)
-                    .tracking(-0.5)
-                    .foregroundStyle(Color.inkPrimary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.7)
-                Text(heroSubtitle)
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.vertical, PiloSpacing.xl)
-            .piloCard(padding: PiloSpacing.xl, elevation: .elevated)
-
-            // 右上角：信封折角装饰
-            EnvelopeCorner(size: 32, fillColor: Color.piloCream, foldColor: Color.piloBlueLight)
-                .clipShape(UnevenRoundedRectangle(
-                    topLeadingRadius: 0,
-                    bottomLeadingRadius: 0,
-                    bottomTrailingRadius: 0,
-                    topTrailingRadius: PiloRadius.card
-                ))
-                .padding(.top, 0)
-                .padding(.trailing, 0)
+    private var heroSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.xs) {
+            Text(repo.name)
+                .font(.piloSerifHero)
+                .tracking(0.5)
+                .foregroundStyle(Color.inkPrimary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+            Text(heroMeta)
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
         }
     }
 
-    private var heroSubtitle: String {
-        var parts: [String] = []
-        if let b = repo.currentBranch {
-            parts.append(b)
-        }
+    private var heroMeta: String {
+        var parts: [String] = [repo.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")]
+        if let b = repo.currentBranch { parts.append(b) }
         if let d = repo.lastCommitDate {
-            parts.append("修改于 " + RepoCard.relativeFormatter.localizedString(for: d, relativeTo: Date()))
+            let formatter = RepoCard.relativeFormatter
+            parts.append((lang == .zh ? "修改于 " : "edited ") + formatter.localizedString(for: d, relativeTo: Date()))
         }
         return parts.joined(separator: " · ")
     }
 
-    // MARK: - 主操作 card（居中大 CTA + 次要 text-link）
+    // MARK: - Commits 信纸卡片列表
 
-    private var actionCard: some View {
-        actionSection
-            .piloCard(padding: PiloSpacing.xl, elevation: .normal)
+    @ViewBuilder
+    private var commitsList: some View {
+        if repo.aheadCount == 0 {
+            emptyCommitsState
+        } else {
+            VStack(spacing: PiloSpacing.xs) {
+                // 真实 commit list 在 Phase 5 push dialog 才拉取；这里展示 placeholder rows
+                ForEach(0..<min(repo.aheadCount, 3), id: \.self) { i in
+                    commitPlaceholderRow(index: i)
+                }
+                if repo.aheadCount > 3 {
+                    Text(lang == .zh ? "…还有 \(repo.aheadCount - 3) 个"
+                                     : "…and \(repo.aheadCount - 3) more")
+                        .font(.piloSerifCaption)
+                        .foregroundStyle(Color.inkTertiary)
+                        .padding(.top, PiloSpacing.xs)
+                }
+            }
+        }
     }
 
-    private var actionSection: some View {
-        VStack(spacing: PiloSpacing.l) {
-            // 一句话状态描述
-            if repo.aheadCount > 0, repo.currentBranch != nil, let remote = repo.remotes.first {
-                Text("\(repo.aheadCount) 个 commit 等着飞往\n\(remote.displayHost)")
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkPrimary)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, PiloSpacing.xl)
-            } else if repo.uncommittedCount > 0 {
-                Text("\(repo.uncommittedCount) 个改动还没 commit")
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkSecondary)
-            } else if repo.remotes.isEmpty {
-                Text("还没有配置 remote")
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkSecondary)
-            } else {
-                Text("已同步")
-                    .font(.piloBody)
-                    .foregroundStyle(Color.mintSafe)
-            }
+    private func commitPlaceholderRow(index: Int) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: PiloSpacing.s) {
+            Text(String(format: "%07x", repo.pathHash.hashValue & 0xFFFFFFF).prefix(7))
+                .font(.piloMono)
+                .foregroundStyle(Color.piloGoldDark)
+            Text(lang == .zh ? "（commit 详情会在推送时拉取）"
+                              : "(commit details fetched at push time)")
+                .font(.piloBody)
+                .foregroundStyle(Color.inkSecondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer()
+            Text((index == 0 ? "1h" : index == 1 ? "2h" : "3h"))
+                .font(.piloSerifCaption)
+                .foregroundStyle(Color.inkTertiary)
+        }
+        .piloCreamCard(padding: PiloSpacing.m)
+    }
 
-            // 主 CTA
+    private var emptyCommitsState: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: PiloSpacing.s) {
+                if repo.uncommittedCount > 0 {
+                    Text(lang == .zh
+                        ? "有 \(repo.uncommittedCount) 个改动还没 commit"
+                        : "\(repo.uncommittedCount) change\(repo.uncommittedCount == 1 ? "" : "s") not committed yet")
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkSecondary)
+                } else if repo.remotes.isEmpty {
+                    Text(lang == .zh ? "还没有配置 remote" : "No remote configured")
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkSecondary)
+                } else {
+                    Text(lang == .zh ? "都同步啦 ✨" : "All caught up ✨")
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.mintSafe)
+                }
+            }
+            .padding(.vertical, PiloSpacing.l)
+            Spacer()
+        }
+    }
+
+    // MARK: - 操作行
+
+    private var actionsRow: some View {
+        HStack(spacing: PiloSpacing.s) {
             Button {
                 Task { await appState.beginPushSession(for: repo) }
             } label: {
-                Label(Copy.Push.pushEntryButton(tone, appState.language), systemImage: "paperplane.fill")
-                    .font(.piloSection)
-                    .frame(minWidth: 200)
+                HStack(spacing: 6) {
+                    Image(systemName: "paperplane.fill")
+                    Text(Copy.Push.pushEntryButton(tone, lang))
+                }
+                .font(.piloSection)
             }
             .buttonStyle(.piloPrimary)
             .disabled(!canPush)
 
-            // 次要 text-link
             Button {
                 NSWorkspace.shared.open(
                     [URL(fileURLWithPath: repo.path)],
@@ -134,90 +161,33 @@ struct RepoDetailView: View {
                     completionHandler: nil
                 )
             } label: {
-                Text("在终端打开 →")
+                Text(lang == .zh ? "在终端打开" : "Open in Terminal")
             }
-            .buttonStyle(.piloTextLink)
+            .buttonStyle(.piloSecondary)
+
+            Spacer()
+
+            if !canPush, let hint = disabledReason {
+                Text(hint)
+                    .font(.piloSerifCaption)
+                    .foregroundStyle(Color.inkTertiary)
+            }
         }
-        .frame(maxWidth: .infinity)
     }
 
     private var canPush: Bool {
         repo.currentBranch != nil && repo.aheadCount > 0 && !repo.remotes.isEmpty
     }
 
-    // MARK: - Meta 信息卡片（label + 内容编辑器样式）
-
-    private var metaSection: some View {
-        metaContent
-            .piloCard(padding: PiloSpacing.xl, elevation: .normal)
-    }
-
-    private var metaContent: some View {
-        VStack(alignment: .leading, spacing: PiloSpacing.xl) {
-            metaRow(label: "路径", content: Text(repo.path).font(.piloMono))
-
-            if !repo.remotes.isEmpty {
-                metaRow(label: "REMOTE", content: remotesList)
-            }
-
-            metaRow(label: "状态", content: statusLine)
+    private var disabledReason: String? {
+        if repo.currentBranch == nil { return lang == .zh ? "detached HEAD" : "detached HEAD" }
+        if repo.remotes.isEmpty { return lang == .zh ? "未配置 remote" : "no remote" }
+        if repo.aheadCount == 0 && repo.uncommittedCount > 0 {
+            return lang == .zh ? "先 git commit" : "git commit first"
         }
-    }
-
-    private func metaRow<C: View>(label: String, content: C) -> some View {
-        VStack(alignment: .leading, spacing: PiloSpacing.xs) {
-            Text(label.uppercased())
-                .font(.piloLabel)
-                .tracking(2.0)
-                .foregroundStyle(Color.inkTertiary)
-            content
-                .foregroundStyle(Color.inkPrimary)
+        if repo.aheadCount == 0 {
+            return lang == .zh ? "无可推送" : "nothing to push"
         }
-    }
-
-    private var remotesList: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ForEach(repo.remotes, id: \.name) { remote in
-                HStack(spacing: 8) {
-                    Text(remote.name)
-                        .font(.piloBody)
-                        .foregroundStyle(Color.piloBlue)
-                    Text("→")
-                        .font(.piloBody)
-                        .foregroundStyle(Color.inkTertiary)
-                    Text(remote.displayHost)
-                        .font(.piloMono)
-                        .foregroundStyle(Color.inkSecondary)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var statusLine: some View {
-        let parts = statusParts
-        if parts.isEmpty {
-            Text("已同步")
-                .font(.piloBody)
-                .foregroundStyle(Color.mintSafe)
-        } else {
-            Text(parts.joined(separator: "   ·   "))
-                .font(.piloBody)
-                .foregroundStyle(Color.inkPrimary)
-        }
-    }
-
-    private var statusParts: [String] {
-        var p: [String] = []
-        if repo.aheadCount > 0      { p.append("↑ \(repo.aheadCount)") }
-        if repo.behindCount > 0     { p.append("↓ \(repo.behindCount)") }
-        if repo.uncommittedCount > 0 { p.append("\(repo.uncommittedCount) 待提交") }
-        return p
-    }
-
-    private var hairline: some View {
-        Rectangle()
-            .fill(Color.cloudDivider.opacity(0.6))
-            .frame(height: 1)
+        return nil
     }
 }

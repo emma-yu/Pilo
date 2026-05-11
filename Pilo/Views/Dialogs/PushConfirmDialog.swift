@@ -571,31 +571,82 @@ struct PushConfirmDialog: View {
 
     private func successView(_ report: PushReport) -> some View {
         VStack(spacing: PiloSpacing.l) {
-            Spacer()
-            // 真鸽子 + 右上角蜡封"SENT"——"信已寄达"的仪式
-            ZStack(alignment: .topTrailing) {
-                PiloMascot(mood: .happy, size: 120, breathing: true)
-                WaxSeal(size: 56, label: "SENT")
-                    .offset(x: 18, y: -8)
-            }
-            .padding(.bottom, PiloSpacing.s)
+            Spacer(minLength: PiloSpacing.s)
 
-            VStack(spacing: PiloSpacing.s) {
+            // Happy 鸽子 + 蜡封
+            ZStack(alignment: .topTrailing) {
+                PiloMascot(mood: .happy, size: 110, breathing: true)
+                WaxSeal(size: 48, label: "SENT")
+                    .offset(x: 14, y: -6)
+            }
+
+            // 衬线大标题 + 斜体副标题
+            VStack(spacing: PiloSpacing.xs) {
                 Text(Copy.Push.successTitle(tone, lang))
-                    .font(.piloHero)
-                    .tracking(-0.3)
+                    .font(.piloSerifHero)
+                    .tracking(1.0)
                     .foregroundStyle(Color.inkPrimary)
-                Text(Copy.Push.successSubtitle(tone, lang, count: report.commitCount))
-                    .font(.piloBody)
+                Text(lang == .zh ? "所有小信都安全到家了" : "All your letters arrived safely")
+                    .font(.piloSerifSubtitle)
                     .foregroundStyle(Color.inkSecondary)
             }
 
-            Spacer()
+            // 3 列 stats grid
+            statsGrid(report)
+                .padding(.vertical, PiloSpacing.s)
+
+            // 「已寄出 · YYYY.MM.DD」绿色邮戳
+            RotatedStamp(
+                text: stampText,
+                tint: .stampMint,
+                rotation: -3,
+                dashStyle: false
+            )
+
+            Spacer(minLength: PiloSpacing.s)
+
             Button(Copy.Push.doneButton, action: onDismiss)
                 .buttonStyle(.piloPrimary)
                 .keyboardShortcut(.defaultAction)
         }
         .padding(PiloSpacing.xl)
+    }
+
+    private func statsGrid(_ report: PushReport) -> some View {
+        HStack(spacing: PiloSpacing.s) {
+            statBox(num: "1", label: lang == .zh ? "个仓库" : "repo")
+            statBox(num: "\(report.commitCount)", label: lang == .zh ? "个 commit" : "commits")
+            statBox(num: "✨", label: lang == .zh ? "送达" : "delivered")
+        }
+        .frame(maxWidth: 340)
+    }
+
+    private func statBox(num: String, label: String) -> some View {
+        VStack(spacing: 2) {
+            Text(num)
+                .font(.piloSerifHero)
+                .foregroundStyle(Color.piloBlue)
+            Text(label)
+                .font(.piloSerifCaption)
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, PiloSpacing.m)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color.piloPaperBorder.opacity(0.3))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .stroke(Color.piloPaperBorder, lineWidth: 0.5)
+                )
+        )
+    }
+
+    private var stampText: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = lang == .zh ? "yyyy.MM.dd" : "MMM d, yyyy"
+        let date = formatter.string(from: Date())
+        return lang == .zh ? "已寄出 · \(date)" : "DELIVERED · \(date)"
     }
 
     private func failureView(_ report: PushReport) -> some View {

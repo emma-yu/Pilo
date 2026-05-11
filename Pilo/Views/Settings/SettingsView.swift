@@ -7,19 +7,21 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             generalTab
-                .tabItem { Label("通用", systemImage: "gearshape") }
+                .tabItem { Label(lang == .zh ? "通用" : "General", systemImage: "gearshape") }
             scanTab
-                .tabItem { Label("扫描", systemImage: "folder") }
+                .tabItem { Label(lang == .zh ? "扫描" : "Scan", systemImage: "folder") }
             securityTab
-                .tabItem { Label("安全", systemImage: "shield") }
+                .tabItem { Label(lang == .zh ? "安全" : "Security", systemImage: "shield") }
             hiddenReposTab
-                .tabItem { Label("已隐藏", systemImage: "eye.slash") }
+                .tabItem { Label(lang == .zh ? "已隐藏" : "Hidden", systemImage: "eye.slash") }
                 .badge(appState.hiddenRepos.count)
             aboutTab
-                .tabItem { Label("关于", systemImage: "info.circle") }
+                .tabItem { Label(lang == .zh ? "关于" : "About", systemImage: "info.circle") }
         }
-        .frame(width: 560, height: 480)
+        .frame(width: 580, height: 500)
     }
+
+    private var lang: Language { appState.language }
 
     // MARK: - 安全（Phase 6）
 
@@ -223,6 +225,9 @@ struct SettingsView: View {
             Color.piloCream.opacity(0.5)
                 .ignoresSafeArea()
             VStack(spacing: PiloSpacing.l) {
+                OrnamentDivider(width: 220)
+                    .padding(.top, PiloSpacing.s)
+
                 ZStack(alignment: .topTrailing) {
                     PiloMascot(mood: .happy, size: 110, breathing: true)
                     WaxSeal(size: 40)
@@ -230,16 +235,20 @@ struct SettingsView: View {
                 }
 
                 VStack(spacing: PiloSpacing.s) {
-                    Text("Pilo")
-                        .font(.piloHero)
-                        .tracking(-0.5)
+                    Text(lang == .zh ? "Pilo 邮局" : "Pilo Post Office")
+                        .font(.piloSerifHero)
+                        .tracking(1.0)
                         .foregroundStyle(Color.inkPrimary)
+                    Text(lang == .zh ? "— 一只帮你安全送代码的小信鸽 —"
+                                      : "— a little pigeon delivering your code —")
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkSecondary)
                     HandDrawnUnderline(width: 60, color: .piloAccent)
                     Text("v0.1.0 · MIT License")
                         .font(.piloCaption)
                         .foregroundStyle(Color.inkSecondary)
                     Text("Made with 🕊️ by Emma")
-                        .font(.piloBody)
+                        .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.inkSecondary)
                 }
 
