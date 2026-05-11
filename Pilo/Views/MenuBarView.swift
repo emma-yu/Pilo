@@ -67,8 +67,8 @@ struct MenuBarView: View {
                 .font(.piloBody)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
-            Button(Copy.menubarSettings) {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            SettingsLink {
+                Text(Copy.menubarSettings)
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
@@ -123,8 +123,8 @@ struct MenuBarView: View {
 
             Spacer()
 
-            Button(Copy.menubarSettings) {
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            SettingsLink {
+                Text(Copy.menubarSettings)
             }
             .buttonStyle(.borderless)
             .controlSize(.small)
