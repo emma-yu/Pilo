@@ -38,8 +38,8 @@ struct OnboardingFlow: View {
             }
             .animation(.piloSpring, value: step)
 
-            progressIndicator
-                .padding(.bottom, 18)
+            PiloProgressBar(totalSteps: Step.allCases.count, currentStep: step.rawValue)
+                .padding(.bottom, PiloSpacing.l)
         }
         .frame(width: 560, height: 480)
         .onAppear {
@@ -70,16 +70,4 @@ struct OnboardingFlow: View {
         dismissWindow(id: "onboarding")
     }
 
-    // MARK: - 进度指示
-
-    private var progressIndicator: some View {
-        HStack(spacing: 8) {
-            ForEach(Step.allCases, id: \.self) { s in
-                Circle()
-                    .fill(s.rawValue <= step.rawValue ? Color.piloBlue : Color.cloudDivider)
-                    .frame(width: 7, height: 7)
-            }
-        }
-        .accessibilityHidden(true)
-    }
 }

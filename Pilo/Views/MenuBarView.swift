@@ -134,9 +134,11 @@ struct MenuBarView: View {
     // MARK: - Divider
 
     private var divider: some View {
-        Divider()
-            .padding(.vertical, 6)
-            .padding(.horizontal, 4)
+        Rectangle()
+            .fill(Color.inkPrimary.opacity(0.06))
+            .frame(height: 1)
+            .padding(.vertical, PiloSpacing.s)
+            .padding(.horizontal, PiloSpacing.xs)
     }
 
     // MARK: - Footer (重设计：全宽 row 替代挤压的 HStack)
@@ -177,9 +179,10 @@ private struct MenuActionRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
+            HStack(spacing: PiloSpacing.m) {
                 Image(systemName: icon)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
                     .frame(width: 18)
                     .foregroundStyle(isDestructive ? Color.roseDanger : Color.piloBlue)
                 Text(title)
@@ -192,12 +195,15 @@ private struct MenuActionRow: View {
                         .foregroundStyle(Color.inkTertiary)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, PiloSpacing.s)
+            .padding(.vertical, PiloSpacing.s)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .hoverable(highlight: (isDestructive ? Color.roseDanger : Color.piloBlue).opacity(0.08))
+        .hoverable(
+            highlight: (isDestructive ? Color.roseDanger : Color.accentColor).opacity(0.12),
+            cornerRadius: PiloRadius.small
+        )
     }
 }
 
@@ -210,9 +216,10 @@ private struct MenuActionRowWithSettingsLink: View {
 
     var body: some View {
         SettingsLink {
-            HStack(spacing: 10) {
+            HStack(spacing: PiloSpacing.m) {
                 Image(systemName: icon)
-                    .font(.system(size: 13))
+                    .font(.system(size: 13, weight: .medium))
+                    .symbolRenderingMode(.hierarchical)
                     .frame(width: 18)
                     .foregroundStyle(Color.piloBlue)
                 Text(title)
@@ -223,11 +230,11 @@ private struct MenuActionRowWithSettingsLink: View {
                     .font(.piloCaption)
                     .foregroundStyle(Color.inkTertiary)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
+            .padding(.horizontal, PiloSpacing.s)
+            .padding(.vertical, PiloSpacing.s)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .hoverable(highlight: Color.piloBlue.opacity(0.08))
+        .hoverable(highlight: Color.accentColor.opacity(0.12), cornerRadius: PiloRadius.small)
     }
 }

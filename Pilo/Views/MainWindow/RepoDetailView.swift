@@ -9,14 +9,16 @@ struct RepoDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                header.piloCard()
+            VStack(alignment: .leading, spacing: PiloSpacing.l) {
+                // Hero card：用 elevated 双层阴影突出当前仓库
+                header.piloCard(elevation: .elevated)
+                // 主操作 + 元信息按节奏排
                 actionsRow.piloCard()
                 metaSection.piloCard()
                 remotesSection
                 statusSection.piloCard()
             }
-            .padding(24)
+            .padding(PiloSpacing.xl)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .sheet(item: Binding(

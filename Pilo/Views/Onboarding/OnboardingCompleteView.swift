@@ -7,10 +7,13 @@ struct OnboardingCompleteView: View {
     let onFinish: () -> Void
 
     var body: some View {
-        VStack(spacing: 18) {
-            Spacer(minLength: 10)
+        VStack(spacing: PiloSpacing.l) {
+            Spacer(minLength: PiloSpacing.s)
 
-            PiloMascot(mood: .happy, size: 96, breathing: true)
+            ZStack {
+                SparkleCluster(mascotSize: 96)
+                PiloMascot(mood: .happy, size: 96, breathing: true)
+            }
 
             primaryText
 
@@ -51,16 +54,19 @@ struct OnboardingCompleteView: View {
         Group {
             if appState.isScanning {
                 Text(Copy.menubarScanInProgress(tone))
-                    .font(.piloTitle)
+                    .font(.piloHero)
                     .foregroundStyle(Color.inkPrimary)
+                    .minimumScaleFactor(0.8)
             } else if appState.repositories.isEmpty {
                 Text(Copy.Onboarding.completeTitleEmpty)
-                    .font(.piloTitle)
+                    .font(.piloHero)
                     .foregroundStyle(Color.inkPrimary)
+                    .minimumScaleFactor(0.8)
             } else {
                 Text(String(format: Copy.Onboarding.completeTitleFound, appState.repositories.count))
-                    .font(.piloTitle)
+                    .font(.piloHero)
                     .foregroundStyle(Color.inkPrimary)
+                    .minimumScaleFactor(0.8)
             }
         }
     }

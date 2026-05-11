@@ -199,31 +199,31 @@ struct SettingsView: View {
 
     private var aboutTab: some View {
         ZStack {
-            // 温暖奶油 surface 区别于其它 tab 的中性灰
             Color.piloCream.opacity(0.5)
                 .ignoresSafeArea()
-            VStack(spacing: 14) {
-                PiloMascot(mood: .happy, size: 88, breathing: true)
-                Text("Pilo")
-                    .font(.piloTitle)
-                Text("v0.1.0 · MIT License")
-                    .font(.piloCaption)
-                    .foregroundStyle(Color.inkSecondary)
-                Text("Made with 🕊️ by Emma")
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkSecondary)
+            VStack(spacing: PiloSpacing.l) {
+                PiloHero(
+                    mood: .happy,
+                    title: "Pilo",
+                    subtitle: "v0.1.0 · MIT License\nMade with 🕊️ by Emma",
+                    mascotSize: 88,
+                    decorations: true
+                )
                 if let v = appState.gitVersion, let p = appState.gitExecutablePath {
-                    Divider().padding(.vertical, 8).padding(.horizontal, 40)
-                    Text("找到 \(v)")
-                        .font(.piloCaption)
-                        .foregroundStyle(Color.inkSecondary)
-                    Text(p)
-                        .font(.piloMono)
-                        .foregroundStyle(Color.inkSecondary)
-                        .textSelection(.enabled)
+                    Divider().padding(.horizontal, PiloSpacing.xxl)
+                    VStack(spacing: PiloSpacing.xs) {
+                        Text("找到 \(v)")
+                            .font(.piloCaption)
+                            .foregroundStyle(Color.inkSecondary)
+                        Text(p)
+                            .font(.piloMono)
+                            .foregroundStyle(Color.inkSecondary)
+                            .textSelection(.enabled)
+                    }
                 }
+                Spacer(minLength: 0)
             }
-            .padding(24)
+            .padding(PiloSpacing.xl)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }

@@ -15,15 +15,19 @@
 		0E1538465A5BD686A7C29164 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5540EAC6848024D2E4873663 /* Copy.swift */; };
 		1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */; };
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
+		1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6AB9592230B7D21B964718 /* PiloHero.swift */; };
 		202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */; };
 		21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E05A4CA192EA6913C4E82F /* SecretScanner.swift */; };
 		21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE45D55C757CD61606DCF1C /* SecretRule.swift */; };
 		22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16B037F569F8B168CAFE426 /* PiloMascot.swift */; };
 		24762692BDB1C4A02A5ABB3D /* ScanFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD4DE05816DDAC61F53E4E9 /* ScanFinding.swift */; };
+		2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB97651940C664B638C347B /* Spacing.swift */; };
 		2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528911A1AB11C78391AEF846 /* Colors.swift */; };
+		30000FA09B2FFCA646EE4FDA /* Elevation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A369CBEDE26B7838355849C5 /* Elevation.swift */; };
 		38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */; };
 		40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */; };
 		43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1BF50B55825899755F5CF5 /* StatusBadge.swift */; };
+		46D020C0E664D11AF6B1A2C6 /* PiloChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF558DE48A0E93A22420D9A /* PiloChip.swift */; };
 		46F2E5A4EE580FC935423CEF /* CommitSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2A9ADDE4DD19B2703E320E /* CommitSummary.swift */; };
 		49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */; };
 		49C36AAC4321706D27F95F7F /* PushReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E456950F8860CE112F3A249B /* PushReport.swift */; };
@@ -33,6 +37,7 @@
 		591FFE9210B63BC604181E34 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF98D24AA2AC6D89E2FE38D /* Animations.swift */; };
 		631B21574C12FE201AA08061 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A11D640FBE8823567CB8EF4 /* AppPaths.swift */; };
 		633B853592053727D02E7284 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE88C8A171ED935AA6B683B /* Typography.swift */; };
+		6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */; };
 		63C6904E4AE3867B463E3811 /* GitignoreEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA01E7215C538911CC7CE44 /* GitignoreEditorTests.swift */; };
 		6415F36F53444D6B42524D80 /* CopyToneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66D0C526983B516A167203C /* CopyToneTests.swift */; };
 		688E2B734BCE5E1286C0624E /* RepositoryCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */; };
@@ -99,6 +104,7 @@
 		4BD4DE05816DDAC61F53E4E9 /* ScanFinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFinding.swift; sourceTree = "<group>"; };
 		4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 		4E64E361A9FA9AB67869B9F4 /* CommitGuardScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitGuardScanner.swift; sourceTree = "<group>"; };
+		4EB97651940C664B638C347B /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
 		4F804131774A1192A06DF985 /* Tone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tone.swift; sourceTree = "<group>"; };
 		4FB9D8EFB0D5FF1BCC5163D5 /* CommitGuardFinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitGuardFinding.swift; sourceTree = "<group>"; };
 		528911A1AB11C78391AEF846 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
@@ -119,10 +125,13 @@
 		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		930E45B5488623F43A9DDDCC /* secret-rules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "secret-rules.json"; sourceTree = "<group>"; };
+		A369CBEDE26B7838355849C5 /* Elevation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Elevation.swift; sourceTree = "<group>"; };
 		A66D0C526983B516A167203C /* CopyToneTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyToneTests.swift; sourceTree = "<group>"; };
 		A6D256A3FEACF71EA243019F /* PushSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushSession.swift; sourceTree = "<group>"; };
 		AAA8A635B27743E4BB1A0078 /* DiffParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParserTests.swift; sourceTree = "<group>"; };
+		ADF558DE48A0E93A22420D9A /* PiloChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloChip.swift; sourceTree = "<group>"; };
 		B9599F1E6035D5ECFE609460 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		BA6AB9592230B7D21B964718 /* PiloHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloHero.swift; sourceTree = "<group>"; };
 		BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FalsePositiveScopeSheet.swift; sourceTree = "<group>"; };
 		BB0D64F8E2855C976F030C4D /* PiloTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PiloTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloButtonStyle.swift; sourceTree = "<group>"; };
@@ -136,6 +145,7 @@
 		E456950F8860CE112F3A249B /* PushReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushReport.swift; sourceTree = "<group>"; };
 		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
 		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
+		F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloProgressBar.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -194,8 +204,13 @@
 				396601D98F4B17ECA50E2B49 /* CardContainer.swift */,
 				528911A1AB11C78391AEF846 /* Colors.swift */,
 				5540EAC6848024D2E4873663 /* Copy.swift */,
+				A369CBEDE26B7838355849C5 /* Elevation.swift */,
 				782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */,
 				C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */,
+				ADF558DE48A0E93A22420D9A /* PiloChip.swift */,
+				BA6AB9592230B7D21B964718 /* PiloHero.swift */,
+				F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */,
+				4EB97651940C664B638C347B /* Spacing.swift */,
 				4F804131774A1192A06DF985 /* Tone.swift */,
 				CCE88C8A171ED935AA6B683B /* Typography.swift */,
 			);
@@ -430,6 +445,7 @@
 				0E1538465A5BD686A7C29164 /* Copy.swift in Sources */,
 				8F4FCBC600D92304B724494C /* DiffHunk.swift in Sources */,
 				060075849867E4E6BA387EE6 /* DiffParser.swift in Sources */,
+				30000FA09B2FFCA646EE4FDA /* Elevation.swift in Sources */,
 				40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */,
 				899FC4F8FED55E28DE2BA83E /* FalsePositiveMark.swift in Sources */,
 				202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */,
@@ -447,7 +463,10 @@
 				49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */,
 				7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */,
 				1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */,
+				46D020C0E664D11AF6B1A2C6 /* PiloChip.swift in Sources */,
+				1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */,
 				22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */,
+				6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */,
 				FD89DE7ADC1DE65DB0108FFE /* PushConfirmDialog.swift in Sources */,
 				52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */,
 				49C36AAC4321706D27F95F7F /* PushReport.swift in Sources */,
@@ -462,6 +481,7 @@
 				21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */,
 				E320322D91974174E383EC5C /* SectionHeader.swift in Sources */,
 				A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */,
+				2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */,
 				43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */,
 				EE7D1C10A4803C61E8C57FAD /* Tone.swift in Sources */,
 				633B853592053727D02E7284 /* Typography.swift in Sources */,

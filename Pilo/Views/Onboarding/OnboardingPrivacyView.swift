@@ -11,8 +11,10 @@ struct OnboardingPrivacyView: View {
             PiloMascot(mood: .alert, size: 64, breathing: true)
 
             Text(Copy.Onboarding.privacyTitle)
-                .font(.piloTitle)
+                .font(.piloHero)
                 .foregroundStyle(Color.inkPrimary)
+                .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.8)
 
             Text(Copy.Onboarding.privacyBody)
                 .font(.piloBody)

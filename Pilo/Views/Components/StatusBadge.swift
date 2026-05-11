@@ -1,5 +1,7 @@
 import SwiftUI
 
+/// **向后兼容包装**：所有 callers 仍可用 StatusBadge(kind:)，内部转调 PiloChip。
+/// 新代码推荐直接用 PiloChip。
 struct StatusBadge: View {
     enum Kind {
         case ahead(Int)
@@ -8,6 +10,26 @@ struct StatusBadge: View {
         case synced
         case offline
 
+        var icon: String {
+            switch self {
+            case .ahead:        "arrow.up"
+            case .behind:       "arrow.down"
+            case .uncommitted:  "pencil"
+            case .synced:       "checkmark"
+            case .offline:      "wifi.slash"
+            }
+        }
+
+        var label: String {
+            switch self {
+            case .ahead(let n):        "\(n)"
+            case .behind(let n):       "\(n)"
+            case .uncommitted(let n):  "\(n) 待提交"
+            case .synced:              "已同步"
+            case .offline:             "离线"
+            }
+        }
+
         var tint: Color {
             switch self {
             case .ahead:        .amberWarn
@@ -15,16 +37,6 @@ struct StatusBadge: View {
             case .uncommitted:  .roseDanger
             case .synced:       .mintSafe
             case .offline:      .inkTertiary
-            }
-        }
-
-        var label: String {
-            switch self {
-            case .ahead(let n):        "\(n) ↑"
-            case .behind(let n):       "\(n) ↓"
-            case .uncommitted(let n):  "\(n) 待提交"
-            case .synced:              "同步"
-            case .offline:             "离线"
             }
         }
 
@@ -42,23 +54,9 @@ struct StatusBadge: View {
     let kind: Kind
 
     var body: some View {
-        HStack(spacing: 5) {
-            Circle()
-                .fill(kind.tint)
-                .frame(width: 8, height: 8)
-            Text(kind.label)
-                .font(.piloCaption)
-                .fontWeight(.medium)
-                .foregroundStyle(kind.tint.opacity(0.95))
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(kind.tint.opacity(0.16))
-        )
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(kind.accessibilityLabel)
+        PiloChip(icon: kind.icon, text: kind.label, tint: kind.tint, style: .tinted, size: .small)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(kind.accessibilityLabel)
     }
 }
 
@@ -71,4 +69,5 @@ struct StatusBadge: View {
         StatusBadge(kind: .offline)
     }
     .padding()
+    .background(Color.creamBg)
 }

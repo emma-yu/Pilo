@@ -568,21 +568,21 @@ struct PushConfirmDialog: View {
     }
 
     private func successView(_ report: PushReport) -> some View {
-        VStack(spacing: 14) {
+        VStack(spacing: PiloSpacing.l) {
             Spacer()
-            PiloMascot(mood: .happy, size: 96, breathing: true)
-            Text(Copy.Push.successTitle(tone))
-                .font(.piloTitle)
-                .foregroundStyle(Color.inkPrimary)
-            Text(Copy.Push.successSubtitle(tone, count: report.commitCount))
-                .font(.piloBody)
-                .foregroundStyle(Color.inkSecondary)
+            PiloHero(
+                mood: .happy,
+                title: Copy.Push.successTitle(tone),
+                subtitle: Copy.Push.successSubtitle(tone, count: report.commitCount),
+                mascotSize: 88,
+                decorations: true
+            )
             Spacer()
             Button(Copy.Push.doneButton, action: onDismiss)
                 .buttonStyle(.piloPrimary)
                 .keyboardShortcut(.defaultAction)
         }
-        .padding(24)
+        .padding(PiloSpacing.xl)
     }
 
     private func failureView(_ report: PushReport) -> some View {

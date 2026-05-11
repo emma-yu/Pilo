@@ -6,27 +6,31 @@ struct OnboardingWelcomeView: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: 20) {
-            Spacer(minLength: 10)
+        VStack(spacing: PiloSpacing.l) {
+            Spacer(minLength: PiloSpacing.s)
 
-            PiloMascot(mood: .happy, size: 96, breathing: true)
+            // Hero with sparkle decorations
+            ZStack {
+                SparkleCluster(mascotSize: 96)
+                PiloMascot(mood: .happy, size: 96, breathing: true)
+            }
 
             Text(Copy.Onboarding.welcomeTitle)
-                .font(.piloTitle)
+                .font(.piloHero)
                 .foregroundStyle(Color.inkPrimary)
 
             Text(Copy.Onboarding.welcomeBody)
                 .font(.piloBody)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 30)
+                .padding(.horizontal, PiloSpacing.xl)
 
-            VStack(alignment: .leading, spacing: 10) {
-                featureRow(symbol: "magnifyingglass", text: Copy.Onboarding.welcomeFeature1)
-                featureRow(symbol: "shield.checkered", text: Copy.Onboarding.welcomeFeature2)
-                featureRow(symbol: "lock.shield", text: Copy.Onboarding.welcomeFeature3)
+            VStack(alignment: .leading, spacing: PiloSpacing.m) {
+                featureRow(symbol: "magnifyingglass", text: Copy.Onboarding.welcomeFeature1, tint: .piloBlue)
+                featureRow(symbol: "shield.checkered", text: Copy.Onboarding.welcomeFeature2, tint: .piloAccent)
+                featureRow(symbol: "lock.shield", text: Copy.Onboarding.welcomeFeature3, tint: .mintSafe)
             }
-            .padding(.top, 8)
+            .padding(.top, PiloSpacing.s)
             .frame(maxWidth: 380, alignment: .leading)
 
             Spacer()
@@ -44,15 +48,16 @@ struct OnboardingWelcomeView: View {
         .padding(30)
     }
 
-    private func featureRow(symbol: String, text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+    private func featureRow(symbol: String, text: String, tint: Color) -> some View {
+        HStack(alignment: .top, spacing: PiloSpacing.m) {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(Color.piloBlue)
-                .frame(width: 20)
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(tint)
+                .frame(width: 22)
             Text(text)
                 .font(.piloBody)
-                .foregroundStyle(Color.inkSecondary)
+                .foregroundStyle(Color.inkPrimary)
             Spacer()
         }
     }
