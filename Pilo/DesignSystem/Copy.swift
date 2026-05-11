@@ -523,7 +523,86 @@ enum Copy {
             }
         }
 
-        // 这些是关键提示用语，仅在 critical 流程出现，必须保持严肃 + 温和
+        // 关键提示用语，所有都双语
+        static func critical(_ lang: Language = .zh) -> String {
+            Loc(zh: "高危", en: "Critical").text(lang)
+        }
+        static func warning(_ lang: Language = .zh) -> String {
+            Loc(zh: "提示", en: "Notice").text(lang)
+        }
+        static func jumpToFile(_ lang: Language = .zh) -> String {
+            Loc(zh: "在 Finder 中显示", en: "Show in Finder").text(lang)
+        }
+        static func markFP(_ lang: Language = .zh) -> String {
+            Loc(zh: "标记为误报", en: "Mark safe").text(lang)
+        }
+        static func markFPHere(_ lang: Language = .zh) -> String {
+            Loc(zh: "仅这个文件", en: "Just this file").text(lang)
+        }
+        static func markFPRule(_ lang: Language = .zh) -> String {
+            Loc(zh: "整个仓库都不再扫这条规则",
+                en: "Skip this rule for the whole repo").text(lang)
+        }
+        static func markFPCancel(_ lang: Language = .zh) -> String {
+            Loc(zh: "再想想", en: "Hold on").text(lang)
+        }
+        static func markFPTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "怎么标记？", en: "How to mark?").text(lang)
+        }
+        static func markFPSubtitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "下次扫描会按你选的范围跳过这一条。",
+                en: "Next scan will skip this finding within the scope you pick.").text(lang)
+        }
+
+        static func pushBypassButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "我已了解，仍然推送", en: "I understand, push anyway").text(lang)
+        }
+
+        static func bypassConfirmTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "🕊️ 真的吗？", en: "🕊️ Are you sure?").text(lang)
+        }
+        static func bypassConfirmDesc(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: """
+                推送之后这些 key 会进入 GitHub 历史，
+                即使后续删除也很难真正清除。
+                通常需要重新生成 key 才能彻底解决。
+
+                📝 建议先做的事：
+                  1. 在密钥服务商后台 revoke 这些 key
+                  2. 重新生成新 key
+                  3. 把新 key 放到 .env 而不是源码
+
+                如果你坚持要推送，请输入仓库名确认：
+                """,
+                en: """
+                Once pushed, these keys enter GitHub history.
+                Even after deletion they're nearly impossible to truly scrub.
+                Rotating the keys is usually the real fix.
+
+                📝 What to do first:
+                  1. Revoke these keys in their issuing dashboard
+                  2. Generate fresh keys
+                  3. Put the new keys in .env, not source
+
+                If you still want to push, type the repo name to confirm:
+                """
+            ).text(lang)
+        }
+        static func bypassConfirmInputPlaceholder(_ lang: Language = .zh) -> String {
+            Loc(zh: "在这里输入仓库名", en: "Type the repo name here").text(lang)
+        }
+        static func bypassConfirmYes(_ lang: Language = .zh) -> String {
+            Loc(zh: "我已了解，推送", en: "I understand, push").text(lang)
+        }
+        static func bypassConfirmNo(_ lang: Language = .zh) -> String {
+            Loc(zh: "取消", en: "Cancel").text(lang)
+        }
+        static func bypassNameMismatch(_ lang: Language = .zh) -> String {
+            Loc(zh: "仓库名不匹配", en: "Repo name doesn't match").text(lang)
+        }
+
+        // 旧静态属性保留供未迁移调用方
         static let critical    = "高危"
         static let warning     = "提示"
         static let jumpToFile  = "在 Finder 中显示"
@@ -533,22 +612,9 @@ enum Copy {
         static let markFPCancel = "再想想"
         static let markFPTitle = "怎么标记？"
         static let markFPSubtitle = "下次扫描会按你选的范围跳过这一条。"
-
         static let pushBypassButton = "我已了解，仍然推送"
-
         static let bypassConfirmTitle = "🕊️ 真的吗？"
-        static let bypassConfirmDesc = """
-        推送之后这些 key 会进入 GitHub 历史，
-        即使后续删除也很难真正清除。
-        通常需要重新生成 key 才能彻底解决。
-
-        📝 建议先做的事：
-          1. 在密钥服务商后台 revoke 这些 key
-          2. 重新生成新 key
-          3. 把新 key 放到 .env 而不是源码
-
-        如果你坚持要推送，请输入仓库名确认：
-        """
+        static let bypassConfirmDesc = "推送之后这些 key 会进入 GitHub 历史…"
         static let bypassConfirmInputPlaceholder = "在这里输入仓库名"
         static let bypassConfirmYes = "我已了解，推送"
         static let bypassConfirmNo  = "取消"
@@ -574,7 +640,36 @@ enum Copy {
             }
         }
 
-        // 设置页 UI 文案（暂保中文，下次迭代再做完整双语）
+        // 设置页 UI 文案 — 全部双语
+        static func settingsSectionTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "安全检查", en: "Security checks").text(lang)
+        }
+        static func settingsToggleDescription(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。",
+                en: "Scans the diff before pushing for API keys / tokens / private keys. Uses Pilo's 25 hand-picked rules, fully local — nothing leaves your Mac."
+            ).text(lang)
+        }
+        static func settingsKillSwitchTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "紧急关闭安全检查", en: "Emergency: turn off scans").text(lang)
+        }
+        static func settingsKillSwitchDesc(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "暂时关闭所有安全扫描，让 push 可以无阻通过。24 小时后自动恢复——避免你忘了自己关过。",
+                en: "Pause every security scan so push goes through unhindered. Auto-restores in 24 hours — so you won't forget you turned it off."
+            ).text(lang)
+        }
+        static func settingsKillSwitchActivateButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "暂时关闭 24 小时", en: "Pause for 24 hours").text(lang)
+        }
+        static func settingsKillSwitchActiveLabel(_ lang: Language = .zh) -> String {
+            Loc(zh: "已关闭，%d 小时后恢复", en: "Off — restores in %d hour(s)").text(lang)
+        }
+        static func settingsKillSwitchRestoreButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "立即恢复", en: "Restore now").text(lang)
+        }
+
+        // 旧静态属性保留
         static let settingsSectionTitle = "安全检查"
         static let settingsToggleEnabled  = "启用敏感信息扫描"
         static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。"

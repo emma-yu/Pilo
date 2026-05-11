@@ -205,7 +205,7 @@ private struct PanelDetail: View {
                             .tracking(0.5)
                             .foregroundStyle(Color.inkPrimary)
                         Spacer(minLength: 12)
-                        PrivacyPill(isPublic: repo.remotes.first?.isPublic)
+                        PrivacyPill(repoId: repo.id)
                     }
 
                     // mono 路径 + 分支（按 mock 去掉时间）

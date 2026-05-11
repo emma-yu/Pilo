@@ -8,26 +8,29 @@ struct FalsePositiveScopeSheet: View {
     let onPick: (FalsePositiveMark.Scope) -> Void
     let onCancel: () -> Void
 
+    @Environment(AppState.self) private var appState
+    private var lang: Language { appState.language }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(Copy.Scan.markFPTitle)
+                Text(Copy.Scan.markFPTitle(lang))
                     .font(.piloTitle)
                     .foregroundStyle(Color.inkPrimary)
-                Text(Copy.Scan.markFPSubtitle)
+                Text(Copy.Scan.markFPSubtitle(lang))
                     .font(.piloBody)
                     .foregroundStyle(Color.inkSecondary)
             }
 
             VStack(spacing: 8) {
                 scopeButton(
-                    title: Copy.Scan.markFPHere,
+                    title: Copy.Scan.markFPHere(lang),
                     subtitle: "\(finding.filePath):\(finding.lineNumber) 的这个匹配不再提示",
                     symbol: "doc.text",
                     action: { onPick(.thisFileOnly) }
                 )
                 scopeButton(
-                    title: Copy.Scan.markFPRule,
+                    title: Copy.Scan.markFPRule(lang),
                     subtitle: finding.ruleName + "（整个仓库都跳过）",
                     symbol: "xmark.circle",
                     action: { onPick(.thisRule) }
@@ -36,7 +39,7 @@ struct FalsePositiveScopeSheet: View {
 
             HStack {
                 Spacer()
-                Button(Copy.Scan.markFPCancel, action: onCancel)
+                Button(Copy.Scan.markFPCancel(lang), action: onCancel)
                     .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
             }

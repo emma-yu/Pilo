@@ -21,12 +21,14 @@
 		21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E05A4CA192EA6913C4E82F /* SecretScanner.swift */; };
 		21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE45D55C757CD61606DCF1C /* SecretRule.swift */; };
 		22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16B037F569F8B168CAFE426 /* PiloMascot.swift */; };
+		2464CA64EFFC2136575BAC85 /* GitHubVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */; };
 		24762692BDB1C4A02A5ABB3D /* ScanFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD4DE05816DDAC61F53E4E9 /* ScanFinding.swift */; };
 		2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB97651940C664B638C347B /* Spacing.swift */; };
 		2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528911A1AB11C78391AEF846 /* Colors.swift */; };
 		2D2BC2CEE9C30D627CBA98B3 /* SettingsTabHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067C5DBF5034F4C22EE8072E /* SettingsTabHeader.swift */; };
 		30000FA09B2FFCA646EE4FDA /* Elevation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A369CBEDE26B7838355849C5 /* Elevation.swift */; };
 		3590CD9C48D12B6BF2301F32 /* PostalOrnaments.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEB69EF00A7F87CFFE2119E /* PostalOrnaments.swift */; };
+		3779A40FAB534489A6D2D77B /* PostalPickers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65DAF0D8A1558F52399AB986 /* PostalPickers.swift */; };
 		38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */; };
 		40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */; };
 		43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F1BF50B55825899755F5CF5 /* StatusBadge.swift */; };
@@ -37,6 +39,7 @@
 		5269C86B4F668014D2043EE4 /* RepoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */; };
 		52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A704D753347DA0624F8EE5 /* PushExecutor.swift */; };
 		548C14F0EDEDE6EC73CA24F8 /* SecretScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1894FF036FBFB212679A29AC /* SecretScannerTests.swift */; };
+		56EFDABB7019D8FAFBA9862D /* CopySweepTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7E7C2F3DAF647204E79CD0F /* CopySweepTests.swift */; };
 		591FFE9210B63BC604181E34 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AF98D24AA2AC6D89E2FE38D /* Animations.swift */; };
 		5B0E6BF6D379DCF7558E6BFD /* Language.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4995B80B410566214FB4ACE8 /* Language.swift */; };
 		631B21574C12FE201AA08061 /* AppPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A11D640FBE8823567CB8EF4 /* AppPaths.swift */; };
@@ -126,6 +129,7 @@
 		5EA01E7215C538911CC7CE44 /* GitignoreEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitignoreEditorTests.swift; sourceTree = "<group>"; };
 		60E9C40F45449667A059ED60 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
 		63E19D8E16EFADA143E2C091 /* PushOutcomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushOutcomeTests.swift; sourceTree = "<group>"; };
+		65DAF0D8A1558F52399AB986 /* PostalPickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalPickers.swift; sourceTree = "<group>"; };
 		6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		6FB9D4B24D2ABF58B84A598D /* PushConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushConfirmDialog.swift; sourceTree = "<group>"; };
 		707C36571A6F9C184754C4BB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -156,8 +160,10 @@
 		DE5D85F98C2D52B4B9888F05 /* FalsePositiveMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FalsePositiveMark.swift; sourceTree = "<group>"; };
 		DE9C13BCCED7CDF23020AF7B /* GitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitClient.swift; sourceTree = "<group>"; };
 		E456950F8860CE112F3A249B /* PushReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushReport.swift; sourceTree = "<group>"; };
+		E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubVisibility.swift; sourceTree = "<group>"; };
 		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
 		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
+		F7E7C2F3DAF647204E79CD0F /* CopySweepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopySweepTests.swift; sourceTree = "<group>"; };
 		F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloProgressBar.swift; sourceTree = "<group>"; };
 		FCEB69EF00A7F87CFFE2119E /* PostalOrnaments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalOrnaments.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -205,6 +211,7 @@
 				12738ED463FC35FD0587E770 /* DiffParser.swift */,
 				74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */,
 				DE9C13BCCED7CDF23020AF7B /* GitClient.swift */,
+				E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */,
 				04A00990925CEF1AE1105D3A /* GitignoreEditor.swift */,
 				75A704D753347DA0624F8EE5 /* PushExecutor.swift */,
 				5C0D7C484861C199FE1F5130 /* RepoScanner.swift */,
@@ -291,6 +298,7 @@
 			children = (
 				4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */,
 				3A8EFDE51151A74B99FD3027 /* CopyLanguageTests.swift */,
+				F7E7C2F3DAF647204E79CD0F /* CopySweepTests.swift */,
 				A66D0C526983B516A167203C /* CopyToneTests.swift */,
 				AAA8A635B27743E4BB1A0078 /* DiffParserTests.swift */,
 				5EA01E7215C538911CC7CE44 /* GitignoreEditorTests.swift */,
@@ -326,6 +334,7 @@
 		DEC3E1750C594E28E436EBE3 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				65DAF0D8A1558F52399AB986 /* PostalPickers.swift */,
 				067C5DBF5034F4C22EE8072E /* SettingsTabHeader.swift */,
 				74EC3C4B71E63346D274F034 /* SettingsView.swift */,
 			);
@@ -441,6 +450,7 @@
 			files = (
 				8D26D59EC29DFACD7BF4E59B /* CommitGuardScannerTests.swift in Sources */,
 				6CF51C11E1DF49DCD24C7E21 /* CopyLanguageTests.swift in Sources */,
+				56EFDABB7019D8FAFBA9862D /* CopySweepTests.swift in Sources */,
 				6415F36F53444D6B42524D80 /* CopyToneTests.swift in Sources */,
 				6B58B4EFD7941301409A146F /* DiffParserTests.swift in Sources */,
 				63C6904E4AE3867B463E3811 /* GitignoreEditorTests.swift in Sources */,
@@ -472,6 +482,7 @@
 				899FC4F8FED55E28DE2BA83E /* FalsePositiveMark.swift in Sources */,
 				202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */,
 				E9CD0AAD574561F095D8946A /* GitClient.swift in Sources */,
+				2464CA64EFFC2136575BAC85 /* GitHubVisibility.swift in Sources */,
 				E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */,
 				0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */,
 				B46E8DDFA74F315E320FB0A1 /* GitignoreEditor.swift in Sources */,
@@ -493,6 +504,7 @@
 				22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */,
 				6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */,
 				3590CD9C48D12B6BF2301F32 /* PostalOrnaments.swift in Sources */,
+				3779A40FAB534489A6D2D77B /* PostalPickers.swift in Sources */,
 				FD89DE7ADC1DE65DB0108FFE /* PushConfirmDialog.swift in Sources */,
 				52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */,
 				49C36AAC4321706D27F95F7F /* PushReport.swift in Sources */,

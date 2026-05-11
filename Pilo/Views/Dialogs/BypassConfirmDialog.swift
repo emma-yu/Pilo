@@ -5,6 +5,8 @@ import SwiftUI
 struct BypassConfirmDialog: View {
 
     @Environment(\.tone) private var tone
+    @Environment(AppState.self) private var appState
+    private var lang: Language { appState.language }
 
     let expectedRepoName: String
     let criticalCount: Int
@@ -23,7 +25,7 @@ struct BypassConfirmDialog: View {
             HStack(alignment: .top, spacing: 12) {
                 PiloMascot(mood: .worried, size: 64, breathing: true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(Copy.Scan.bypassConfirmTitle)
+                    Text(Copy.Scan.bypassConfirmTitle(lang))
                         .font(.piloTitle)
                         .foregroundStyle(Color.inkPrimary)
                     Text("发现 \(criticalCount) 项高危内容仍未处理")
@@ -33,7 +35,7 @@ struct BypassConfirmDialog: View {
                 Spacer()
             }
 
-            Text(Copy.Scan.bypassConfirmDesc)
+            Text(Copy.Scan.bypassConfirmDesc(lang))
                 .font(.piloBody)
                 .foregroundStyle(Color.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -47,25 +49,25 @@ struct BypassConfirmDialog: View {
                 Text(expectedRepoName)
                     .font(.piloMono)
                     .foregroundStyle(Color.inkTertiary)
-                TextField(Copy.Scan.bypassConfirmInputPlaceholder, text: $typed)
+                TextField(Copy.Scan.bypassConfirmInputPlaceholder(lang), text: $typed)
                     .textFieldStyle(.roundedBorder)
                     .focused($isInputFocused)
                     .onSubmit {
                         if matches { onConfirm() }
                     }
                 if !typed.isEmpty && !matches {
-                    Text(Copy.Scan.bypassNameMismatch)
+                    Text(Copy.Scan.bypassNameMismatch(lang))
                         .font(.piloCaption)
                         .foregroundStyle(Color.roseDanger)
                 }
             }
 
             HStack {
-                Button(Copy.Scan.bypassConfirmNo, action: onCancel)
+                Button(Copy.Scan.bypassConfirmNo(lang), action: onCancel)
                     .buttonStyle(.piloSecondary)
                     .keyboardShortcut(.cancelAction)
                 Spacer()
-                Button(Copy.Scan.bypassConfirmYes, action: onConfirm)
+                Button(Copy.Scan.bypassConfirmYes(lang), action: onConfirm)
                     .buttonStyle(.piloDestructive)
                     .keyboardShortcut(.defaultAction)
                     .disabled(!matches)

@@ -37,51 +37,45 @@ struct SettingsView: View {
                 enSubtitle: "— tune Pilo's language and tone —"
             )
 
-            Form {
-                Section {
-                    Picker("", selection: Binding(
-                        get: { appState.language },
-                        set: { appState.updateLanguage($0) }
-                    )) {
-                        ForEach(Language.allCases, id: \.self) { lang in
-                            Text(lang.nativeName).tag(lang)
-                        }
+            ScrollView {
+                VStack(alignment: .leading, spacing: PiloSpacing.xl) {
+                    // 语言区
+                    VStack(alignment: .leading, spacing: PiloSpacing.s) {
+                        sectionLabel(lang == .zh ? "语言 / Language" : "Language / 语言")
+                        LanguageCardPicker(
+                            selection: Binding(
+                                get: { appState.language },
+                                set: { _ in }
+                            ),
+                            onChange: { newLang in appState.updateLanguage(newLang) }
+                        )
+                        Text(lang == .zh
+                            ? "界面文字会立即切换；初次启动时按系统语言推断"
+                            : "UI text switches immediately; defaults to your system language on first launch")
+                            .font(.piloSerifSubtitle)
+                            .foregroundStyle(Color.inkSecondary)
                     }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
 
-                    Text(lang == .zh
-                        ? "界面文字会立即切换；初次启动时按系统语言推断"
-                        : "UI text switches immediately; defaults to your system language on first launch")
-                        .font(.piloSerifSubtitle)
-                        .foregroundStyle(.secondary)
-                } header: {
-                    sectionLabel(lang == .zh ? "语言 / Language" : "Language / 语言")
-                }
-
-                Section {
-                    Picker("", selection: Binding(
-                        get: { appState.tone },
-                        set: { appState.updateTone($0) }
-                    )) {
-                        ForEach(Tone.allCases, id: \.self) { tone in
-                            Text(tone.displayName).tag(tone)
-                        }
+                    // 语调区
+                    VStack(alignment: .leading, spacing: PiloSpacing.s) {
+                        sectionLabel(lang == .zh ? "语调 / Tone" : "Tone / 语调")
+                        ToneCardPicker(
+                            selection: Binding(
+                                get: { appState.tone },
+                                set: { _ in }
+                            ),
+                            onChange: { newTone in appState.updateTone(newTone) }
+                        )
+                        Text(lang == .zh
+                            ? "Friendly 模式带温柔可爱语气（「咕咕～」），Minimal 模式信息密度优先"
+                            : "Friendly: warm playful tone (\"Coo coo~\"). Minimal: terse and dense.")
+                            .font(.piloSerifSubtitle)
+                            .foregroundStyle(Color.inkSecondary)
                     }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-
-                    Text(lang == .zh
-                        ? "Friendly 模式带温柔可爱语气（「咕咕～」），Minimal 模式信息密度优先"
-                        : "Friendly mode uses warm playful tone (\"Coo coo~\"). Minimal mode prioritises density.")
-                        .font(.piloSerifSubtitle)
-                        .foregroundStyle(.secondary)
-                } header: {
-                    sectionLabel(lang == .zh ? "语调 / Tone" : "Tone / 语调")
                 }
+                .padding(PiloSpacing.xl)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
         }
         .background(Color.creamBg)
     }
@@ -97,31 +91,30 @@ struct SettingsView: View {
                 enSubtitle: "— tell Pilo where to look for your code —"
             )
 
-            Form {
-                Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PiloSpacing.m) {
+                    sectionLabel(lang == .zh ? "扫描目录" : "Watch folders")
+
                     if appState.watchDirectories.isEmpty {
                         Text(lang == .zh ? "还没有添加任何目录" : "No folders added yet")
                             .font(.piloSerifSubtitle)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.vertical, PiloSpacing.s)
                     } else {
                         ForEach(appState.watchDirectories, id: \.self) { url in
                             watchDirRow(url: url)
                         }
                     }
 
-                    Button(action: addDirectory) {
-                        Label(lang == .zh ? "添加目录" : "Add folder", systemImage: "plus.circle.fill")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(Color.piloBlue)
-                    }
-                    .buttonStyle(.borderless)
-                    .padding(.top, 4)
-                } header: {
-                    sectionLabel(lang == .zh ? "扫描目录" : "Watch folders")
+                    PiloAddRowButton(
+                        title: lang == .zh ? "添加目录" : "Add folder",
+                        action: addDirectory
+                    )
+                    .padding(.top, PiloSpacing.xs)
                 }
+                .padding(PiloSpacing.xl)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
         }
         .background(Color.creamBg)
     }
@@ -137,21 +130,20 @@ struct SettingsView: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
-            Button(lang == .zh ? "移除" : "Remove") {
-                appState.removeWatchDirectory(url)
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
-            .foregroundStyle(Color.roseDanger)
+            PiloLinkButton(
+                title: lang == .zh ? "移除" : "Remove",
+                tint: .roseDanger,
+                action: { appState.removeWatchDirectory(url) }
+            )
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Color.piloPaper)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .stroke(Color.piloPaperBorder, lineWidth: 0.5)
         )
     }
@@ -180,7 +172,7 @@ struct SettingsView: View {
 
             Form {
                 Section {
-                    Text(Copy.KillSwitch.settingsToggleDescription)
+                    Text(Copy.KillSwitch.settingsToggleDescription(lang))
                         .font(.piloSerifSubtitle)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -196,9 +188,9 @@ struct SettingsView: View {
                                 .foregroundStyle(appState.isKillSwitchActive ? Color.amberWarn : Color.mintSafe)
                                 .font(.system(size: 18))
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(Copy.KillSwitch.settingsKillSwitchTitle)
+                                Text(Copy.KillSwitch.settingsKillSwitchTitle(lang))
                                     .font(.piloSection)
-                                Text(Copy.KillSwitch.settingsKillSwitchDesc)
+                                Text(Copy.KillSwitch.settingsKillSwitchDesc(lang))
                                     .font(.piloSerifSubtitle)
                                     .foregroundStyle(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -207,12 +199,12 @@ struct SettingsView: View {
 
                         if appState.isKillSwitchActive {
                             HStack(spacing: 10) {
-                                Text(String(format: Copy.KillSwitch.settingsKillSwitchActiveLabel,
+                                Text(String(format: Copy.KillSwitch.settingsKillSwitchActiveLabel(lang),
                                             appState.killSwitchRemainingHours))
                                     .font(.piloBody)
                                     .foregroundStyle(Color.amberWarn)
                                 Spacer()
-                                Button(Copy.KillSwitch.settingsKillSwitchRestoreButton) {
+                                Button(Copy.KillSwitch.settingsKillSwitchRestoreButton(lang)) {
                                     appState.deactivateKillSwitch()
                                 }
                                 .buttonStyle(.piloPrimary)
@@ -221,7 +213,7 @@ struct SettingsView: View {
                         } else {
                             HStack {
                                 Spacer()
-                                Button(Copy.KillSwitch.settingsKillSwitchActivateButton) {
+                                Button(Copy.KillSwitch.settingsKillSwitchActivateButton(lang)) {
                                     appState.activateKillSwitch()
                                 }
                                 .buttonStyle(.piloSecondary)
@@ -311,21 +303,20 @@ struct SettingsView: View {
                     .truncationMode(.middle)
             }
             Spacer()
-            Button(lang == .zh ? "恢复" : "Restore") {
-                appState.setHidden(false, repoId: repo.id)
-            }
-            .buttonStyle(.borderless)
-            .controlSize(.small)
-            .foregroundStyle(Color.piloBlue)
+            PiloLinkButton(
+                title: lang == .zh ? "恢复" : "Restore",
+                tint: .piloBlue,
+                action: { appState.setHidden(false, repoId: repo.id) }
+            )
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 9)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Color.piloPaper)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .stroke(Color.piloPaperBorder, lineWidth: 0.5)
         )
     }

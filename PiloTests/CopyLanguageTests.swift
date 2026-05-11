@@ -135,7 +135,7 @@ final class CopyLanguageTests: XCTestCase {
 
     func testCriticalContentNotJokey() {
         // 关键安全文案不应有 emoji 或感叹号过多
-        let bypass = Copy.Scan.bypassConfirmDesc
+        let bypass = Copy.Scan.bypassConfirmDesc(.zh)
         XCTAssertFalse(bypass.contains("lol"), "bypass 文案不应含 lol")
         XCTAssertFalse(bypass.contains("😂"), "bypass 文案不应含 笑 emoji")
         // 应包含建议关键词

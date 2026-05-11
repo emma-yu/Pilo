@@ -17,7 +17,21 @@ final class AppState {
     let pushExecutor: PushExecutor
     let secretScanner: SecretScanner
     let commitGuard: CommitGuardScanner
+    let visibilityClient: GitHubVisibilityClient
     private let fsMonitor: FSEventMonitor
+
+    // MARK: - 仓库可见性缓存（24h TTL）
+
+    /// repoId → (visibility, fetchedAt)
+    var visibilityCache: [UUID: (vis: GitHubVisibility, at: Date)] = [:]
+    private static let visibilityTTL: TimeInterval = 24 * 3600
+
+    /// 给视图用：拿当前 repo 缓存的可见性。nil = 没查过 OR 已过期
+    func cachedVisibility(for repoId: UUID) -> GitHubVisibility? {
+        guard let entry = visibilityCache[repoId] else { return nil }
+        if Date().timeIntervalSince(entry.at) > Self.visibilityTTL { return nil }
+        return entry.vis
+    }
 
     // MARK: - Push 会话
 
@@ -128,6 +142,7 @@ final class AppState {
         self.pushExecutor = PushExecutor(gitClient: git)
         self.secretScanner = SecretScanner()
         self.commitGuard = CommitGuardScanner()
+        self.visibilityClient = GitHubVisibilityClient()
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -523,17 +538,33 @@ final class AppState {
         selectedRepoId = id
         currentCommits = []
         commitsFetchTask?.cancel()
-        guard let id, let repo = repositories.first(where: { $0.id == id }),
-              let branch = repo.currentBranch else { return }
+        guard let id, let repo = repositories.first(where: { $0.id == id }) else { return }
         let repoURL = URL(fileURLWithPath: repo.path)
-        let upstreamRemote = repo.defaultPushRemote
-        commitsFetchTask = Task { [weak self] in
-            let commits = await self?.gitClient.pendingPushCommits(
-                repo: repoURL, branch: branch, remote: upstreamRemote
-            ) ?? []
-            await MainActor.run {
-                guard let self, self.selectedRepoId == id else { return }
-                self.currentCommits = commits
+
+        // 1) Commits
+        if let branch = repo.currentBranch {
+            let upstreamRemote = repo.defaultPushRemote
+            commitsFetchTask = Task { [weak self] in
+                let commits = await self?.gitClient.pendingPushCommits(
+                    repo: repoURL, branch: branch, remote: upstreamRemote
+                ) ?? []
+                await MainActor.run {
+                    guard let self, self.selectedRepoId == id else { return }
+                    self.currentCommits = commits
+                }
+            }
+        }
+
+        // 2) Visibility（按需 + 缓存）
+        if cachedVisibility(for: id) == nil,
+           let firstURL = repo.remotes.first?.url,
+           let owner = GitHubVisibilityClient.parseOwnerRepo(from: firstURL) {
+            Task { [weak self] in
+                guard let self else { return }
+                let vis = await self.visibilityClient.fetch(owner)
+                await MainActor.run {
+                    self.visibilityCache[id] = (vis, Date())
+                }
             }
         }
     }

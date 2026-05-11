@@ -3,27 +3,32 @@ import SwiftUI
 // MARK: - PrivacyPill（右上角 私有 / 公开）
 
 /// 仓库可见性指示。位置：详情页 title 行右上。
-/// 现阶段 isPublic 来自 GitRemote.isPublic（v0.1 永远 nil → 默认显示「私有」）。
-/// Phase 5+ 接入 GitHub API 后会真实反映。
+/// **真实**用 GitHub 公共 API 查（GitHubVisibilityClient），24h 缓存。
+/// 三态：公开 / 私有 / unknown（未查到时 = nil，不显示 pill）。
 struct PrivacyPill: View {
-    let isPublic: Bool?
+    let repoId: UUID
     @Environment(AppState.self) private var appState
 
     private var lang: Language { appState.language }
 
     var body: some View {
-        let resolved = isPublic ?? false
-        let text = resolved
-            ? (lang == .zh ? "公开" : "Public")
-            : (lang == .zh ? "私有" : "Private")
-        let bg: Color = resolved
-            ? Color.piloAccent.opacity(0.22)
-            : Color.cloudDivider.opacity(0.55)
-        let fg: Color = resolved
-            ? Color.roseDanger
-            : Color.inkSecondary
+        switch appState.cachedVisibility(for: repoId) {
+        case .publicRepo:
+            pill(text: lang == .zh ? "公开" : "Public",
+                 fg: Color.roseDanger,
+                 bg: Color.piloAccent.opacity(0.22))
+        case .privateRepo:
+            pill(text: lang == .zh ? "私有" : "Private",
+                 fg: Color.inkSecondary,
+                 bg: Color.cloudDivider.opacity(0.55))
+        case .unknown, .none:
+            // 未查到/查不到——保持沉默，不假装知道
+            EmptyView()
+        }
+    }
 
-        return Text(text)
+    private func pill(text: String, fg: Color, bg: Color) -> some View {
+        Text(text)
             .font(.piloSerifSubtitle)
             .foregroundStyle(fg)
             .padding(.horizontal, 11)
@@ -95,12 +100,12 @@ struct RepoStatusPill: View {
         HStack {
             Text("uvpeek-android").font(.piloSerifHero)
             Spacer()
-            PrivacyPill(isPublic: false)
+            PrivacyPill(repoId: UUID())
         }
         HStack {
             Text("my-blog").font(.piloSerifHero)
             Spacer()
-            PrivacyPill(isPublic: true)
+            PrivacyPill(repoId: UUID())
         }
     }
     .padding(28)
