@@ -10,6 +10,7 @@ struct MainPanel: View {
     private var lang: Language { appState.language }
 
     var body: some View {
+        // 窗口本身就是面板——header 直接坐在窗口顶部，下方 2 栏铺满
         VStack(spacing: 0) {
             PanelHeader()
             Rectangle()
@@ -17,7 +18,7 @@ struct MainPanel: View {
                 .frame(height: 1)
             HStack(alignment: .top, spacing: 0) {
                 PanelSidebar()
-                    .frame(width: 180)
+                    .frame(width: 220)
                     .frame(maxHeight: .infinity)
                 Rectangle()
                     .fill(Color.cloudDivider)
@@ -25,18 +26,9 @@ struct MainPanel: View {
                 PanelDetail()
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
-            .frame(minHeight: 360)
         }
-        .frame(maxWidth: 720)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.paperCard)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.inkPrimary.opacity(0.10), lineWidth: 0.5)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.paperCard)
     }
 }
 
