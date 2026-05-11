@@ -24,6 +24,7 @@
 		24762692BDB1C4A02A5ABB3D /* ScanFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BD4DE05816DDAC61F53E4E9 /* ScanFinding.swift */; };
 		2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EB97651940C664B638C347B /* Spacing.swift */; };
 		2C101ADF73A4B398A2CDEBB9 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 528911A1AB11C78391AEF846 /* Colors.swift */; };
+		2D2BC2CEE9C30D627CBA98B3 /* SettingsTabHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 067C5DBF5034F4C22EE8072E /* SettingsTabHeader.swift */; };
 		30000FA09B2FFCA646EE4FDA /* Elevation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A369CBEDE26B7838355849C5 /* Elevation.swift */; };
 		3590CD9C48D12B6BF2301F32 /* PostalOrnaments.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCEB69EF00A7F87CFFE2119E /* PostalOrnaments.swift */; };
 		38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */; };
@@ -90,6 +91,7 @@
 /* Begin PBXFileReference section */
 		02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepositoryCodableTests.swift; sourceTree = "<group>"; };
 		04A00990925CEF1AE1105D3A /* GitignoreEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitignoreEditor.swift; sourceTree = "<group>"; };
+		067C5DBF5034F4C22EE8072E /* SettingsTabHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsTabHeader.swift; sourceTree = "<group>"; };
 		071C8F4E44898A6B17DA6ABE /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		0866CD77575282C41947BADD /* GitRemote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitRemote.swift; sourceTree = "<group>"; };
 		12738ED463FC35FD0587E770 /* DiffParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParser.swift; sourceTree = "<group>"; };
@@ -324,6 +326,7 @@
 		DEC3E1750C594E28E436EBE3 /* Settings */ = {
 			isa = PBXGroup;
 			children = (
+				067C5DBF5034F4C22EE8072E /* SettingsTabHeader.swift */,
 				74EC3C4B71E63346D274F034 /* SettingsView.swift */,
 			);
 			path = Settings;
@@ -504,6 +507,7 @@
 				21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */,
 				21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */,
 				E320322D91974174E383EC5C /* SectionHeader.swift in Sources */,
+				2D2BC2CEE9C30D627CBA98B3 /* SettingsTabHeader.swift in Sources */,
 				A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */,
 				2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */,
 				43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */,

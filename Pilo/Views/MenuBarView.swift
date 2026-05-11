@@ -68,14 +68,17 @@ struct MenuBarView: View {
     @ViewBuilder
     private var hero: some View {
         VStack(spacing: PiloSpacing.s) {
+            // 邮局风：mascot 上方加金色装饰线
+            OrnamentDivider(width: 200)
+                .padding(.bottom, PiloSpacing.xs)
             PiloMascot(mood: heroMood, size: 84, breathing: true)
                 .padding(.bottom, PiloSpacing.xs)
             Text(heroTitle)
-                .font(.piloTitle)
-                .tracking(-0.3)
+                .font(.piloSerifTitle)
+                .tracking(0.3)
                 .foregroundStyle(Color.inkPrimary)
             Text(heroSubtitle)
-                .font(.piloBody)
+                .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -140,20 +143,47 @@ struct MenuBarView: View {
     @ViewBuilder
     private var content: some View {
         if !appState.pendingRepos.isEmpty {
-            VStack(spacing: 2) {
-                ForEach(appState.pendingRepos.prefix(4)) { repo in
-                    pendingRepoRow(repo)
+            VStack(alignment: .leading, spacing: PiloSpacing.s) {
+                // 斜体宋体 group label — 邮局风
+                HStack(spacing: 6) {
+                    Text(lang == .zh
+                         ? "— 待寄出的小信 —"
+                         : "— letters to send —")
+                        .font(.piloSerifLabel)
+                        .foregroundStyle(Color.piloGoldDark)
+                        .tracking(0.5)
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.piloGold, Color.piloGold.opacity(0)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(height: 1)
                 }
-                if appState.pendingRepos.count > 4 {
-                    Text("…还有 \(appState.pendingRepos.count - 4) 个")
-                        .font(.piloCaption)
-                        .foregroundStyle(Color.inkTertiary)
-                        .padding(.top, PiloSpacing.xs)
+                .padding(.horizontal, PiloSpacing.xs)
+                .padding(.bottom, PiloSpacing.xs)
+
+                VStack(spacing: 2) {
+                    ForEach(appState.pendingRepos.prefix(4)) { repo in
+                        pendingRepoRow(repo)
+                    }
+                    if appState.pendingRepos.count > 4 {
+                        Text(lang == .zh
+                             ? "…还有 \(appState.pendingRepos.count - 4) 个"
+                             : "…and \(appState.pendingRepos.count - 4) more")
+                            .font(.piloSerifSubtitle)
+                            .foregroundStyle(Color.inkTertiary)
+                            .padding(.top, PiloSpacing.xs)
+                    }
                 }
             }
             .padding(.horizontal, PiloSpacing.xs)
         }
     }
+
+    private var lang: Language { appState.language }
 
     private func pendingRepoRow(_ repo: Repository) -> some View {
         Button {
@@ -219,8 +249,15 @@ struct MenuBarView: View {
     // MARK: - Divider
 
     private var divider: some View {
+        // 邮局风金色 hairline
         Rectangle()
-            .fill(Color.inkPrimary.opacity(0.08))
+            .fill(
+                LinearGradient(
+                    colors: [Color.piloGold.opacity(0), Color.piloGold.opacity(0.5), Color.piloGold.opacity(0)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
             .frame(height: 1)
     }
 }
