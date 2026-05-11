@@ -10,10 +10,57 @@ struct SettingsView: View {
                 .tabItem { Label("通用", systemImage: "gearshape") }
             scanTab
                 .tabItem { Label("扫描", systemImage: "folder") }
+            hiddenReposTab
+                .tabItem { Label("已隐藏", systemImage: "eye.slash") }
+                .badge(appState.hiddenRepos.count)
             aboutTab
                 .tabItem { Label("关于", systemImage: "info.circle") }
         }
-        .frame(width: 560, height: 420)
+        .frame(width: 560, height: 460)
+    }
+
+    // MARK: - 已隐藏
+
+    private var hiddenReposTab: some View {
+        Form {
+            Section("已隐藏的仓库") {
+                if appState.hiddenRepos.isEmpty {
+                    Text("没有隐藏的仓库。\n在主面板右键任意仓库 → 「隐藏此仓库」。")
+                        .font(.piloCaption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                } else {
+                    ForEach(appState.hiddenRepos) { repo in
+                        HStack(spacing: 10) {
+                            Image(systemName: "eye.slash")
+                                .foregroundStyle(Color.inkTertiary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(repo.name)
+                                    .font(.piloSection)
+                                Text(repo.path)
+                                    .font(.piloMono)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                            Spacer()
+                            Button("恢复") {
+                                appState.setHidden(false, repoId: repo.id)
+                            }
+                            .buttonStyle(.borderless)
+                            .controlSize(.small)
+                        }
+                    }
+                }
+            }
+
+            Section {
+                Text("隐藏的仓库不会出现在菜单栏 popover 和主面板里，但 Pilo 仍然会扫描它们以便随时恢复。")
+                    .font(.piloCaption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
     }
 
     // MARK: - 通用

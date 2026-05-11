@@ -72,4 +72,36 @@ final class RepositoryCodableTests: XCTestCase {
         let r2 = GitRemote(name: "origin", url: "https://github.com/emma/pilo.git", isPublic: nil)
         XCTAssertEqual(r2.displayHost, "github.com/emma/pilo")
     }
+
+    // MARK: - 凭证脱敏（P0 安全）
+
+    func testHTTPSWithPATIsSanitized() {
+        let dirty = "https://emma-yu:ghp_FAKETOKEN1234567890@github.com/emma-yu/foo.git"
+        let r = GitRemote(name: "origin", url: dirty)
+        XCTAssertFalse(r.url.contains("ghp_"), "url 字段不能保留 PAT")
+        XCTAssertFalse(r.url.contains("emma-yu:"), "url 字段不能保留 user:pass")
+        XCTAssertEqual(r.url, "https://github.com/emma-yu/foo.git")
+    }
+
+    func testHTTPSWithUserOnlyIsSanitized() {
+        let dirty = "https://emma-yu@github.com/foo.git"
+        let r = GitRemote(name: "origin", url: dirty)
+        XCTAssertEqual(r.url, "https://github.com/foo.git")
+    }
+
+    func testSSHFormUnchanged() {
+        let ssh = "git@github.com:emma/foo.git"
+        let r = GitRemote(name: "origin", url: ssh)
+        XCTAssertEqual(r.url, ssh, "SSH 形式不带凭证，原样保留")
+    }
+
+    func testSanitizeAppliedOnDecode() throws {
+        // 模拟旧 state.json 里残留的脏 URL 被读回
+        let dirtyJSON = """
+        {"name":"origin","url":"https://x:ghp_LEAK1234567890@github.com/a/b.git"}
+        """.data(using: .utf8)!
+        let decoded = try JSONDecoder.pilo.decode(GitRemote.self, from: dirtyJSON)
+        XCTAssertFalse(decoded.url.contains("ghp_"), "decode 后必须也脱敏")
+        XCTAssertFalse(decoded.url.contains("x:"), "decode 后必须也脱敏")
+    }
 }

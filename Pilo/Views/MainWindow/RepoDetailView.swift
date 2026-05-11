@@ -34,29 +34,61 @@ struct RepoDetailView: View {
     }
 
     private var actionsRow: some View {
-        HStack(spacing: 10) {
-            Button {
-                Task { await appState.beginPushSession(for: repo) }
-            } label: {
-                Label(Copy.Push.pushEntryButton(tone), systemImage: "paperplane.fill")
-                    .frame(minWidth: 100)
-            }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
-            .tint(Color.piloBlue)
-            .disabled(repo.aheadCount == 0 || repo.currentBranch == nil)
-            .help(repo.aheadCount == 0 ? Copy.Push.pushDisabledHint : "")
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Button {
+                    Task { await appState.beginPushSession(for: repo) }
+                } label: {
+                    Label(Copy.Push.pushEntryButton(tone), systemImage: "paperplane.fill")
+                        .frame(minWidth: 100)
+                }
+                .controlSize(.large)
+                .buttonStyle(.borderedProminent)
+                .tint(Color.piloBlue)
+                .disabled(!canPush)
 
-            Button {
-                NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
-                                        withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
-                                        configuration: NSWorkspace.OpenConfiguration(),
-                                        completionHandler: nil)
-            } label: {
-                Label("在终端打开", systemImage: "terminal")
+                Button {
+                    NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
+                                            withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+                                            configuration: NSWorkspace.OpenConfiguration(),
+                                            completionHandler: nil)
+                } label: {
+                    Label("在终端打开", systemImage: "terminal")
+                }
+                .controlSize(.large)
             }
-            .controlSize(.large)
+
+            if let hint = pushDisabledReason {
+                HStack(spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(Color.lavenderInfo)
+                    Text(hint)
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+            }
         }
+    }
+
+    private var canPush: Bool {
+        repo.currentBranch != nil && repo.aheadCount > 0 && !repo.remotes.isEmpty
+    }
+
+    /// 当 push 按钮 disabled 时显示的明确理由（按优先级）
+    private var pushDisabledReason: String? {
+        if repo.currentBranch == nil {
+            return "当前不在任何分支上（detached HEAD），无法 push"
+        }
+        if repo.remotes.isEmpty {
+            return "还没有配置 remote。先在终端运行 `git remote add origin <url>`"
+        }
+        if repo.aheadCount == 0 && repo.uncommittedCount > 0 {
+            return "有 \(repo.uncommittedCount) 个改动还没 commit。先 `git commit` 才能 push"
+        }
+        if repo.aheadCount == 0 {
+            return "没有可推送的 commit"
+        }
+        return nil
     }
 
     private var header: some View {

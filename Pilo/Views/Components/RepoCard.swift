@@ -6,6 +6,8 @@ struct RepoCard: View {
     var isSelected: Bool = false
     var onTap: (() -> Void)? = nil
 
+    @Environment(AppState.self) private var appState
+
     var body: some View {
         HStack(spacing: 10) {
             statusDot
@@ -30,6 +32,27 @@ struct RepoCard: View {
         )
         .contentShape(Rectangle())
         .onTapGesture { onTap?() }
+        .contextMenu {
+            Button {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
+            } label: {
+                Label("在 Finder 中显示", systemImage: "folder")
+            }
+            Button {
+                NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
+                                        withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+                                        configuration: NSWorkspace.OpenConfiguration(),
+                                        completionHandler: nil)
+            } label: {
+                Label("在终端打开", systemImage: "terminal")
+            }
+            Divider()
+            Button(role: .destructive) {
+                appState.setHidden(true, repoId: repo.id)
+            } label: {
+                Label("隐藏此仓库", systemImage: "eye.slash")
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityIdentifier("repo.row.\(repo.pathHash)")
     }
@@ -60,11 +83,21 @@ struct RepoCard: View {
 
     @ViewBuilder
     private var badge: some View {
-        switch repo.statusSummary {
-        case .ahead:        StatusBadge(kind: .ahead(repo.aheadCount))
-        case .behind:       StatusBadge(kind: .behind(repo.behindCount))
-        case .uncommitted:  StatusBadge(kind: .uncommitted(repo.uncommittedCount))
-        case .synced:       StatusBadge(kind: .synced)
+        // 同时显示 ahead + uncommitted（之前只显示优先级最高的，导致 getihu 那种
+        // "5 待提交 + 4 ↑" 的仓库丢了 ahead 数字，用户以为没法 push）
+        HStack(spacing: 4) {
+            if repo.aheadCount > 0 {
+                StatusBadge(kind: .ahead(repo.aheadCount))
+            }
+            if repo.behindCount > 0 && repo.aheadCount == 0 {
+                StatusBadge(kind: .behind(repo.behindCount))
+            }
+            if repo.uncommittedCount > 0 {
+                StatusBadge(kind: .uncommitted(repo.uncommittedCount))
+            }
+            if !repo.hasWork && repo.behindCount == 0 {
+                StatusBadge(kind: .synced)
+            }
         }
     }
 

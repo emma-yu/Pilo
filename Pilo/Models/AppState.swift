@@ -255,6 +255,23 @@ final class AppState {
         pushSession = s2
     }
 
+    // MARK: - 隐藏 / 取消隐藏仓库
+
+    func setHidden(_ hidden: Bool, repoId: UUID) {
+        guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }
+        repositories[idx].isHidden = hidden
+        // 隐藏当前选中的，要重选
+        if hidden && selectedRepoId == repoId {
+            selectedRepoId = sortedRepos.first?.id
+        }
+        saveRepositoriesToDisk()
+    }
+
+    var hiddenRepos: [Repository] {
+        repositories.filter { $0.isHidden }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     func dismissPushSession() {
         pushSession = nil
         // 推送后做一次轻量 rescan 校准 ahead/behind
