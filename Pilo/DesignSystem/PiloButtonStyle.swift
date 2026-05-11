@@ -7,6 +7,7 @@ enum PiloButtonRole {
     case secondary     // 次操作（取消 / 跳过）：bordered，hover 时 PiloBlueLight bg
     case ghost         // 卡片内 inline chip：透明，hover 时显形
     case destructive   // bypass：roseDanger 填充
+    case textLink      // Bear-style 纯文字链接：仅 ink primary 文字 + hover 下划线
 }
 
 struct PiloButtonStyle: ButtonStyle {
@@ -33,25 +34,29 @@ struct PiloButtonStyle: ButtonStyle {
     private var horizontalPadding: CGFloat {
         switch role {
         case .ghost:        return 8
-        default:            return 16
+        case .textLink:     return 0
+        default:            return 18
         }
     }
     private var verticalPadding: CGFloat {
         switch role {
         case .ghost:        return 4
-        default:            return 8
+        case .textLink:     return 4
+        default:            return 10
         }
     }
     private var minHeight: CGFloat {
         switch role {
         case .ghost:        return 24
-        default:            return 32
+        case .textLink:     return 22
+        default:            return 36
         }
     }
     private var cornerRadius: CGFloat {
         switch role {
         case .ghost:        return 6
-        default:            return 8
+        case .textLink:     return 0
+        default:            return 10
         }
     }
 
@@ -64,12 +69,14 @@ struct PiloButtonStyle: ButtonStyle {
             (cfg.isPressed ? Color.piloBlueDark : Color.piloBlue)
                 .opacity(isEnabled ? 1.0 : 0.5)
         case .secondary:
-            Color.piloBlueLight.opacity(cfg.isPressed ? 0.35 : 0.0)
+            Color.cloudDivider.opacity(cfg.isPressed ? 0.6 : 0.0)
         case .ghost:
             Color.cloudDivider.opacity(cfg.isPressed ? 0.7 : 0.5)
         case .destructive:
             (cfg.isPressed ? Color.piloBlueDark : Color.roseDanger)
                 .opacity(isEnabled ? 1.0 : 0.5)
+        case .textLink:
+            Color.clear
         }
     }
 
@@ -79,6 +86,8 @@ struct PiloButtonStyle: ButtonStyle {
             return .white
         case .secondary, .ghost:
             return isEnabled ? .inkPrimary : .inkTertiary
+        case .textLink:
+            return isEnabled ? .piloBlue : .inkTertiary
         }
     }
 
@@ -86,7 +95,7 @@ struct PiloButtonStyle: ButtonStyle {
     private func borderOverlay(for cfg: Configuration) -> some View {
         if role == .secondary {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(Color.piloBlue.opacity(0.5), lineWidth: 1)
+                .stroke(Color.cloudDivider, lineWidth: 1)
         }
     }
 
@@ -108,4 +117,5 @@ extension ButtonStyle where Self == PiloButtonStyle {
     static var piloSecondary: PiloButtonStyle   { PiloButtonStyle(role: .secondary) }
     static var piloGhost: PiloButtonStyle       { PiloButtonStyle(role: .ghost) }
     static var piloDestructive: PiloButtonStyle { PiloButtonStyle(role: .destructive) }
+    static var piloTextLink: PiloButtonStyle    { PiloButtonStyle(role: .textLink) }
 }

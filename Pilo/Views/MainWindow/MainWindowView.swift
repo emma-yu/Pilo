@@ -7,16 +7,12 @@ struct MainWindowView: View {
     var body: some View {
         NavigationSplitView {
             RepoListView()
-                .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 340)
+                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 360)
         } detail: {
             ZStack {
-                // 顶部双层柔渐变："日出"感——PiloBlue 6% + PiloCream 4%
-                LinearGradient(
-                    colors: [Color.piloBlue.opacity(0.06), Color.piloCream.opacity(0.04), Color.clear],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-                .ignoresSafeArea()
+                // Bear-vibe：纯纸品色底，无渐变，靠留白和文字呼吸
+                Color.creamBg
+                    .ignoresSafeArea()
 
                 Group {
                     if let id = appState.selectedRepoId,
@@ -32,7 +28,7 @@ struct MainWindowView: View {
             }
         }
         .navigationTitle("Pilo")
-        .frame(minWidth: 760, minHeight: 500)
+        .frame(minWidth: 920, minHeight: 540)
     }
 
     private var emptyDetail: some View {

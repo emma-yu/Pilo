@@ -102,7 +102,8 @@ struct PiloChip: View {
         case .filled:
             shape.fill(tint)
         case .tinted:
-            shape.fill(tint.opacity(0.16))
+            // Bear-vibe: 几乎隐形的背景，靠文字 tint 传达色彩
+            shape.fill(tint.opacity(0.10))
         case .outline:
             shape.stroke(tint, lineWidth: 1)
         }

@@ -10,10 +10,7 @@ struct OnboardingCompleteView: View {
         VStack(spacing: PiloSpacing.l) {
             Spacer(minLength: PiloSpacing.s)
 
-            ZStack {
-                SparkleCluster(mascotSize: 96)
-                PiloMascot(mood: .happy, size: 96, breathing: true)
-            }
+            PiloMascot(mood: .happy, size: 140, breathing: true)
 
             primaryText
 

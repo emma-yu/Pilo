@@ -6,32 +6,32 @@ struct OnboardingWelcomeView: View {
     let onContinue: () -> Void
 
     var body: some View {
-        VStack(spacing: PiloSpacing.l) {
-            Spacer(minLength: PiloSpacing.s)
+        VStack(spacing: PiloSpacing.xl) {
+            Spacer()
 
-            // Hero with sparkle decorations
-            ZStack {
-                SparkleCluster(mascotSize: 96)
-                PiloMascot(mood: .happy, size: 96, breathing: true)
+            PiloMascot(mood: .happy, size: 140, breathing: true)
+
+            VStack(spacing: PiloSpacing.m) {
+                Text(Copy.Onboarding.welcomeTitle)
+                    .font(.piloHero)
+                    .tracking(-0.5)
+                    .foregroundStyle(Color.inkPrimary)
+
+                Text(Copy.Onboarding.welcomeBody)
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 360)
             }
-
-            Text(Copy.Onboarding.welcomeTitle)
-                .font(.piloHero)
-                .foregroundStyle(Color.inkPrimary)
-
-            Text(Copy.Onboarding.welcomeBody)
-                .font(.piloBody)
-                .foregroundStyle(Color.inkSecondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, PiloSpacing.xl)
 
             VStack(alignment: .leading, spacing: PiloSpacing.m) {
-                featureRow(symbol: "magnifyingglass", text: Copy.Onboarding.welcomeFeature1, tint: .piloBlue)
-                featureRow(symbol: "shield.checkered", text: Copy.Onboarding.welcomeFeature2, tint: .piloAccent)
-                featureRow(symbol: "lock.shield", text: Copy.Onboarding.welcomeFeature3, tint: .mintSafe)
+                featureRow(symbol: "magnifyingglass", text: Copy.Onboarding.welcomeFeature1)
+                featureRow(symbol: "shield.checkered", text: Copy.Onboarding.welcomeFeature2)
+                featureRow(symbol: "lock.shield", text: Copy.Onboarding.welcomeFeature3)
             }
+            .frame(maxWidth: 360, alignment: .leading)
             .padding(.top, PiloSpacing.s)
-            .frame(maxWidth: 380, alignment: .leading)
 
             Spacer()
 
@@ -48,12 +48,12 @@ struct OnboardingWelcomeView: View {
         .padding(30)
     }
 
-    private func featureRow(symbol: String, text: String, tint: Color) -> some View {
+    private func featureRow(symbol: String, text: String) -> some View {
         HStack(alignment: .top, spacing: PiloSpacing.m) {
             Image(systemName: symbol)
                 .font(.system(size: 14, weight: .medium))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(tint)
+                .foregroundStyle(Color.piloBlue)
                 .frame(width: 22)
             Text(text)
                 .font(.piloBody)

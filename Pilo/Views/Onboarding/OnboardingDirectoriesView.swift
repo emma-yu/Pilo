@@ -14,12 +14,14 @@ struct OnboardingDirectoriesView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 64, breathing: true)
+            PiloMascot(mood: .alert, size: 110, breathing: true)
 
             Text(Copy.Onboarding.directoriesTitle)
-                .font(.piloTitle)
+                .font(.piloHero)
+                .tracking(-0.5)
                 .foregroundStyle(Color.inkPrimary)
                 .multilineTextAlignment(.center)
+                .minimumScaleFactor(0.7)
 
             directoryList
 

@@ -1,59 +1,68 @@
 import SwiftUI
 
+/// Bear-vibe 极简 sidebar：纸品色背景 + 大 label 顶 + 2 行 row。
+/// 移除 chip / 蓝条 / dot。
 struct RepoListView: View {
 
     @Environment(AppState.self) private var appState
 
     var body: some View {
-        VStack(spacing: 0) {
-            // 顶部 chip 替代传统标题——更现代、信息密度更高
-            sidebarHeaderChip
-                .padding(.horizontal, PiloSpacing.m)
-                .padding(.top, PiloSpacing.m)
-                .padding(.bottom, PiloSpacing.s)
+        ZStack {
+            // 纸品色 sidebar 背景，替代 SwiftUI 默认 .sidebar 灰
+            Color.creamBg
+                .ignoresSafeArea()
 
-            List(selection: Binding(
-                get: { appState.selectedRepoId },
-                set: { appState.selectedRepoId = $0 }
-            )) {
-                Section {
-                    ForEach(appState.sortedRepos) { repo in
-                        RepoCard(repo: repo, isSelected: repo.id == appState.selectedRepoId) {
-                            appState.selectedRepoId = repo.id
+            VStack(spacing: 0) {
+                // 顶部签名感 label
+                signatureHeader
+                    .padding(.horizontal, PiloSpacing.l)
+                    .padding(.top, PiloSpacing.xl)
+                    .padding(.bottom, PiloSpacing.s)
+
+                hairline
+                    .padding(.horizontal, PiloSpacing.l)
+
+                ScrollView {
+                    LazyVStack(spacing: 2) {
+                        ForEach(appState.sortedRepos) { repo in
+                            RepoCard(repo: repo, isSelected: repo.id == appState.selectedRepoId) {
+                                appState.selectedRepoId = repo.id
+                            }
+                            .padding(.horizontal, PiloSpacing.s)
                         }
-                        .tag(repo.id as UUID?)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 3, leading: 8, bottom: 3, trailing: 8))
-                        .listRowBackground(Color.clear)
                     }
-                } header: {
-                    SectionHeader(title: "仓库", style: .label)
-                        .padding(.bottom, PiloSpacing.xs)
+                    .padding(.vertical, PiloSpacing.m)
                 }
+                .scrollContentBackground(.hidden)
             }
-            .listStyle(.sidebar)
-            .scrollContentBackground(.hidden)
         }
     }
 
-    private var sidebarHeaderChip: some View {
+    private var signatureHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("PILO")
+                .font(.piloLabel)
+                .tracking(2.0)
+                .foregroundStyle(Color.piloBlue)
+            Text(headerSubtitle)
+                .font(.piloCaption)
+                .foregroundStyle(Color.inkSecondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var headerSubtitle: String {
         let total = appState.repositories.filter { !$0.isHidden }.count
         let pending = appState.pendingRepos.count
-        let text: String
         if pending > 0 {
-            text = "\(total) 仓库 · \(pending) 待推送"
-        } else {
-            text = "\(total) 仓库"
+            return "\(total) 仓库 · 待处理 \(pending)"
         }
-        return HStack {
-            PiloChip(
-                icon: "shippingbox.fill",
-                text: text,
-                tint: .piloBlue,
-                style: .tinted,
-                size: .medium
-            )
-            Spacer()
-        }
+        return "\(total) 仓库都同步啦"
+    }
+
+    private var hairline: some View {
+        Rectangle()
+            .fill(Color.cloudDivider.opacity(0.6))
+            .frame(height: 1)
     }
 }

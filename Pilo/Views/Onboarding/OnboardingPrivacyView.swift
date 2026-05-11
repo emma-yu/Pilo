@@ -8,13 +8,14 @@ struct OnboardingPrivacyView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 64, breathing: true)
+            PiloMascot(mood: .alert, size: 110, breathing: true)
 
             Text(Copy.Onboarding.privacyTitle)
                 .font(.piloHero)
+                .tracking(-0.5)
                 .foregroundStyle(Color.inkPrimary)
                 .multilineTextAlignment(.center)
-                .minimumScaleFactor(0.8)
+                .minimumScaleFactor(0.7)
 
             Text(Copy.Onboarding.privacyBody)
                 .font(.piloBody)

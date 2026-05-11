@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 
+/// Bear-vibe RepoDetailView：居中编辑器布局，max-width 680，无 card，靠留白 + hairline。
 struct RepoDetailView: View {
 
     let repo: Repository
@@ -9,17 +10,23 @@ struct RepoDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: PiloSpacing.l) {
-                // Hero card：用 elevated 双层阴影突出当前仓库
-                header.piloCard(elevation: .elevated)
-                // 主操作 + 元信息按节奏排
-                actionsRow.piloCard()
-                metaSection.piloCard()
-                remotesSection
-                statusSection.piloCard()
+            VStack(alignment: .leading, spacing: 0) {
+                heroSection
+                    .padding(.top, PiloSpacing.xxxl + 8)
+                    .padding(.bottom, PiloSpacing.xl)
+
+                actionSection
+                    .padding(.bottom, PiloSpacing.xxl)
+
+                hairline
+                    .padding(.bottom, PiloSpacing.xl)
+
+                metaSection
+                    .padding(.bottom, PiloSpacing.xxxl)
             }
-            .padding(PiloSpacing.xl)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: 680)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, PiloSpacing.xl)
         }
         .sheet(item: Binding(
             get: { appState.pushSession },
@@ -35,129 +42,161 @@ struct RepoDetailView: View {
         }
     }
 
-    private var actionsRow: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Button {
-                    Task { await appState.beginPushSession(for: repo) }
-                } label: {
-                    Label(Copy.Push.pushEntryButton(tone), systemImage: "paperplane.fill")
-                        .font(.piloSection)
-                        .frame(minWidth: 110)
-                }
-                .buttonStyle(.piloPrimary)
-                .disabled(!canPush)
+    // MARK: - Hero（仓库名 + 元信息居中）
 
-                Button {
-                    NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
-                                            withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
-                                            configuration: NSWorkspace.OpenConfiguration(),
-                                            completionHandler: nil)
-                } label: {
-                    Label("在终端打开", systemImage: "terminal")
-                        .font(.piloBody)
-                }
-                .buttonStyle(.piloSecondary)
-            }
-
-            if let hint = pushDisabledReason {
-                HStack(spacing: 6) {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(Color.lavenderInfo)
-                    Text(hint)
-                        .font(.piloCaption)
-                        .foregroundStyle(Color.inkSecondary)
-                }
-            }
+    private var heroSection: some View {
+        VStack(alignment: .center, spacing: PiloSpacing.s) {
+            Text(repo.name)
+                .font(.piloHero)
+                .tracking(-0.5)
+                .foregroundStyle(Color.inkPrimary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .minimumScaleFactor(0.7)
+            Text(heroSubtitle)
+                .font(.piloBody)
+                .foregroundStyle(Color.inkSecondary)
+                .multilineTextAlignment(.center)
         }
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private var heroSubtitle: String {
+        var parts: [String] = []
+        if let b = repo.currentBranch {
+            parts.append(b)
+        }
+        if let d = repo.lastCommitDate {
+            parts.append("修改于 " + RepoCard.relativeFormatter.localizedString(for: d, relativeTo: Date()))
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    // MARK: - 主操作区（居中大 CTA + 次要 text-link）
+
+    private var actionSection: some View {
+        VStack(spacing: PiloSpacing.l) {
+            // 一句话状态描述
+            if repo.aheadCount > 0, repo.currentBranch != nil, let remote = repo.remotes.first {
+                Text("\(repo.aheadCount) 个 commit 等着飞往\n\(remote.displayHost)")
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, PiloSpacing.xl)
+            } else if repo.uncommittedCount > 0 {
+                Text("\(repo.uncommittedCount) 个改动还没 commit")
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+            } else if repo.remotes.isEmpty {
+                Text("还没有配置 remote")
+                    .font(.piloBody)
+                    .foregroundStyle(Color.inkSecondary)
+            } else {
+                Text("已同步")
+                    .font(.piloBody)
+                    .foregroundStyle(Color.mintSafe)
+            }
+
+            // 主 CTA
+            Button {
+                Task { await appState.beginPushSession(for: repo) }
+            } label: {
+                Label("推送", systemImage: "paperplane.fill")
+                    .font(.piloSection)
+                    .frame(minWidth: 200)
+            }
+            .buttonStyle(.piloPrimary)
+            .disabled(!canPush)
+
+            // 次要 text-link
+            Button {
+                NSWorkspace.shared.open(
+                    [URL(fileURLWithPath: repo.path)],
+                    withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+                    configuration: NSWorkspace.OpenConfiguration(),
+                    completionHandler: nil
+                )
+            } label: {
+                Text("在终端打开 →")
+            }
+            .buttonStyle(.piloTextLink)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var canPush: Bool {
         repo.currentBranch != nil && repo.aheadCount > 0 && !repo.remotes.isEmpty
     }
 
-    /// 当 push 按钮 disabled 时显示的明确理由（按优先级）
-    private var pushDisabledReason: String? {
-        if repo.currentBranch == nil {
-            return "当前不在任何分支上（detached HEAD），无法 push"
+    // MARK: - Meta 信息（label + 内容编辑器样式）
+
+    private var metaSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.xl) {
+            metaRow(label: "路径", content: Text(repo.path).font(.piloMono))
+
+            if !repo.remotes.isEmpty {
+                metaRow(label: "REMOTE", content: remotesList)
+            }
+
+            metaRow(label: "状态", content: statusLine)
         }
-        if repo.remotes.isEmpty {
-            return "还没有配置 remote。先在终端运行 `git remote add origin <url>`"
-        }
-        if repo.aheadCount == 0 && repo.uncommittedCount > 0 {
-            return "有 \(repo.uncommittedCount) 个改动还没 commit。先 `git commit` 才能 push"
-        }
-        if repo.aheadCount == 0 {
-            return "没有可推送的 commit"
-        }
-        return nil
     }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(repo.name)
-                .font(.piloTitle)
+    private func metaRow<C: View>(label: String, content: C) -> some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.xs) {
+            Text(label.uppercased())
+                .font(.piloLabel)
+                .tracking(2.0)
+                .foregroundStyle(Color.inkTertiary)
+            content
                 .foregroundStyle(Color.inkPrimary)
-            HStack(spacing: 8) {
-                if let branch = repo.currentBranch {
-                    Text(branch)
+        }
+    }
+
+    private var remotesList: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(repo.remotes, id: \.name) { remote in
+                HStack(spacing: 8) {
+                    Text(remote.name)
+                        .font(.piloBody)
+                        .foregroundStyle(Color.piloBlue)
+                    Text("→")
+                        .font(.piloBody)
+                        .foregroundStyle(Color.inkTertiary)
+                    Text(remote.displayHost)
                         .font(.piloMono)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.cloudDivider.opacity(0.5), in: RoundedRectangle(cornerRadius: 4))
-                }
-                if let d = repo.lastCommitDate {
-                    Text("最后提交：\(RepoCard.relativeFormatter.localizedString(for: d, relativeTo: Date()))")
-                        .font(.piloCaption)
                         .foregroundStyle(Color.inkSecondary)
                 }
             }
         }
     }
 
-    private var metaSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "路径")
-            Text(repo.path)
-                .font(.piloMono)
-                .foregroundStyle(Color.inkSecondary)
-                .textSelection(.enabled)
-        }
-    }
-
     @ViewBuilder
-    private var remotesSection: some View {
-        if !repo.remotes.isEmpty {
-            VStack(alignment: .leading, spacing: 8) {
-                SectionHeader(title: "Remote")
-                ForEach(repo.remotes, id: \.name) { remote in
-                    HStack(spacing: 6) {
-                        Text(remote.name)
-                            .font(.piloMono)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color.piloBlueLight.opacity(0.45), in: RoundedRectangle(cornerRadius: 5))
-                            .foregroundStyle(Color.piloBlueDark)
-                        Text(remote.displayHost)
-                            .font(.piloBody)
-                            .foregroundStyle(Color.inkSecondary)
-                    }
-                }
-            }
-            .piloCard()
+    private var statusLine: some View {
+        let parts = statusParts
+        if parts.isEmpty {
+            Text("已同步")
+                .font(.piloBody)
+                .foregroundStyle(Color.mintSafe)
+        } else {
+            Text(parts.joined(separator: "   ·   "))
+                .font(.piloBody)
+                .foregroundStyle(Color.inkPrimary)
         }
     }
 
-    private var statusSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "状态")
-            HStack(spacing: 10) {
-                if repo.aheadCount > 0 { StatusBadge(kind: .ahead(repo.aheadCount)) }
-                if repo.behindCount > 0 { StatusBadge(kind: .behind(repo.behindCount)) }
-                if repo.uncommittedCount > 0 { StatusBadge(kind: .uncommitted(repo.uncommittedCount)) }
-                if !repo.hasWork && repo.behindCount == 0 { StatusBadge(kind: .synced) }
-            }
-        }
+    private var statusParts: [String] {
+        var p: [String] = []
+        if repo.aheadCount > 0      { p.append("↑ \(repo.aheadCount)") }
+        if repo.behindCount > 0     { p.append("↓ \(repo.behindCount)") }
+        if repo.uncommittedCount > 0 { p.append("\(repo.uncommittedCount) 待提交") }
+        return p
     }
 
+    private var hairline: some View {
+        Rectangle()
+            .fill(Color.cloudDivider.opacity(0.6))
+            .frame(height: 1)
+    }
 }
