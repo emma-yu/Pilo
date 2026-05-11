@@ -63,21 +63,23 @@ final class FSEventMonitor: @unchecked Sendable {
             copyDescription: nil
         )
 
+        // 必须设 UseCFTypes，回调里的 `eventPaths` 才会是 CFArray<CFString>。
+        // 不设的话它是 char**，把它当 NSArray 用会立即 EXC_BAD_ACCESS（v0.1 第一次 ship 翻车在此）。
         let createFlags = UInt32(
             kFSEventStreamCreateFlagFileEvents |
             kFSEventStreamCreateFlagNoDefer |
-            kFSEventStreamCreateFlagIgnoreSelf
+            kFSEventStreamCreateFlagIgnoreSelf |
+            kFSEventStreamCreateFlagUseCFTypes
         )
 
         let callback: FSEventStreamCallback = { _, contextInfo, numEvents, eventPaths, eventFlags, _ in
             guard let contextInfo = contextInfo else { return }
             let monitor = Unmanaged<FSEventMonitor>.fromOpaque(contextInfo).takeUnretainedValue()
-            // eventPaths is a CFArray of CFString (because we set kFSEventStreamCreateFlagUseCFTypes? NO — we didn't,
-            // so eventPaths is `CFArrayRef` with C strings cast as `UnsafePointer<UnsafePointer<CChar>>?`).
-            // 我们这里没设 UseCFTypes，所以走 CFArray-as-NSArray-of-NSString 路径：
-            let pathsArr = unsafeBitCast(eventPaths, to: NSArray.self)
+            // 与 UseCFTypes 配对：eventPaths 是 CFArrayRef，toll-free bridge 到 NSArray<NSString>
+            let cfArray = Unmanaged<CFArray>.fromOpaque(eventPaths).takeUnretainedValue()
+            let pathsArr = cfArray as NSArray
             for i in 0..<numEvents {
-                let path = pathsArr[i] as? String ?? ""
+                guard let path = pathsArr[i] as? String else { continue }
                 let flag = eventFlags[i]
                 monitor.handle(path: path, flags: flag)
             }
