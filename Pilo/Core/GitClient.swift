@@ -124,11 +124,69 @@ actor GitClient {
         return trimmed.isEmpty ? nil : trimmed
     }
 
+    // MARK: - Push 相关查询
+
+    /// 当前分支的 upstream，例如 `origin/main`。无配置返回 nil。
+    func branchUpstream(repo: URL, branch: String) async -> (remote: String, branch: String)? {
+        guard let r = await runGit(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "\(branch)@{upstream}"], in: repo),
+              r.ok else { return nil }
+        let s = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parts = s.split(separator: "/", maxSplits: 1).map(String.init)
+        guard parts.count == 2 else { return nil }
+        return (parts[0], parts[1])
+    }
+
+    /// 列出从 `<remote>/<branch>` 到 `HEAD` 之间未推送的 commit。
+    /// 若 remote ref 不存在，返回空数组（调用方应改走"首次 push -u"路径）。
+    func pendingPushCommits(repo: URL, branch: String, remote: String) async -> [CommitSummary] {
+        let ref = "\(remote)/\(branch)"
+        // remote ref 不存在直接 short-circuit
+        guard let exists = await runGit(["rev-parse", "--verify", "--quiet", ref], in: repo),
+              exists.ok else { return [] }
+
+        // %x00 是 NUL 分隔符；%h short hash；%s subject；%ct epoch；%an author name
+        let format = "%h%x00%s%x00%ct%x00%an"
+        guard let r = await runGit(
+            ["log", "\(ref)..HEAD", "--format=\(format)"],
+            in: repo
+        ), r.ok else { return [] }
+
+        var out: [CommitSummary] = []
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
+            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+            guard cols.count == 4 else { continue }
+            guard let ts = TimeInterval(cols[2]) else { continue }
+            out.append(CommitSummary(
+                hash: cols[0],
+                subject: cols[1],
+                date: Date(timeIntervalSince1970: ts),
+                author: cols[3]
+            ))
+        }
+        return out
+    }
+
+    /// 执行 `git push`。**不解释结果**——调用方（PushExecutor）负责 stderr 分类。
+    /// 已经强制 GIT_TERMINAL_PROMPT=0；凭证缺失时会立刻失败而非阻塞。
+    func push(repo: URL, remote: String, branch: String, setUpstream: Bool) async -> ProcessResult? {
+        var args = ["push", "--porcelain"]
+        if setUpstream { args.append("-u") }
+        args.append(remote)
+        args.append(branch)
+        // push 可能较慢；放宽 timeout 到 120s
+        return await runGitWithTimeout(args, in: repo, timeout: 120)
+    }
+
     // MARK: - 内部进程执行
 
     private func runGit(_ args: [String], in repo: URL) async -> ProcessResult? {
         guard let exec = executablePath else { return nil }
         return await runOnce(exec, args: args, workingDirectory: repo)
+    }
+
+    private func runGitWithTimeout(_ args: [String], in repo: URL, timeout: TimeInterval) async -> ProcessResult? {
+        guard let exec = executablePath else { return nil }
+        return await runOnce(exec, args: args, workingDirectory: repo, timeout: timeout)
     }
 
     private func runOnce(

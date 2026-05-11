@@ -14,7 +14,12 @@ final class AppState {
 
     let gitClient: GitClient
     let scanner: RepoScanner
+    let pushExecutor: PushExecutor
     private let fsMonitor: FSEventMonitor
+
+    // MARK: - Push 会话
+
+    var pushSession: PushSession?
 
     /// 当前消费 FSEvent 的任务；watch dirs 改变时取消重启
     private var watcherTask: Task<Void, Never>?
@@ -59,6 +64,7 @@ final class AppState {
         let git = GitClient()
         self.gitClient = git
         self.scanner = RepoScanner(gitClient: git)
+        self.pushExecutor = PushExecutor(gitClient: git)
         self.fsMonitor = FSEventMonitor()
         self.watchDirectories = WatchDirectoriesStorage.load()
         loadToneFromDefaults()
@@ -184,6 +190,76 @@ final class AppState {
             try data.write(to: AppPaths.stateJSON, options: [.atomic])
         } catch {
             // 持久化失败不致命；后续 phase 加入日志
+        }
+    }
+
+    // MARK: - Push 会话流程
+
+    /// 由 RepoDetailView 的 Push 按钮触发：拉取要推送的 commit 列表 + 解析 upstream，
+    /// 然后把 sheet 切到 preflight 状态。
+    func beginPushSession(for repo: Repository) async {
+        guard let branch = repo.currentBranch else { return }
+        let defaultRemote = repo.defaultPushRemote
+        let upstream = await gitClient.branchUpstream(repo: URL(fileURLWithPath: repo.path), branch: branch)
+        let willSetUpstream = upstream == nil
+        let remote = upstream?.remote ?? defaultRemote
+        let upstreamBranch = upstream?.branch ?? branch
+        let commits = await gitClient.pendingPushCommits(
+            repo: URL(fileURLWithPath: repo.path),
+            branch: upstreamBranch,
+            remote: remote
+        )
+
+        let preflight = PushSession.Preflight(
+            repoId: repo.id,
+            repoPath: repo.path,
+            repoName: repo.name,
+            remote: remote,
+            branch: branch,
+            willSetUpstream: willSetUpstream,
+            commits: commits
+        )
+        self.pushSession = PushSession(preflight: preflight)
+    }
+
+    /// PushConfirmDialog 的"推送"按钮调用。从 preflight → running → completed。
+    func executePush() async {
+        guard let session = pushSession,
+              case .preflight(let pre) = session.state else { return }
+
+        // 切到 running 状态
+        var s = session
+        s.state = .running(.init(remote: pre.remote))
+        pushSession = s
+
+        let report = await pushExecutor.push(
+            repoURL: URL(fileURLWithPath: pre.repoPath),
+            repoId: pre.repoId,
+            repoName: pre.repoName,
+            remote: pre.remote,
+            branch: pre.branch,
+            commitCount: pre.commits.count,
+            setUpstream: pre.willSetUpstream
+        )
+
+        // 推送成功 → 该仓库 aheadCount 清零（后续 fetch 会校准；先乐观更新）
+        if report.outcome.isSuccess {
+            if let idx = repositories.firstIndex(where: { $0.id == pre.repoId }) {
+                repositories[idx].aheadCount = 0
+                saveRepositoriesToDisk()
+            }
+        }
+
+        var s2 = session
+        s2.state = .completed(report)
+        pushSession = s2
+    }
+
+    func dismissPushSession() {
+        pushSession = nil
+        // 推送后做一次轻量 rescan 校准 ahead/behind
+        Task { [weak self] in
+            await self?.rescan()
         }
     }
 

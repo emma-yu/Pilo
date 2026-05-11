@@ -1,21 +1,61 @@
 import SwiftUI
+import AppKit
 
 struct RepoDetailView: View {
 
     let repo: Repository
     @Environment(AppState.self) private var appState
+    @Environment(\.tone) private var tone
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 header
+                actionsRow
                 metaSection
                 remotesSection
                 statusSection
-                actionsHint
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .sheet(item: Binding(
+            get: { appState.pushSession },
+            set: { appState.pushSession = $0 }
+        )) { _ in
+            PushConfirmDialog(
+                session: Binding(
+                    get: { appState.pushSession },
+                    set: { appState.pushSession = $0 }
+                ),
+                onDismiss: { appState.dismissPushSession() }
+            )
+        }
+    }
+
+    private var actionsRow: some View {
+        HStack(spacing: 10) {
+            Button {
+                Task { await appState.beginPushSession(for: repo) }
+            } label: {
+                Label(Copy.Push.pushEntryButton(tone), systemImage: "paperplane.fill")
+                    .frame(minWidth: 100)
+            }
+            .controlSize(.large)
+            .buttonStyle(.borderedProminent)
+            .tint(Color.piloBlue)
+            .disabled(repo.aheadCount == 0 || repo.currentBranch == nil)
+            .help(repo.aheadCount == 0 ? Copy.Push.pushDisabledHint : "")
+
+            Button {
+                NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
+                                        withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+                                        configuration: NSWorkspace.OpenConfiguration(),
+                                        completionHandler: nil)
+            } label: {
+                Label("在终端打开", systemImage: "terminal")
+            }
+            .controlSize(.large)
         }
     }
 
@@ -84,12 +124,4 @@ struct RepoDetailView: View {
         }
     }
 
-    private var actionsHint: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            SectionHeader(title: "动作")
-            Text("Push / Pull 等操作将在 Phase 5 实现。当前版本仅做发现与显示。")
-                .font(.piloCaption)
-                .foregroundStyle(Color.inkTertiary)
-        }
-    }
 }

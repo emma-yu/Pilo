@@ -103,6 +103,139 @@ enum Copy {
         static let completeStayInMenubar = "提示：Pilo 会一直待在菜单栏 ↑"
     }
 
+    // MARK: - 推送（Phase 5）
+
+    enum Push {
+
+        // Preflight 阶段
+        static func preflightTitle(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "准备推送啦"
+            case .minimal:  "确认推送"
+            }
+        }
+
+        static func preflightSubtitle(_ tone: Tone, count: Int) -> String {
+            switch tone {
+            case .friendly: "我要把 \(count) 个 commit 飞到远端，确认一下？"
+            case .minimal:  "将推送 \(count) 个 commit"
+            }
+        }
+
+        static let preflightCommitsHeader = "本次推送的 commit"
+        static let preflightFirstPushHint = "首次推送 · 会自动设置 upstream（-u）"
+        static let preflightScanPlaceholder = "🔒 安全检查（Phase 6 待启用）"
+
+        static func pushButton(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "✨ 推送 ✨"
+            case .minimal:  "推送"
+            }
+        }
+
+        static func cancelButton(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "再想想"
+            case .minimal:  "取消"
+            }
+        }
+
+        // Running 阶段
+        static func runningTitle(_ tone: Tone, remote: String) -> String {
+            switch tone {
+            case .friendly: "正在飞往 \(remote)..."
+            case .minimal:  "推送到 \(remote)..."
+            }
+        }
+
+        // Completed 阶段 - 成功
+        static func successTitle(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "🌸 推送完成"
+            case .minimal:  "推送完成"
+            }
+        }
+
+        static func successSubtitle(_ tone: Tone, count: Int) -> String {
+            switch tone {
+            case .friendly: "\(count) 个 commit 已送达 ✨"
+            case .minimal:  "\(count) 个 commit 已送达"
+            }
+        }
+
+        // Completed 阶段 - 失败
+        static func failureTitle(_ tone: Tone, outcome: PushOutcome) -> String {
+            switch (outcome, tone) {
+            case (.authenticationFailed, .friendly):  "🥲 没认证通过"
+            case (.authenticationFailed, .minimal):   "认证失败"
+            case (.nonFastForward, .friendly):        "😯 远端有新内容"
+            case (.nonFastForward, .minimal):         "Non-fast-forward"
+            case (.hookRejected, .friendly):          "🛑 pre-push hook 拦下了"
+            case (.hookRejected, .minimal):           "Pre-push hook 拒绝"
+            case (.networkError, .friendly):          "🌧️ 网络好像不通"
+            case (.networkError, .minimal):           "网络错误"
+            case (.noUpstreamConfigured, .friendly):  "🤔 还没配 upstream"
+            case (.noUpstreamConfigured, .minimal):   "未配置 upstream"
+            case (.unknown, .friendly):               "咕咕没飞过去"
+            case (.unknown, .minimal):                "推送失败"
+            case (.success, _):                        ""  // 不应该到这里
+            }
+        }
+
+        static func failureExplanation(_ outcome: PushOutcome) -> String {
+            switch outcome {
+            case .authenticationFailed:
+                """
+                看起来 git 不知道用什么凭证来认证。最常见的两个解决方法：
+
+                • 如果用 HTTPS：在终端运行一次 `git push`，让 macOS Keychain 缓存你的 GitHub Personal Access Token
+                • 如果用 SSH：确认你的 SSH key 已经在 ssh-agent 里（`ssh-add -l`），并且公钥已加到 GitHub 设置
+                """
+            case .nonFastForward:
+                """
+                远端比本地新，需要先把远端的改动拉下来：
+
+                • 在终端运行 `git pull --rebase` 或 `git fetch && git rebase origin/<branch>`
+                • 解决冲突（如果有）后重新推送
+                """
+            case .hookRejected:
+                """
+                你或团队配置的 pre-push hook 拒绝了这次推送。具体原因在下方 stderr 里。
+                修复 hook 提示的问题后重试。
+                """
+            case .networkError:
+                """
+                没连上远端服务器。检查一下：
+
+                • Wi-Fi / 代理是否正常
+                • 远端 URL 是否拼写正确
+                """
+            case .noUpstreamConfigured:
+                """
+                这个分支还没有 upstream。Pilo 应该自动加 -u，但似乎被拒绝了。
+                可以在终端运行 `git push -u origin <branch>` 排查。
+                """
+            case .unknown, .success:
+                "下方 stderr 里有详细信息。"
+            }
+        }
+
+        static let copyStderrButton  = "复制错误信息"
+        static let openTerminalButton = "在终端打开"
+        static let closeButton        = "关闭"
+        static let doneButton         = "好啦"
+
+        // Push 入口（详情视图按钮）
+        static func pushEntryButton(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "✨ 推送"
+            case .minimal:  "推送"
+            }
+        }
+
+        static let pushDisabledHint = "没有可推送的 commit"
+    }
+
     // MARK: - Mascot 无障碍标签
 
     enum MascotA11y {
