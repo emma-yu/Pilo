@@ -7,10 +7,14 @@ struct PiloApp: App {
 
     var body: some Scene {
         // 1. 菜单栏弹窗
-        MenuBarExtra("Pilo", systemImage: menuBarSymbol) {
+        // 用 label-based MenuBarExtra 才能动态切换图标（Image asset / SF Symbol 混合）。
+        // 正常状态：自定义鸽子 mascot；异常状态：SF Symbol（kill switch / 无 git）。
+        MenuBarExtra {
             MenuBarView()
                 .environment(appState)
                 .tone(appState.tone)
+        } label: {
+            menuBarLabel
         }
         .menuBarExtraStyle(.window)
 
@@ -44,12 +48,20 @@ struct PiloApp: App {
         }
     }
 
-    // 菜单栏图标：根据状态切换；用 SF Symbol 18×18 大小，避免在带刘海的外接显示器上裁切
-    private var menuBarSymbol: String {
-        if appState.isKillSwitchActive { return "eye.slash" }     // 安全检查暂停
-        let pending = appState.pendingRepos.count
-        if appState.gitExecutablePath == nil { return "exclamationmark.bird" }
-        if pending == 0 { return "bird" }
-        return "bird.fill"
+    // 菜单栏图标 label：彩色 mascot 用于正常状态；异常态降级回 SF Symbol（更高辨识度）
+    @ViewBuilder
+    private var menuBarLabel: some View {
+        if appState.isKillSwitchActive {
+            Image(systemName: "eye.slash")
+        } else if appState.gitExecutablePath == nil {
+            Image(systemName: "exclamationmark.triangle")
+                .foregroundStyle(.orange)
+        } else {
+            Image("MenuBarIcon")
+                .resizable()
+                .interpolation(.high)
+                .scaledToFit()
+                .frame(width: 22, height: 22)
+        }
     }
 }
