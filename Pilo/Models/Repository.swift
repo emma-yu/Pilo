@@ -44,6 +44,10 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
     /// 仓库根有无 tests / __tests__ / XxxTests 目录或测试约定文件（每次 scan 时刷新）。
     var hasTests: Bool
 
+    /// Resume Work：用户上一次在 Pilo 里 select 这个 repo 的时间。
+    /// 跟 lastScanDate / lastCommitDate 都不一样 —— 这是"上次打开看过"的时间。
+    var lastViewedDate: Date?
+
     init(
         id: UUID = UUID(),
         path: String,
@@ -66,7 +70,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         falsePositiveMarks: [FalsePositiveMark] = [],
         category: RepoCategory = .unset,
         hasReadme: Bool = false,
-        hasTests: Bool = false
+        hasTests: Bool = false,
+        lastViewedDate: Date? = nil
     ) {
         self.id = id
         self.pathHash = Self.hash(path: path)
@@ -91,6 +96,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.category = category
         self.hasReadme = hasReadme
         self.hasTests = hasTests
+        self.lastViewedDate = lastViewedDate
     }
 
     // Codable 向后兼容：旧 state.json 没有新字段时使用默认值。
@@ -99,7 +105,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
              uncommittedCount, lastCommitDate, lastFetchDate, lastFetchSuccess,
              remotes, defaultPushRemote, firstCommitHash, isHidden, customTags,
              lastScanDate, skipFetch, skipMainBranchWarning, falsePositiveMarks,
-             category, hasReadme, hasTests
+             category, hasReadme, hasTests, lastViewedDate
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -127,6 +133,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.category = try c.decodeIfPresent(RepoCategory.self, forKey: .category) ?? .unset
         self.hasReadme = try c.decodeIfPresent(Bool.self, forKey: .hasReadme) ?? false
         self.hasTests = try c.decodeIfPresent(Bool.self, forKey: .hasTests) ?? false
+        // Resume Work：旧 state.json 没有 lastViewedDate → nil（首次见面）
+        self.lastViewedDate = try c.decodeIfPresent(Date.self, forKey: .lastViewedDate)
     }
 
     static func hash(path: String) -> String {

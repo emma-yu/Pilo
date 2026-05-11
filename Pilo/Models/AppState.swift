@@ -88,6 +88,16 @@ final class AppState {
     var currentCommits: [CommitSummary] = []
     private var commitsFetchTask: Task<Void, Never>?
 
+    // === Resume Work + 项目文档（Phase B v2）===
+    /// 当前选中 repo 的未提交文件清单（草稿）
+    var currentUncommittedFiles: [UncommittedFile] = []
+    /// 当前选中 repo 的最近 commit（"最近寄出过"）
+    var currentRecentCommits: [CommitSummary] = []
+    /// 当前选中 repo 的项目文档列表
+    var currentDocs: [RepoDoc] = []
+    private var resumeFetchTask: Task<Void, Never>?
+    private var docsFetchTask: Task<Void, Never>?
+
     /// Phase B (Project Inventory) 三段分组：活跃 / 静默 / 沉寂
     /// 优先级原则：**任何有 work 的仓库都是 active**（用户需要做事），不论 mood。
     /// 没 work 的按 mood 切分到三档。
@@ -552,11 +562,24 @@ final class AppState {
     func selectRepo(_ id: UUID?) {
         selectedRepoId = id
         currentCommits = []
+        currentUncommittedFiles = []
+        currentRecentCommits = []
+        currentDocs = []
         commitsFetchTask?.cancel()
+        resumeFetchTask?.cancel()
+        docsFetchTask?.cancel()
         guard let id, let repo = repositories.first(where: { $0.id == id }) else { return }
         let repoURL = URL(fileURLWithPath: repo.path)
 
-        // 1) Commits
+        // 0) 记录"上次见你"时间——下次打开就有意义了。
+        //    注意：必须在这里更新（不是 commit 时也不是 push 时），
+        //    "上次见你"的语义就是"上次用户在 Pilo 里看过这个 repo"。
+        if let idx = repositories.firstIndex(where: { $0.id == id }) {
+            repositories[idx].lastViewedDate = Date()
+            saveRepositoriesToDisk()
+        }
+
+        // 1) 待推送 Commits
         if let branch = repo.currentBranch {
             let upstreamRemote = repo.defaultPushRemote
             commitsFetchTask = Task { [weak self] in
@@ -570,7 +593,30 @@ final class AppState {
             }
         }
 
-        // 2) Visibility（按需 + 缓存）
+        // 2) Resume Work：草稿 + 最近寄出
+        resumeFetchTask = Task { [weak self] in
+            let uncommitted = await self?.gitClient.uncommittedFiles(repo: repoURL, limit: 10) ?? []
+            let recent = await self?.gitClient.recentCommits(repo: repoURL, limit: 5) ?? []
+            await MainActor.run {
+                guard let self, self.selectedRepoId == id else { return }
+                self.currentUncommittedFiles = uncommitted
+                self.currentRecentCommits = recent
+            }
+        }
+
+        // 3) 项目文档（按需扫，不阻塞 UI）
+        docsFetchTask = Task { [weak self] in
+            // 文档扫盘是纯 FileManager，但仍放到后台 Task 避免占用 MainActor
+            let docs = await Task.detached(priority: .userInitiated) {
+                RepoDocsIndexer.index(repoPath: repo.path)
+            }.value
+            await MainActor.run {
+                guard let self, self.selectedRepoId == id else { return }
+                self.currentDocs = docs
+            }
+        }
+
+        // 4) Visibility（按需 + 缓存）
         if cachedVisibility(for: id) == nil,
            let firstURL = repo.remotes.first?.url,
            let owner = GitHubVisibilityClient.parseOwnerRepo(from: firstURL) {
@@ -644,7 +690,9 @@ final class AppState {
                     // Phase B: category 用户手设保留；hasReadme/hasTests 从 fresh 取最新值
                     category: prior.category,
                     hasReadme: fresh.hasReadme,
-                    hasTests: fresh.hasTests
+                    hasTests: fresh.hasTests,
+                    // Resume Work：lastViewedDate 用户行为产物，scan 不覆盖
+                    lastViewedDate: prior.lastViewedDate
                 )
             }
             byHash[fresh.pathHash] = fresh

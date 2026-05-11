@@ -261,6 +261,14 @@ private struct PanelDetail: View {
                     RepoStatusPill(repo: repo)
                         .padding(.top, 18)
 
+                    // Resume Work：欢迎回来卡片（条件显示）
+                    ResumeWorkCard(
+                        repo: repo,
+                        uncommittedFiles: appState.currentUncommittedFiles,
+                        recentCommits: appState.currentRecentCommits
+                    )
+                    .padding(.top, 16)
+
                     // Phase B: 项目体检行（mood + README + tests）
                     healthRow(for: repo)
                         .padding(.top, 12)
@@ -273,6 +281,10 @@ private struct PanelDetail: View {
 
                     // 三态 body
                     bodyContent(for: repo)
+
+                    // 项目文档面板（条件显示）
+                    ProjectDocsPanel(repoPath: repo.path, docs: appState.currentDocs)
+                        .padding(.top, 18)
 
                     Spacer(minLength: 24)
 

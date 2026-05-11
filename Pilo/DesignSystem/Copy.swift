@@ -865,4 +865,99 @@ enum Copy {
             lang == .zh ? "项目体检" : "Project health"
         }
     }
+
+    // MARK: - Resume Work（上次做到哪）
+
+    enum Resume {
+
+        /// 卡片主标题。首次见面（lastViewedDate == nil）用不同问候。
+        static func title(firstTime: Bool, _ tone: Tone, _ lang: Language) -> String {
+            if firstTime {
+                switch (tone, lang) {
+                case (.friendly, .zh): return "初次见面"
+                case (.friendly, .en): return "Nice to meet you"
+                case (.minimal, .zh):  return "新仓库"
+                case (.minimal, .en):  return "New repo"
+                }
+            } else {
+                switch (tone, lang) {
+                case (.friendly, .zh): return "欢迎回来"
+                case (.friendly, .en): return "Welcome back"
+                case (.minimal, .zh):  return "继续工作"
+                case (.minimal, .en):  return "Resume"
+                }
+            }
+        }
+
+        /// 副标题："上次见你 X 天前 · 在 branch Y"。
+        /// 时间用 RelativeDateTimeFormatter localized，branch 末尾追加（仅有 branch 才显示）。
+        static func subtitle(daysSinceViewed: Int?, branch: String?, _ lang: Language) -> String {
+            var parts: [String] = []
+            if let days = daysSinceViewed {
+                if lang == .zh {
+                    if days == 0 {
+                        parts.append("今天刚见过")
+                    } else if days == 1 {
+                        parts.append("上次是昨天")
+                    } else {
+                        parts.append("上次见你是 \(days) 天前")
+                    }
+                } else {
+                    if days == 0 {
+                        parts.append("Saw you earlier today")
+                    } else if days == 1 {
+                        parts.append("Last seen yesterday")
+                    } else {
+                        parts.append("Last seen \(days) days ago")
+                    }
+                }
+            }
+            if let b = branch {
+                parts.append(lang == .zh ? "在 \(b)" : "on \(b)")
+            }
+            return parts.joined(separator: " · ")
+        }
+
+        // Section labels（卡片内部）
+        static func draftsLabel(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "— 留下的草稿 · \(count) —" }
+            return count == 1 ? "— 1 draft left behind —" : "— \(count) drafts left behind —"
+        }
+        static func recentSentLabel(_ lang: Language) -> String {
+            lang == .zh ? "— 最近寄出 —" : "— recently sent —"
+        }
+
+        // 未提交文件 status 单字符标记（mono 字体显示）
+        static func statusBadge(_ status: UncommittedFile.Status) -> String {
+            switch status {
+            case .modified:   return "M"
+            case .added:      return "A"
+            case .deleted:    return "D"
+            case .renamed:    return "R"
+            case .copied:     return "C"
+            case .untracked:  return "?"
+            case .conflicted: return "!"
+            case .other:      return "·"
+            }
+        }
+    }
+
+    // MARK: - 项目文档面板
+
+    enum Docs {
+        static func sectionTitle(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "项目文档 · \(count) 份" }
+            return count == 1 ? "Project docs · 1" : "Project docs · \(count)"
+        }
+        static func empty(_ lang: Language) -> String {
+            lang == .zh ? "这个项目还没什么文档" : "No docs in this project yet"
+        }
+        /// 文件 mtime 的人类可读相对时间（"3 天前" / "2 周前"）
+        static func relativeModified(_ date: Date, _ lang: Language) -> String {
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .full
+            formatter.locale = (lang == .zh) ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
+            return formatter.localizedString(for: date, relativeTo: Date())
+        }
+    }
 }

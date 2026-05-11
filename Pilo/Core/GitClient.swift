@@ -166,6 +166,69 @@ actor GitClient {
         return out
     }
 
+    /// Resume Work：当前工作区未提交文件列表。
+    /// 解析 `git status --porcelain`（v1 格式），limit 行截断。
+    /// 失败 / 空 → 返回空数组（caller 应 graceful 处理）。
+    func uncommittedFiles(repo: URL, limit: Int = 20) async -> [UncommittedFile] {
+        guard let r = await runGit(["status", "--porcelain"], in: repo), r.ok else { return [] }
+        return Self.parseUncommittedFiles(porcelain: r.stdout, limit: limit)
+    }
+
+    /// 解析 porcelain v1 输出。**static**：方便单测，无副作用。
+    /// 格式：`XY path` 或 `R  old -> new`。前 2 字符 = X(staged) Y(unstaged) status。
+    static func parseUncommittedFiles(porcelain: String, limit: Int) -> [UncommittedFile] {
+        var out: [UncommittedFile] = []
+        for line in porcelain.split(separator: "\n", omittingEmptySubsequences: true) {
+            let chars = Array(line)
+            guard chars.count >= 4 else { continue }
+            let x = chars[0]
+            let y = chars[1]
+            // 第 3 个字符（index 2）应为 space；path 从 index 3 开始
+            var pathStr = String(chars[3...])
+            // rename "old -> new" 取 new
+            if let arrowRange = pathStr.range(of: " -> ") {
+                pathStr = String(pathStr[arrowRange.upperBound...])
+            }
+            let status: UncommittedFile.Status = {
+                if x == "?" || y == "?" { return .untracked }
+                if x == "U" || y == "U" { return .conflicted }
+                if x == "R" { return .renamed }
+                if x == "C" { return .copied }
+                if x == "D" || y == "D" { return .deleted }
+                if x == "A" { return .added }
+                if x == "M" || y == "M" { return .modified }
+                return .other
+            }()
+            out.append(UncommittedFile(status: status, path: pathStr))
+            if out.count >= limit { break }
+        }
+        return out
+    }
+
+    /// Resume Work：最近 N 个 commit（HEAD 倒推），用作"最近寄出过"展示。
+    /// 跟 pendingPushCommits 不同：那个是相对 remote 的待推；这个是历史。
+    func recentCommits(repo: URL, limit: Int = 5) async -> [CommitSummary] {
+        let format = "%h%x00%s%x00%ct%x00%an"
+        guard let r = await runGit(
+            ["log", "-\(limit)", "--format=\(format)"],
+            in: repo
+        ), r.ok else { return [] }
+
+        var out: [CommitSummary] = []
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
+            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+            guard cols.count == 4 else { continue }
+            guard let ts = TimeInterval(cols[2]) else { continue }
+            out.append(CommitSummary(
+                hash: cols[0],
+                subject: cols[1],
+                date: Date(timeIntervalSince1970: ts),
+                author: cols[3]
+            ))
+        }
+        return out
+    }
+
     /// 拉取即将 push 的 commit 范围内变更过的文件清单 + status。
     /// 返回 [(path, status)]，status: A/M/D；删除项调用方应跳过 size 检查。
     /// 首次 push（远端 ref 不存在）时和空树对比，得到 HEAD 全量文件清单（全部当 A）。
