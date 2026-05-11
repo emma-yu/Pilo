@@ -4,14 +4,16 @@ import Foundation
 /// 由 `RepoDocsIndexer` 扫仓库根 + docs/ 一级目录得到。
 struct RepoDoc: Hashable, Sendable, Identifiable {
     enum Kind: String, Sendable {
-        case readme        // README.*
-        case changelog     // CHANGELOG.*
-        case todo          // TODO.*
-        case prd           // PRD.*
-        case architecture  // ARCHITECTURE.* / DESIGN.*
-        case contributing  // CONTRIBUTING.*
-        case notes         // NOTES.*
-        case generic       // docs/*.md（不分类）
+        case readme         // README.*
+        case changelog      // CHANGELOG.*
+        case todo           // TODO.* / ROADMAP.*
+        case prd            // PRD.* / REQUIREMENTS.*
+        case architecture   // ARCHITECTURE.* / DESIGN.* / IMPLEMENTATION.*
+        case contributing   // CONTRIBUTING.* / CODE_OF_CONDUCT.* / SECURITY.*
+        case license        // LICENSE / COPYING / AUTHORS / NOTICE
+        case notes          // NOTES.* / IDEAS.*
+        case aiInstructions // CLAUDE.md / AGENTS.md / CURSOR.md / .cursorrules / AI.md
+        case generic        // 其他 .md（根级或子目录）
     }
 
     let kind: Kind

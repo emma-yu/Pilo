@@ -29,6 +29,15 @@ struct MainPanel: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.paperCard)
+        // Markdown 预览 sheet：appState.previewingDoc 非 nil 时弹出
+        .sheet(item: Binding(
+            get: { appState.previewingDoc },
+            set: { if $0 == nil { appState.dismissPreview() } }
+        )) { doc in
+            // 找到 doc 对应 repo 的路径（selectedRepo）
+            let repoPath = appState.repositories.first(where: { $0.id == appState.selectedRepoId })?.path ?? ""
+            MarkdownPreviewSheet(doc: doc, repoPath: repoPath)
+        }
     }
 }
 

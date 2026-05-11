@@ -98,6 +98,22 @@ final class AppState {
     private var resumeFetchTask: Task<Void, Never>?
     private var docsFetchTask: Task<Void, Never>?
 
+    // === Markdown 预览（Phase B v3）===
+    /// 当前正在预览的文档。nil → 预览 sheet 关闭。
+    var previewingDoc: RepoDoc?
+    /// 预览的 markdown 内容（异步加载）；nil = 加载中，empty = 失败/空文件
+    var previewDocument: MarkdownDocument?
+    /// 预览加载错误（无法读 / 不是文本 / 太大）
+    var previewError: PreviewError?
+    private var previewLoadTask: Task<Void, Never>?
+
+    enum PreviewError: Error, Sendable, Equatable {
+        case fileNotFound
+        case notText
+        case tooLarge
+        case empty
+    }
+
     /// Phase B (Project Inventory) 三段分组：活跃 / 静默 / 沉寂
     /// 优先级原则：**任何有 work 的仓库都是 active**（用户需要做事），不论 mood。
     /// 没 work 的按 mood 切分到三档。
@@ -651,6 +667,68 @@ final class AppState {
     var hiddenRepos: [Repository] {
         repositories.filter { $0.isHidden }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // MARK: - Markdown 预览
+
+    /// 打开预览 sheet。异步读文件 + 解析；状态通过 previewDocument / previewError 传递。
+    func presentPreview(for doc: RepoDoc, in repoPath: String) {
+        previewingDoc = doc
+        previewDocument = nil
+        previewError = nil
+        previewLoadTask?.cancel()
+
+        let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
+        previewLoadTask = Task { [weak self] in
+            let result = await Task.detached(priority: .userInitiated) {
+                Self.loadAndParse(at: fullPath)
+            }.value
+            await MainActor.run {
+                guard let self, self.previewingDoc?.id == doc.id else { return }
+                switch result {
+                case .success(let document):
+                    if document.blocks.isEmpty && !document.truncated {
+                        self.previewError = .empty
+                    } else if document.truncated {
+                        self.previewError = .tooLarge
+                    } else {
+                        self.previewDocument = document
+                    }
+                case .failure(let err):
+                    self.previewError = err
+                }
+            }
+        }
+    }
+
+    func dismissPreview() {
+        previewingDoc = nil
+        previewDocument = nil
+        previewError = nil
+        previewLoadTask?.cancel()
+        previewLoadTask = nil
+    }
+
+    /// 读文件 + 解析。返回 success(doc) 或 failure(具体错误)。
+    /// 在后台 Task.detached 上跑，避免 MainActor 阻塞。
+    nonisolated private static func loadAndParse(at url: URL) -> Result<MarkdownDocument, PreviewError> {
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return .failure(.fileNotFound)
+        }
+        guard let data = try? Data(contentsOf: url) else {
+            return .failure(.fileNotFound)
+        }
+        if data.count > MarkdownRenderer.maxFileBytes {
+            return .failure(.tooLarge)
+        }
+        if data.isEmpty {
+            return .failure(.empty)
+        }
+        guard let text = String(data: data, encoding: .utf8) else {
+            return .failure(.notText)
+        }
+        let doc = MarkdownRenderer.parse(text)
+        return .success(doc)
     }
 
     func dismissPushSession() {

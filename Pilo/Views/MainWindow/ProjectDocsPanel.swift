@@ -59,10 +59,12 @@ private struct DocRow: View {
     let repoPath: String
     let lang: Language
 
+    @Environment(AppState.self) private var appState
     @State private var isHovered = false
 
     var body: some View {
-        Button(action: openInDefaultApp) {
+        // 主行 = 预览 sheet；hover 时右侧出现 ↗ 副按钮 = 外部编辑器
+        Button(action: presentPreview) {
             HStack(spacing: 10) {
                 Image(systemName: iconName(for: doc.kind))
                     .font(.system(size: 12))
@@ -85,6 +87,23 @@ private struct DocRow: View {
                     .font(.piloSerifCaption)
                     .foregroundStyle(Color.inkTertiary)
                     .frame(minWidth: 70, alignment: .trailing)
+
+                // hover 时副按钮：用外部编辑器打开
+                if isHovered {
+                    Button(action: openInDefaultApp) {
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.piloBlueDark)
+                    }
+                    .buttonStyle(.plain)
+                    .help(lang == .zh ? "用编辑器打开" : "Open in editor")
+                    .transition(.opacity)
+                } else {
+                    // 占位让 row 宽度不跳
+                    Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.clear)
+                }
             }
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
@@ -95,8 +114,14 @@ private struct DocRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .onHover { isHovered = $0 }
-        .help(lang == .zh ? "用默认编辑器打开" : "Open in default editor")
+        .onHover { hovered in
+            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovered }
+        }
+        .help(Copy.Docs.rowHint(lang))
+    }
+
+    private func presentPreview() {
+        appState.presentPreview(for: doc, in: repoPath)
     }
 
     private func openInDefaultApp() {
@@ -106,27 +131,31 @@ private struct DocRow: View {
 
     private func iconName(for kind: RepoDoc.Kind) -> String {
         switch kind {
-        case .readme:        return "doc.text.fill"
-        case .changelog:     return "scroll.fill"
-        case .todo:          return "checklist"
-        case .prd:           return "doc.richtext.fill"
-        case .architecture:  return "square.stack.3d.up.fill"
-        case .contributing:  return "person.2.fill"
-        case .notes:         return "note.text"
-        case .generic:       return "doc.text"
+        case .readme:         return "doc.text.fill"
+        case .changelog:      return "scroll.fill"
+        case .todo:           return "checklist"
+        case .prd:            return "doc.richtext.fill"
+        case .architecture:   return "square.stack.3d.up.fill"
+        case .contributing:   return "person.2.fill"
+        case .license:        return "doc.badge.gearshape"
+        case .notes:          return "note.text"
+        case .aiInstructions: return "sparkles"
+        case .generic:        return "doc.text"
         }
     }
 
     private func iconColor(for kind: RepoDoc.Kind) -> Color {
         switch kind {
-        case .readme:        return .piloBlue
-        case .changelog:     return .piloGoldDark
-        case .todo:          return .amberWarn
-        case .prd:           return .lavenderInfo
-        case .architecture:  return .piloBlueDark
-        case .contributing:  return .mintSafe
-        case .notes:         return .inkSecondary
-        case .generic:       return .inkTertiary
+        case .readme:         return .piloBlue
+        case .changelog:      return .piloGoldDark
+        case .todo:           return .amberWarn
+        case .prd:            return .lavenderInfo
+        case .architecture:   return .piloBlueDark
+        case .contributing:   return .mintSafe
+        case .license:        return .inkSecondary
+        case .notes:          return .inkSecondary
+        case .aiInstructions: return .piloAccent
+        case .generic:        return .inkTertiary
         }
     }
 }

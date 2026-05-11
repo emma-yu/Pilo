@@ -959,5 +959,52 @@ enum Copy {
             formatter.locale = (lang == .zh) ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
             return formatter.localizedString(for: date, relativeTo: Date())
         }
+        static func rowHint(_ lang: Language) -> String {
+            lang == .zh ? "点开看看 · ↗ 用编辑器打开" : "Click to read · ↗ open in editor"
+        }
+    }
+
+    // MARK: - Markdown 预览 sheet
+
+    enum Preview {
+        static func openInEditor(_ lang: Language) -> String {
+            lang == .zh ? "用编辑器打开" : "Open in editor"
+        }
+        static func close(_ lang: Language) -> String {
+            lang == .zh ? "关闭" : "Close"
+        }
+        static func loading(_ lang: Language) -> String {
+            lang == .zh ? "正在翻开这封信..." : "Opening the letter..."
+        }
+
+        // 错误态
+        static func errorTooLargeTitle(_ lang: Language) -> String {
+            lang == .zh ? "这份文档太长了" : "This document is too long"
+        }
+        static func errorTooLargeBody(_ lang: Language) -> String {
+            lang == .zh
+                ? "为了不卡顿，Pilo 不在邮局内展示超过 500 KB 的文档。\n请用编辑器打开看完整内容。"
+                : "To stay snappy, Pilo doesn't inline docs over 500 KB.\nPlease open it in your editor for the full read."
+        }
+        static func errorNotTextTitle(_ lang: Language) -> String {
+            lang == .zh ? "这不是一份文本文档" : "Not a text document"
+        }
+        static func errorNotTextBody(_ lang: Language) -> String {
+            lang == .zh
+                ? "Pilo 只能展示 UTF-8 文本，遇到二进制或其他编码就读不出来了。"
+                : "Pilo can only render UTF-8 text. This file looks binary or in another encoding."
+        }
+        static func errorNotFoundTitle(_ lang: Language) -> String {
+            lang == .zh ? "文件找不到了" : "File not found"
+        }
+        static func errorNotFoundBody(_ lang: Language) -> String {
+            lang == .zh ? "刚才还在的，可能被移走或重命名了。" : "It was here a moment ago. Maybe moved or renamed."
+        }
+        static func errorEmptyTitle(_ lang: Language) -> String {
+            lang == .zh ? "这份文档是空的" : "This document is empty"
+        }
+        static func errorEmptyBody(_ lang: Language) -> String {
+            lang == .zh ? "里面什么都没有，是占位文件。" : "Nothing inside. Looks like a placeholder."
+        }
     }
 }
