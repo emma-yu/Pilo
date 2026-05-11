@@ -166,6 +166,45 @@ actor GitClient {
         return out
     }
 
+    /// 拉取即将 push 的 commit 范围内变更过的文件清单 + status。
+    /// 返回 [(path, status)]，status: A/M/D；删除项调用方应跳过 size 检查。
+    /// 首次 push（远端 ref 不存在）时和空树对比，得到 HEAD 全量文件清单（全部当 A）。
+    func changedFilesForPush(repo: URL, branch: String, remote: String) async -> [(path: String, status: Character)] {
+        let ref = "\(remote)/\(branch)"
+        let exists = await runGit(["rev-parse", "--verify", "--quiet", ref], in: repo)
+        let revSpec: String
+        if exists?.ok == true {
+            revSpec = "\(ref)..HEAD"
+        } else {
+            revSpec = "4b825dc642cb6eb9a060e54bf8d69288fbee4904..HEAD"
+        }
+        guard let r = await runGit(["diff", "--name-status", "-M", "-C", revSpec], in: repo), r.ok else {
+            return []
+        }
+        var out: [(String, Character)] = []
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
+            // 形如 "A\tpath" 或 "M\tpath" 或 "R100\told\tnew"（rename）
+            let cols = line.split(separator: "\t", omittingEmptySubsequences: true).map(String.init)
+            guard let first = cols.first, !first.isEmpty else { continue }
+            let status = first.first!
+            // rename / copy 取目标路径（最后一列）
+            if (status == "R" || status == "C"), cols.count >= 3 {
+                out.append((cols[2], "A"))    // 重命名后的目标当 A 处理
+            } else if cols.count >= 2 {
+                out.append((cols[1], status))
+            }
+        }
+        return out
+    }
+
+    /// 查 HEAD 上某个 path 的 blob 大小（bytes）。
+    /// 文件不存在 / 是子模块时返回 nil。
+    func blobSize(repo: URL, path: String) async -> Int64? {
+        // git cat-file -s HEAD:<path>
+        guard let r = await runGit(["cat-file", "-s", "HEAD:\(path)"], in: repo), r.ok else { return nil }
+        return Int64(r.stdout.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
     /// 拉取即将推送的 diff（HEAD vs 远端分支）。--unified=0 让我们只看到真新增的行，
     /// 不带上下文 noise；--no-color 关掉 ANSI 转义；--no-ext-diff 防御用户配了花式 differ。
     /// 远端 ref 不存在（首次 push）时返回 HEAD 的全量内容 diff。

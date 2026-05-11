@@ -19,14 +19,44 @@ struct PushSession: Identifiable, Sendable {
         let willSetUpstream: Bool
         let commits: [CommitSummary]
         var findings: [ScanFinding] = []
+        var guardFindings: [CommitGuardFinding] = []
         var scanSkippedByKillSwitch: Bool = false
-        var bypassConfirmed: Bool = false   // 用户已通过 BypassConfirmDialog 输入仓库名解锁推送
+        var bypassConfirmed: Bool = false
+        /// session-scoped 忽略集合（"仅本次忽略"按钮写入；不持久化）
+        var ignoredIds: Set<UUID> = []
 
-        var criticalFindings: [ScanFinding] { findings.filter { $0.severity == .critical } }
-        var warningFindings: [ScanFinding]  { findings.filter { $0.severity == .warning  } }
-        var hasCritical: Bool { !criticalFindings.isEmpty }
+        // MARK: - 可见集合（过滤掉 ignoredIds）
+
+        var visibleFindings: [ScanFinding] {
+            findings.filter { !ignoredIds.contains($0.id) }
+        }
+        var visibleGuardFindings: [CommitGuardFinding] {
+            guardFindings.filter { !ignoredIds.contains($0.id) }
+        }
+
+        // MARK: - 严重度切片
+
+        var criticalFindings: [ScanFinding]              { visibleFindings.filter      { $0.severity == .critical } }
+        var warningFindings: [ScanFinding]               { visibleFindings.filter      { $0.severity == .warning  } }
+        var criticalGuardFindings: [CommitGuardFinding]  { visibleGuardFindings.filter { $0.severity == .critical } }
+        var warningGuardFindings: [CommitGuardFinding]   { visibleGuardFindings.filter { $0.severity == .warning  } }
+
+        var hasCritical: Bool {
+            !criticalFindings.isEmpty || !criticalGuardFindings.isEmpty
+        }
+        var hasWarning: Bool {
+            !warningFindings.isEmpty || !warningGuardFindings.isEmpty
+        }
+        var hasAnyIssue: Bool { hasCritical || hasWarning }
+
+        var totalCriticalCount: Int {
+            criticalFindings.count + criticalGuardFindings.count
+        }
+        var totalWarningCount: Int {
+            warningFindings.count + warningGuardFindings.count
+        }
+
         var canPushDirectly: Bool {
-            // 没 critical 时可以直接推；有 critical 时需要 bypass
             !hasCritical || bypassConfirmed
         }
     }

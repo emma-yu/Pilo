@@ -16,6 +16,7 @@ final class AppState {
     let scanner: RepoScanner
     let pushExecutor: PushExecutor
     let secretScanner: SecretScanner
+    let commitGuard: CommitGuardScanner
     private let fsMonitor: FSEventMonitor
 
     // MARK: - Push 会话
@@ -24,6 +25,19 @@ final class AppState {
 
     /// 用户当前面对的 finding 是否在选择"标记为误报"的范围。nil 表示没有该 popover。
     var falsePositivePickerTarget: ScanFinding?
+
+    /// 最近一次"加入 .gitignore"的结果，用于触发 GitignoreActionSheet。
+    var lastGitignoreAction: GitignoreActionState?
+
+    struct GitignoreActionState: Sendable, Identifiable {
+        let id = UUID()
+        let kind: CommitGuardFinding.Kind
+        let filePath: String
+        let addedLines: [String]
+        let alreadyPresent: [String]
+        let gitignorePath: String
+        let advisedAction: String     // 给用户的下一步说明
+    }
 
     // MARK: - Kill switch（PRD §4.8）
 
@@ -90,6 +104,7 @@ final class AppState {
         self.scanner = RepoScanner(gitClient: git)
         self.pushExecutor = PushExecutor(gitClient: git)
         self.secretScanner = SecretScanner()
+        self.commitGuard = CommitGuardScanner()
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -264,10 +279,12 @@ final class AppState {
 
         // 2) 安全扫描（如果 kill switch 没启用）
         var findings: [ScanFinding] = []
+        var guardFindings: [CommitGuardFinding] = []
         var scanSkipped = false
         if isKillSwitchActive {
             scanSkipped = true
         } else if !commits.isEmpty {
+            // SecretScanner（diff 内容）
             if let diff = await gitClient.diffForPush(repo: repoURL, branch: upstreamBranch, remote: remote) {
                 let diffLines = DiffParser.parse(diff)
                 findings = await secretScanner.scan(
@@ -276,6 +293,17 @@ final class AppState {
                     falsePositiveMarks: repo.falsePositiveMarks
                 )
             }
+            // CommitGuardScanner（文件清单 + 大小）
+            let changed = await gitClient.changedFilesForPush(
+                repo: repoURL, branch: upstreamBranch, remote: remote
+            )
+            // 闭包捕获 self 不能直接 await actor 方法；把 gitClient 局部捕获
+            let gc = gitClient
+            guardFindings = await commitGuard.scan(
+                changedFiles: changed,
+                sizeFor: { path in await gc.blobSize(repo: repoURL, path: path) },
+                repoId: repo.id
+            )
         }
 
         let preflight = PushSession.Preflight(
@@ -287,10 +315,72 @@ final class AppState {
             willSetUpstream: willSetUpstream,
             commits: commits,
             findings: findings,
+            guardFindings: guardFindings,
             scanSkippedByKillSwitch: scanSkipped,
-            bypassConfirmed: false
+            bypassConfirmed: false,
+            ignoredIds: []
         )
         self.pushSession = PushSession(preflight: preflight)
+    }
+
+    // MARK: - Session-scoped 忽略
+
+    /// 仅本次忽略——不持久化。下次 push 这个 finding 还会出现。
+    func ignoreOnce(findingId: UUID) {
+        guard let session = pushSession, case .preflight(var pre) = session.state else { return }
+        pre.ignoredIds.insert(findingId)
+        var s = session
+        s.state = .preflight(pre)
+        pushSession = s
+    }
+
+    // MARK: - 加入 .gitignore
+
+    /// 给定一个 commit guard finding，把它建议的模式追加到 repo 根 .gitignore。
+    /// 触发 lastGitignoreAction，让 GitignoreActionSheet 弹出告诉用户后续步骤。
+    func addToGitignore(for finding: CommitGuardFinding) {
+        guard let repo = repositories.first(where: { $0.id == finding.repoId }) else { return }
+        guard case .addToGitignore(let pattern) = finding.suggestion else { return }
+        do {
+            let result = try GitignoreEditor.append(pattern: pattern, toRepoAt: repo.path)
+            let advised: String
+            switch finding.kind {
+            case .envFile, .privateKey:
+                advised = """
+                ⚠️ 重要：.gitignore 只阻止**未来**的提交。这次 push 里已经存在的文件不会因此消失——它一旦上 GitHub，全世界都能看到。
+
+                建议：
+                  1. 立即在密钥服务商后台 revoke 涉及的 token / 密钥
+                  2. 重新生成新 key，放到 .env 而非源码
+                  3. 如果需要把这个文件从历史中彻底抹掉，请在终端运行：
+                     git filter-repo --path \(finding.filePath) --invert-paths
+                """
+            case .buildArtifact, .dsStore, .publicKey:
+                advised = "已加入 .gitignore——未来不会再误推。如果想从历史中也清理，可在终端用 git filter-repo。"
+            case .largeFile, .oversizeBlocked:
+                advised = "大文件建议走 Git LFS：\n  brew install git-lfs\n  git lfs install\n  git lfs track \"\(finding.filePath)\""
+            }
+            self.lastGitignoreAction = GitignoreActionState(
+                kind: finding.kind,
+                filePath: finding.filePath,
+                addedLines: result.addedLines,
+                alreadyPresent: result.alreadyPresent,
+                gitignorePath: result.gitignorePath,
+                advisedAction: advised
+            )
+            // 同步从 preflight 移除这条（用户已经处理过了）
+            ignoreOnce(findingId: finding.id)
+        } catch {
+            // .gitignore 写不进去——通常是权限问题；做个温和提示
+            self.lastGitignoreAction = GitignoreActionState(
+                kind: finding.kind,
+                filePath: finding.filePath,
+                addedLines: [],
+                alreadyPresent: [],
+                gitignorePath: "(写入失败)",
+                advisedAction: "写不进去 .gitignore：\(error.localizedDescription)\n建议手动编辑仓库根的 .gitignore。"
+            )
+        }
     }
 
     /// BypassConfirmDialog 验证通过后调用：用户已输入仓库名解锁推送。

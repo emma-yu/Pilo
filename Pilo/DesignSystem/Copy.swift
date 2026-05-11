@@ -301,6 +301,66 @@ enum Copy {
         static let bypassNameMismatch = "仓库名不匹配"
     }
 
+    // MARK: - 误提交防护（Phase 7）
+
+    enum Guard {
+
+        static let criticalGroupTitle = "高危 · 阻断推送"
+        static let warningGroupTitle  = "提示 · 可以推但建议处理"
+
+        static func summaryAllClear(_ tone: Tone) -> [String] {
+            switch tone {
+            case .friendly:
+                return ["✅ 没有发现敏感信息", "✅ 没有可疑文件", "✅ 文件大小正常"]
+            case .minimal:
+                return ["敏感信息扫描通过", "文件类型检查通过", "文件大小检查通过"]
+            }
+        }
+
+        static let addToGitignoreButton = "加入 .gitignore"
+        static let showInFinderButton   = "在 Finder 中显示"
+        static let learnLFSButton       = "了解 Git LFS"
+        static let ignoreOnceButton     = "仅本次忽略"
+        static let markSafeButton       = "已确认安全"
+        static let jumpToCodeButton     = "跳转到代码"
+
+        // GitignoreActionSheet
+        static let actionSheetTitle = "已加入 .gitignore"
+        static let actionSheetOpen  = "用编辑器打开 .gitignore"
+        static let actionSheetCopyFilterCmd = "复制 filter-repo 命令"
+        static let actionSheetDone  = "知道了"
+
+        // 推送按钮新状态
+        static func pushDisabledByCritical(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "处理高危项后才能推送"
+            case .minimal:  "请先处理高危项"
+            }
+        }
+
+        static func pushBypassLink(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "了解风险，仍然推送 →"
+            case .minimal:  "强制推送 →"
+            }
+        }
+
+        // 顶部章节
+        static func sectionTitle(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "🛡️ 推送前检查"
+            case .minimal:  "推送前检查"
+            }
+        }
+
+        static func sectionSummaryClear(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "全部通过 ✨"
+            case .minimal:  "通过"
+            }
+        }
+    }
+
     // MARK: - Kill switch（Phase 6）
 
     enum KillSwitch {

@@ -59,6 +59,16 @@ struct PushConfirmDialog: View {
                 onCancel: { appState.falsePositivePickerTarget = nil }
             )
         }
+        // Phase 7：加入 .gitignore 之后的诚实告知 sheet
+        .sheet(item: Binding(
+            get: { appState.lastGitignoreAction },
+            set: { appState.lastGitignoreAction = $0 }
+        )) { action in
+            GitignoreActionSheet(
+                action: action,
+                onDismiss: { appState.lastGitignoreAction = nil }
+            )
+        }
     }
 
     // MARK: - Preflight
@@ -151,45 +161,75 @@ struct PushConfirmDialog: View {
         }
     }
 
+    // MARK: - 检查总区（Phase 7 重设计）
+
     @ViewBuilder
     private func findingsSection(_ pre: PushSession.Preflight) -> some View {
-        if pre.scanSkippedByKillSwitch {
-            scanSkippedBanner
-        } else if pre.findings.isEmpty {
-            scanCleanBanner
-        } else {
-            VStack(alignment: .leading, spacing: 8) {
-                SectionHeader(
-                    title: Copy.Scan.sectionHeader(tone, count: pre.findings.count),
-                    trailing: pre.hasCritical ? "高危 \(pre.criticalFindings.count)" : nil
-                )
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(pre.findings) { f in
-                            findingCard(f)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-                .frame(maxHeight: 220)
+        VStack(alignment: .leading, spacing: 10) {
+            sectionHeader(pre)
+            if pre.scanSkippedByKillSwitch {
+                scanSkippedBanner
+            } else if !pre.hasAnyIssue {
+                cleanChecklist
+            } else {
+                issuesScroller(pre)
             }
         }
     }
 
-    private var scanCleanBanner: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "checkmark.shield.fill")
-                .foregroundStyle(Color.mintSafe)
-            Text(Copy.Scan.sectionHeader(tone, count: 0))
-                .font(.piloCaption)
-                .foregroundStyle(Color.inkSecondary)
+    private func sectionHeader(_ pre: PushSession.Preflight) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(Copy.Guard.sectionTitle(tone))
+                .font(.piloSection)
+                .foregroundStyle(Color.inkPrimary)
             Spacer()
+            if pre.scanSkippedByKillSwitch {
+                EmptyView()
+            } else if !pre.hasAnyIssue {
+                Text(Copy.Guard.sectionSummaryClear(tone))
+                    .font(.piloCaption)
+                    .foregroundStyle(Color.mintSafe)
+            } else {
+                if pre.totalCriticalCount > 0 {
+                    severityChip(count: pre.totalCriticalCount, severity: .critical)
+                }
+                if pre.totalWarningCount > 0 {
+                    severityChip(count: pre.totalWarningCount, severity: .warning)
+                }
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+    }
+
+    private func severityChip(count: Int, severity: FindingSeverity) -> some View {
+        let tint: Color = severity == .critical ? .roseDanger : .amberWarn
+        let label: String = severity == .critical ? "高危 \(count)" : "提示 \(count)"
+        return Text(label)
+            .font(.piloCaption)
+            .fontWeight(.semibold)
+            .foregroundStyle(tint)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
+    }
+
+    private var cleanChecklist: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Copy.Guard.summaryAllClear(tone), id: \.self) { line in
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.mintSafe)
+                        .font(.system(size: 12))
+                    Text(line)
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkSecondary)
+                }
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.mintSafe.opacity(0.12))
+                .fill(Color.mintSafe.opacity(0.10))
         )
     }
 
@@ -210,18 +250,67 @@ struct PushConfirmDialog: View {
         )
     }
 
+    private func issuesScroller(_ pre: PushSession.Preflight) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                if pre.totalCriticalCount > 0 {
+                    issueGroup(
+                        title: Copy.Guard.criticalGroupTitle,
+                        severity: .critical,
+                        scanFindings: pre.criticalFindings,
+                        guardFindings: pre.criticalGuardFindings
+                    )
+                }
+                if pre.totalWarningCount > 0 {
+                    issueGroup(
+                        title: Copy.Guard.warningGroupTitle,
+                        severity: .warning,
+                        scanFindings: pre.warningFindings,
+                        guardFindings: pre.warningGuardFindings
+                    )
+                }
+            }
+            .padding(.vertical, 2)
+        }
+        .frame(maxHeight: 260)
+    }
+
     @ViewBuilder
-    private func findingCard(_ finding: ScanFinding) -> some View {
-        let tint: Color = finding.severity == .critical ? .roseDanger : .amberWarn
-        VStack(alignment: .leading, spacing: 6) {
+    private func issueGroup(
+        title: String,
+        severity: FindingSeverity,
+        scanFindings: [ScanFinding],
+        guardFindings: [CommitGuardFinding]
+    ) -> some View {
+        let tint: Color = severity == .critical ? .roseDanger : .amberWarn
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
-                Text(finding.severity == .critical ? Copy.Scan.critical : Copy.Scan.warning)
+                Image(systemName: severity == .critical ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(tint)
+                Text(title)
                     .font(.piloCaption)
                     .fontWeight(.semibold)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
                     .foregroundStyle(tint)
+            }
+            ForEach(scanFindings) { f in
+                scanFindingCard(f)
+            }
+            ForEach(guardFindings) { f in
+                guardFindingCard(f)
+            }
+        }
+    }
+
+    // MARK: - 单条卡片
+
+    @ViewBuilder
+    private func scanFindingCard(_ finding: ScanFinding) -> some View {
+        let tint: Color = finding.severity == .critical ? .roseDanger : .amberWarn
+        baseCard(tint: tint) {
+            HStack(spacing: 8) {
+                Image(systemName: "key.fill")
+                    .foregroundStyle(tint)
+                    .font(.system(size: 13))
                 Text(finding.ruleName)
                     .font(.piloSection)
                     .foregroundStyle(Color.inkPrimary)
@@ -244,19 +333,99 @@ struct PushConfirmDialog: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(Color.cloudDivider.opacity(0.4))
                 )
-            HStack(spacing: 8) {
-                Button(Copy.Scan.jumpToFile) {
-                    revealInFinder(finding: finding)
+            actionRow {
+                iconButton("arrow.up.right.square", Copy.Guard.jumpToCodeButton) {
+                    revealScanFinding(finding)
                 }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-                Button(Copy.Scan.markFP) {
+                if finding.severity == .warning {
+                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton) {
+                        appState.ignoreOnce(findingId: finding.id)
+                    }
+                }
+                iconButton("checkmark.shield", Copy.Guard.markSafeButton) {
                     appState.falsePositivePickerTarget = finding
                 }
-                .buttonStyle(.borderless)
-                .controlSize(.small)
-                Spacer()
             }
+        }
+    }
+
+    @ViewBuilder
+    private func guardFindingCard(_ finding: CommitGuardFinding) -> some View {
+        let tint: Color = finding.severity == .critical ? .roseDanger : .amberWarn
+        baseCard(tint: tint) {
+            HStack(spacing: 8) {
+                Image(systemName: iconForGuardKind(finding.kind))
+                    .foregroundStyle(tint)
+                    .font(.system(size: 13))
+                Text(finding.displayKind)
+                    .font(.piloSection)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer()
+                if let sz = finding.formattedSize {
+                    Text(sz)
+                        .font(.piloMono)
+                        .foregroundStyle(Color.inkTertiary)
+                }
+            }
+            Text(finding.filePath)
+                .font(.piloMono)
+                .foregroundStyle(Color.inkSecondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Color.cloudDivider.opacity(0.4))
+                )
+            Text(finding.explanation)
+                .font(.piloCaption)
+                .foregroundStyle(Color.inkSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            actionRow {
+                iconButton("folder", Copy.Guard.showInFinderButton) {
+                    revealGuardFinding(finding)
+                }
+                if case .addToGitignore = finding.suggestion {
+                    iconButton("doc.badge.plus", Copy.Guard.addToGitignoreButton) {
+                        appState.addToGitignore(for: finding)
+                    }
+                }
+                if case .useLFS = finding.suggestion {
+                    iconButton("arrow.up.doc", Copy.Guard.learnLFSButton) {
+                        if let url = URL(string: "https://git-lfs.com") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                }
+                if finding.severity == .warning {
+                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton) {
+                        appState.ignoreOnce(findingId: finding.id)
+                    }
+                }
+            }
+        }
+    }
+
+    private func iconForGuardKind(_ kind: CommitGuardFinding.Kind) -> String {
+        switch kind {
+        case .envFile:           return "doc.text.fill"
+        case .privateKey:        return "key.horizontal.fill"
+        case .publicKey:         return "key"
+        case .largeFile:         return "doc.zipper"
+        case .oversizeBlocked:   return "exclamationmark.octagon"
+        case .buildArtifact:     return "shippingbox"
+        case .dsStore:           return "doc.text"
+        }
+    }
+
+    // MARK: - 通用卡片骨架
+
+    @ViewBuilder
+    private func baseCard<Content: View>(tint: Color, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            content()
         }
         .padding(10)
         .background(
@@ -269,42 +438,108 @@ struct PushConfirmDialog: View {
         )
     }
 
-    private func revealInFinder(finding: ScanFinding) {
-        guard let repoPath = appState.pushSession.flatMap({ s -> String? in
-            if case .preflight(let pre) = s.state { return pre.repoPath } else { return nil }
-        }) else { return }
+    @ViewBuilder
+    private func actionRow<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 4) {
+            content()
+            Spacer()
+        }
+        .padding(.top, 2)
+    }
+
+    private func iconButton(_ symbol: String, _ label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: symbol)
+                    .font(.system(size: 11))
+                Text(label)
+                    .font(.piloCaption)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(Color.cloudDivider.opacity(0.5))
+            )
+            .foregroundStyle(Color.inkPrimary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func revealScanFinding(_ finding: ScanFinding) {
+        guard let repoPath = currentRepoPath else { return }
         let fileURL = URL(fileURLWithPath: repoPath).appendingPathComponent(finding.filePath)
         NSWorkspace.shared.activateFileViewerSelecting([fileURL])
     }
 
+    private func revealGuardFinding(_ finding: CommitGuardFinding) {
+        guard let repoPath = currentRepoPath else { return }
+        let fileURL = URL(fileURLWithPath: repoPath).appendingPathComponent(finding.filePath)
+        NSWorkspace.shared.activateFileViewerSelecting([fileURL])
+    }
+
+    private var currentRepoPath: String? {
+        appState.pushSession.flatMap { s -> String? in
+            if case .preflight(let pre) = s.state { return pre.repoPath }
+            return nil
+        }
+    }
+
     private func preflightFooter(_ pre: PushSession.Preflight) -> some View {
-        HStack {
-            Button(Copy.Push.cancelButton(tone), action: onDismiss)
-                .controlSize(.large)
-                .keyboardShortcut(.cancelAction)
-            Spacer()
+        VStack(alignment: .trailing, spacing: 6) {
+            HStack {
+                Button(Copy.Push.cancelButton(tone), action: onDismiss)
+                    .controlSize(.large)
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                if pre.hasCritical && !pre.bypassConfirmed {
+                    // 主路径是"处理高危项"，按钮 disabled。bypass 降级为下方小号文字链接。
+                    Button {
+                        // 不可达；按钮已 disabled
+                    } label: {
+                        Text(Copy.Guard.pushDisabledByCritical(tone))
+                            .frame(minWidth: 140)
+                    }
+                    .controlSize(.large)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.inkTertiary)
+                    .disabled(true)
+                } else if pre.bypassConfirmed {
+                    Button {
+                        Task { await appState.executePush() }
+                    } label: {
+                        Text(Copy.Scan.pushBypassButton(tone))
+                            .frame(minWidth: 140)
+                    }
+                    .controlSize(.large)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.roseDanger)
+                    .keyboardShortcut(.defaultAction)
+                } else {
+                    Button {
+                        Task { await appState.executePush() }
+                    } label: {
+                        Text(Copy.Push.pushButton(tone))
+                            .frame(minWidth: 110)
+                    }
+                    .controlSize(.large)
+                    .buttonStyle(.borderedProminent)
+                    .tint(Color.piloBlue)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(pre.commits.isEmpty)
+                }
+            }
+            // bypass 降级为安静文字链接，不和主按钮等权重
             if pre.hasCritical && !pre.bypassConfirmed {
                 Button {
                     showBypassDialog = true
                 } label: {
-                    Text(Copy.Scan.pushBypassButton(tone))
-                        .frame(minWidth: 140)
+                    Text(Copy.Guard.pushBypassLink(tone))
+                        .font(.piloCaption)
+                        .foregroundStyle(Color.inkTertiary)
+                        .underline()
                 }
-                .controlSize(.large)
-                .buttonStyle(.bordered)
-                .tint(Color.roseDanger)
-            } else {
-                Button {
-                    Task { await appState.executePush() }
-                } label: {
-                    Text(Copy.Push.pushButton(tone))
-                        .frame(minWidth: 110)
-                }
-                .controlSize(.large)
-                .buttonStyle(.borderedProminent)
-                .tint(Color.piloBlue)
-                .keyboardShortcut(.defaultAction)
-                .disabled(pre.commits.isEmpty)
+                .buttonStyle(.plain)
             }
         }
     }
