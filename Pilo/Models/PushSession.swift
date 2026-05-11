@@ -18,6 +18,17 @@ struct PushSession: Identifiable, Sendable {
         let branch: String
         let willSetUpstream: Bool
         let commits: [CommitSummary]
+        var findings: [ScanFinding] = []
+        var scanSkippedByKillSwitch: Bool = false
+        var bypassConfirmed: Bool = false   // 用户已通过 BypassConfirmDialog 输入仓库名解锁推送
+
+        var criticalFindings: [ScanFinding] { findings.filter { $0.severity == .critical } }
+        var warningFindings: [ScanFinding]  { findings.filter { $0.severity == .warning  } }
+        var hasCritical: Bool { !criticalFindings.isEmpty }
+        var canPushDirectly: Bool {
+            // 没 critical 时可以直接推；有 critical 时需要 bypass
+            !hasCritical || bypassConfirmed
+        }
     }
 
     struct Running: Sendable, Hashable {

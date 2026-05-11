@@ -236,6 +236,93 @@ enum Copy {
         static let pushDisabledHint = "没有可推送的 commit"
     }
 
+    // MARK: - 安全扫描（Phase 6）
+
+    enum Scan {
+
+        static func sectionHeader(_ tone: Tone, count: Int) -> String {
+            switch (count, tone) {
+            case (0, .friendly): "✅ 安全检查通过"
+            case (0, .minimal):  "安全检查通过"
+            case (_, .friendly): "哎呀～发现 \(count) 处可能要看看"
+            case (_, .minimal):  "发现 \(count) 处"
+            }
+        }
+
+        static func killSwitchSkipped(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "🕶️ 安全检查已暂停（紧急模式）"
+            case .minimal:  "安全检查已暂停"
+            }
+        }
+
+        static let critical    = "高危"
+        static let warning     = "提示"
+        static let jumpToFile  = "在 Finder 中显示"
+        static let markFP      = "标记为误报"
+        static let markFPHere  = "仅这个文件"
+        static let markFPRule  = "整个仓库都不再扫这条规则"
+        static let markFPCancel = "再想想"
+        static let markFPTitle = "怎么标记？"
+        static let markFPSubtitle = "下次扫描会按你选的范围跳过这一条。"
+
+        // Critical 时 Push 按钮文案
+        static func pushBypassButton(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "我已了解，仍然推送"
+            case .minimal:  "确认推送"
+            }
+        }
+
+        // BypassConfirmDialog
+        static func bypassConfirmTitle(_ tone: Tone) -> String {
+            switch tone {
+            case .friendly: "🕊️ 真的吗？"
+            case .minimal:  "确认绕过安全检查"
+            }
+        }
+
+        static let bypassConfirmDesc = """
+        推送之后这些 key 会进入 GitHub 历史，
+        即使后续删除也很难真正清除。
+        通常需要重新生成 key 才能彻底解决。
+
+        📝 建议先做的事：
+          1. 在密钥服务商后台 revoke 这些 key
+          2. 重新生成新 key
+          3. 把新 key 放到 .env 而不是源码
+
+        如果你坚持要推送，请输入仓库名确认：
+        """
+
+        static let bypassConfirmInputPlaceholder = "在这里输入仓库名"
+        static let bypassConfirmYes = "我已了解，推送"
+        static let bypassConfirmNo  = "取消"
+        static let bypassNameMismatch = "仓库名不匹配"
+    }
+
+    // MARK: - Kill switch（Phase 6）
+
+    enum KillSwitch {
+
+        static func bannerInMenuBar(_ tone: Tone, remainingHours: Int) -> String {
+            switch tone {
+            case .friendly: "🕶️ 安全检查已关闭（剩 \(remainingHours) 小时自动恢复）· 点击立即恢复"
+            case .minimal:  "安全检查已关闭（\(remainingHours) 小时后恢复）· 立即恢复"
+            }
+        }
+
+        static let settingsSectionTitle = "安全检查"
+        static let settingsToggleEnabled  = "启用敏感信息扫描"
+        static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。"
+
+        static let settingsKillSwitchTitle = "紧急关闭安全检查"
+        static let settingsKillSwitchDesc  = "暂时关闭所有安全扫描，让 push 可以无阻通过。24 小时后自动恢复——避免你忘了自己关过。"
+        static let settingsKillSwitchActivateButton = "暂时关闭 24 小时"
+        static let settingsKillSwitchActiveLabel  = "已关闭，%d 小时后恢复"
+        static let settingsKillSwitchRestoreButton = "立即恢复"
+    }
+
     // MARK: - Mascot 无障碍标签
 
     enum MascotA11y {

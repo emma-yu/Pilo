@@ -10,13 +10,76 @@ struct SettingsView: View {
                 .tabItem { Label("通用", systemImage: "gearshape") }
             scanTab
                 .tabItem { Label("扫描", systemImage: "folder") }
+            securityTab
+                .tabItem { Label("安全", systemImage: "shield") }
             hiddenReposTab
                 .tabItem { Label("已隐藏", systemImage: "eye.slash") }
                 .badge(appState.hiddenRepos.count)
             aboutTab
                 .tabItem { Label("关于", systemImage: "info.circle") }
         }
-        .frame(width: 560, height: 460)
+        .frame(width: 560, height: 480)
+    }
+
+    // MARK: - 安全（Phase 6）
+
+    private var securityTab: some View {
+        Form {
+            Section(Copy.KillSwitch.settingsSectionTitle) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Copy.KillSwitch.settingsToggleDescription)
+                        .font(.piloCaption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: appState.isKillSwitchActive ? "eye.slash.fill" : "shield.fill")
+                            .foregroundStyle(appState.isKillSwitchActive ? Color.amberWarn : Color.mintSafe)
+                            .font(.system(size: 18))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(Copy.KillSwitch.settingsKillSwitchTitle)
+                                .font(.piloSection)
+                            Text(Copy.KillSwitch.settingsKillSwitchDesc)
+                                .font(.piloCaption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+
+                    if appState.isKillSwitchActive {
+                        HStack(spacing: 10) {
+                            Text(String(format: Copy.KillSwitch.settingsKillSwitchActiveLabel, appState.killSwitchRemainingHours))
+                                .font(.piloBody)
+                                .foregroundStyle(Color.amberWarn)
+                            Spacer()
+                            Button(Copy.KillSwitch.settingsKillSwitchRestoreButton) {
+                                appState.deactivateKillSwitch()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                        .padding(.top, 6)
+                    } else {
+                        HStack {
+                            Spacer()
+                            Button(Copy.KillSwitch.settingsKillSwitchActivateButton) {
+                                appState.activateKillSwitch()
+                            }
+                            .controlSize(.small)
+                            .tint(Color.amberWarn)
+                        }
+                        .padding(.top, 6)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .formStyle(.grouped)
     }
 
     // MARK: - 已隐藏

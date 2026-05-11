@@ -12,6 +12,8 @@ struct PushConfirmDialog: View {
     @Binding var session: PushSession?
     let onDismiss: () -> Void
 
+    @State private var showBypassDialog = false
+
     var body: some View {
         VStack(spacing: 0) {
             switch session?.state {
@@ -25,10 +27,38 @@ struct PushConfirmDialog: View {
                 EmptyView()
             }
         }
-        .frame(width: 540)
-        .frame(minHeight: 360)
+        .frame(width: 560)
+        .frame(minHeight: 420)
         .background(Color.creamBg)
         .accessibilityElement(children: .contain)
+        // BypassConfirmDialog — 仅当 critical findings 存在且用户主动点了"我已了解仍然推送"
+        .sheet(isPresented: $showBypassDialog) {
+            if let session, case .preflight(let pre) = session.state {
+                BypassConfirmDialog(
+                    expectedRepoName: pre.repoName,
+                    criticalCount: pre.criticalFindings.count,
+                    onConfirm: {
+                        appState.confirmBypassForCurrentPush()
+                        showBypassDialog = false
+                        Task { await appState.executePush() }
+                    },
+                    onCancel: { showBypassDialog = false }
+                )
+            }
+        }
+        // FalsePositive 范围选择器
+        .sheet(item: Binding(
+            get: { appState.falsePositivePickerTarget },
+            set: { appState.falsePositivePickerTarget = $0 }
+        )) { finding in
+            FalsePositiveScopeSheet(
+                finding: finding,
+                onPick: { scope in
+                    Task { await appState.markFalsePositive(finding, scope: scope) }
+                },
+                onCancel: { appState.falsePositivePickerTarget = nil }
+            )
+        }
     }
 
     // MARK: - Preflight
@@ -39,7 +69,7 @@ struct PushConfirmDialog: View {
             preflightHeader(pre)
             Divider()
             commitsList(pre.commits)
-            scanPlaceholder
+            findingsSection(pre)
             Spacer(minLength: 0)
             preflightFooter(pre)
         }
@@ -121,21 +151,130 @@ struct PushConfirmDialog: View {
         }
     }
 
-    private var scanPlaceholder: some View {
+    @ViewBuilder
+    private func findingsSection(_ pre: PushSession.Preflight) -> some View {
+        if pre.scanSkippedByKillSwitch {
+            scanSkippedBanner
+        } else if pre.findings.isEmpty {
+            scanCleanBanner
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(
+                    title: Copy.Scan.sectionHeader(tone, count: pre.findings.count),
+                    trailing: pre.hasCritical ? "高危 \(pre.criticalFindings.count)" : nil
+                )
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(pre.findings) { f in
+                            findingCard(f)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .frame(maxHeight: 220)
+            }
+        }
+    }
+
+    private var scanCleanBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "shield.lefthalf.filled")
-                .foregroundStyle(Color.inkTertiary)
-            Text(Copy.Push.preflightScanPlaceholder)
+            Image(systemName: "checkmark.shield.fill")
+                .foregroundStyle(Color.mintSafe)
+            Text(Copy.Scan.sectionHeader(tone, count: 0))
                 .font(.piloCaption)
-                .foregroundStyle(Color.inkTertiary)
+                .foregroundStyle(Color.inkSecondary)
             Spacer()
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .stroke(Color.cloudDivider, lineWidth: 1)
+                .fill(Color.mintSafe.opacity(0.12))
         )
+    }
+
+    private var scanSkippedBanner: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "eye.slash.fill")
+                .foregroundStyle(Color.amberWarn)
+            Text(Copy.Scan.killSwitchSkipped(tone))
+                .font(.piloCaption)
+                .foregroundStyle(Color.inkSecondary)
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.amberWarn.opacity(0.15))
+        )
+    }
+
+    @ViewBuilder
+    private func findingCard(_ finding: ScanFinding) -> some View {
+        let tint: Color = finding.severity == .critical ? .roseDanger : .amberWarn
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text(finding.severity == .critical ? Copy.Scan.critical : Copy.Scan.warning)
+                    .font(.piloCaption)
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 4))
+                    .foregroundStyle(tint)
+                Text(finding.ruleName)
+                    .font(.piloSection)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer()
+                Text("\(finding.filePath):\(finding.lineNumber)")
+                    .font(.piloMono)
+                    .foregroundStyle(Color.inkTertiary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            Text(finding.lineSnippet)
+                .font(.piloMono)
+                .foregroundStyle(Color.inkSecondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Color.cloudDivider.opacity(0.4))
+                )
+            HStack(spacing: 8) {
+                Button(Copy.Scan.jumpToFile) {
+                    revealInFinder(finding: finding)
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                Button(Copy.Scan.markFP) {
+                    appState.falsePositivePickerTarget = finding
+                }
+                .buttonStyle(.borderless)
+                .controlSize(.small)
+                Spacer()
+            }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.paperCard)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .stroke(tint.opacity(0.35), lineWidth: 1)
+                )
+        )
+    }
+
+    private func revealInFinder(finding: ScanFinding) {
+        guard let repoPath = appState.pushSession.flatMap({ s -> String? in
+            if case .preflight(let pre) = s.state { return pre.repoPath } else { return nil }
+        }) else { return }
+        let fileURL = URL(fileURLWithPath: repoPath).appendingPathComponent(finding.filePath)
+        NSWorkspace.shared.activateFileViewerSelecting([fileURL])
     }
 
     private func preflightFooter(_ pre: PushSession.Preflight) -> some View {
@@ -144,17 +283,29 @@ struct PushConfirmDialog: View {
                 .controlSize(.large)
                 .keyboardShortcut(.cancelAction)
             Spacer()
-            Button {
-                Task { await appState.executePush() }
-            } label: {
-                Text(Copy.Push.pushButton(tone))
-                    .frame(minWidth: 110)
+            if pre.hasCritical && !pre.bypassConfirmed {
+                Button {
+                    showBypassDialog = true
+                } label: {
+                    Text(Copy.Scan.pushBypassButton(tone))
+                        .frame(minWidth: 140)
+                }
+                .controlSize(.large)
+                .buttonStyle(.bordered)
+                .tint(Color.roseDanger)
+            } else {
+                Button {
+                    Task { await appState.executePush() }
+                } label: {
+                    Text(Copy.Push.pushButton(tone))
+                        .frame(minWidth: 110)
+                }
+                .controlSize(.large)
+                .buttonStyle(.borderedProminent)
+                .tint(Color.piloBlue)
+                .keyboardShortcut(.defaultAction)
+                .disabled(pre.commits.isEmpty)
             }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
-            .tint(Color.piloBlue)
-            .keyboardShortcut(.defaultAction)
-            .disabled(pre.commits.isEmpty)
         }
     }
 

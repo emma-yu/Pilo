@@ -8,6 +8,9 @@ struct MenuBarView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if appState.isKillSwitchActive {
+                killSwitchBanner
+            }
             content
             divider
             footer
@@ -20,6 +23,30 @@ struct MenuBarView: View {
                 openWindow(id: "onboarding")
             }
         }
+    }
+
+    private var killSwitchBanner: some View {
+        Button {
+            appState.deactivateKillSwitch()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "eye.slash.fill")
+                    .foregroundStyle(Color.amberWarn)
+                Text(Copy.KillSwitch.bannerInMenuBar(appState.tone, remainingHours: appState.killSwitchRemainingHours))
+                    .font(.piloCaption)
+                    .foregroundStyle(Color.inkSecondary)
+                    .multilineTextAlignment(.leading)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.amberWarn.opacity(0.18))
+            )
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, 8)
     }
 
     // MARK: - Content

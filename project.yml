@@ -32,8 +32,9 @@ targets:
         excludes:
           - 'Info.plist'
           - 'Pilo.entitlements'
-    resources:
-      - path: Pilo/Resources/Assets.xcassets
+      # XcodeGen 会按扩展名自动分配 buildPhase：
+      # .swift → Sources / .xcassets → Resources / .json → Resources
+      # 不需要单独的 resources: 段
     info:
       path: Pilo/Info.plist
       properties:

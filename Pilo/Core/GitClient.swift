@@ -166,6 +166,29 @@ actor GitClient {
         return out
     }
 
+    /// 拉取即将推送的 diff（HEAD vs 远端分支）。--unified=0 让我们只看到真新增的行，
+    /// 不带上下文 noise；--no-color 关掉 ANSI 转义；--no-ext-diff 防御用户配了花式 differ。
+    /// 远端 ref 不存在（首次 push）时返回 HEAD 的全量内容 diff。
+    func diffForPush(repo: URL, branch: String, remote: String) async -> String? {
+        let ref = "\(remote)/\(branch)"
+        let exists = await runGit(["rev-parse", "--verify", "--quiet", ref], in: repo)
+        let revisionSpec: String
+        if exists?.ok == true {
+            revisionSpec = "\(ref)..HEAD"
+        } else {
+            // 首次 push：和"空树"对比 → diff 出 HEAD 的全量内容
+            revisionSpec = "4b825dc642cb6eb9a060e54bf8d69288fbee4904..HEAD"
+            // ↑ 这是 git 的 well-known 空树 hash (`git hash-object -t tree --stdin </dev/null`)
+        }
+        let r = await runGitWithTimeout(
+            ["diff", revisionSpec, "--unified=0", "--no-color", "--no-ext-diff"],
+            in: repo,
+            timeout: 30
+        )
+        guard let r, r.ok else { return nil }
+        return r.stdout
+    }
+
     /// 执行 `git push`。**不解释结果**——调用方（PushExecutor）负责 stderr 分类。
     /// 已经强制 GIT_TERMINAL_PROMPT=0；凭证缺失时会立刻失败而非阻塞。
     func push(repo: URL, remote: String, branch: String, setUpstream: Bool) async -> ProcessResult? {

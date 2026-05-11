@@ -15,11 +15,35 @@ final class AppState {
     let gitClient: GitClient
     let scanner: RepoScanner
     let pushExecutor: PushExecutor
+    let secretScanner: SecretScanner
     private let fsMonitor: FSEventMonitor
 
     // MARK: - Push 会话
 
     var pushSession: PushSession?
+
+    /// 用户当前面对的 finding 是否在选择"标记为误报"的范围。nil 表示没有该 popover。
+    var falsePositivePickerTarget: ScanFinding?
+
+    // MARK: - Kill switch（PRD §4.8）
+
+    /// 直接由 UserDefaults 镜像；computed 的 isActive 才是 UI 应该读的。
+    var killSwitchExpiresAt: Date?
+
+    /// 真正的状态：当前 kill switch 是否在生效中。
+    /// **不要**用 stored 属性——computed 保证读到当下时间的真值，不会因为 timer 没醒而误报。
+    var isKillSwitchActive: Bool {
+        guard let d = killSwitchExpiresAt else { return false }
+        return d > Date()
+    }
+
+    var killSwitchRemainingHours: Int {
+        guard let d = killSwitchExpiresAt else { return 0 }
+        let s = max(0, d.timeIntervalSinceNow)
+        return Int(ceil(s / 3600))
+    }
+
+    private var killSwitchExpiryTask: Task<Void, Never>?
 
     /// 当前消费 FSEvent 的任务；watch dirs 改变时取消重启
     private var watcherTask: Task<Void, Never>?
@@ -65,7 +89,32 @@ final class AppState {
         self.gitClient = git
         self.scanner = RepoScanner(gitClient: git)
         self.pushExecutor = PushExecutor(gitClient: git)
+        self.secretScanner = SecretScanner()
         self.fsMonitor = FSEventMonitor()
+        // 恢复 kill switch 状态
+        if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
+            let restored = Date(timeIntervalSince1970: ts)
+            if restored > Date() {
+                self.killSwitchExpiresAt = restored
+                // init 里直接 Task 调度过期清理；MainActor 上下文，安全
+                let weakSelf = self
+                killSwitchExpiryTask = Task { [weak weakSelf] in
+                    let interval = restored.timeIntervalSinceNow
+                    if interval > 0 {
+                        try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                    }
+                    await MainActor.run {
+                        guard let s = weakSelf else { return }
+                        if let exp = s.killSwitchExpiresAt, exp <= Date() {
+                            s.killSwitchExpiresAt = nil
+                            UserDefaults.standard.removeObject(forKey: SettingsKey.killSwitchExpiresAt.rawValue)
+                        }
+                    }
+                }
+            } else {
+                UserDefaults.standard.removeObject(forKey: SettingsKey.killSwitchExpiresAt.rawValue)
+            }
+        }
         self.watchDirectories = WatchDirectoriesStorage.load()
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
@@ -195,20 +244,39 @@ final class AppState {
 
     // MARK: - Push 会话流程
 
-    /// 由 RepoDetailView 的 Push 按钮触发：拉取要推送的 commit 列表 + 解析 upstream，
+    /// 由 RepoDetailView 的 Push 按钮触发：拉取 commit 列表 + 解析 upstream + 跑安全扫描，
     /// 然后把 sheet 切到 preflight 状态。
     func beginPushSession(for repo: Repository) async {
         guard let branch = repo.currentBranch else { return }
+        let repoURL = URL(fileURLWithPath: repo.path)
         let defaultRemote = repo.defaultPushRemote
-        let upstream = await gitClient.branchUpstream(repo: URL(fileURLWithPath: repo.path), branch: branch)
+        let upstream = await gitClient.branchUpstream(repo: repoURL, branch: branch)
         let willSetUpstream = upstream == nil
         let remote = upstream?.remote ?? defaultRemote
         let upstreamBranch = upstream?.branch ?? branch
+
+        // 1) commit 列表
         let commits = await gitClient.pendingPushCommits(
-            repo: URL(fileURLWithPath: repo.path),
+            repo: repoURL,
             branch: upstreamBranch,
             remote: remote
         )
+
+        // 2) 安全扫描（如果 kill switch 没启用）
+        var findings: [ScanFinding] = []
+        var scanSkipped = false
+        if isKillSwitchActive {
+            scanSkipped = true
+        } else if !commits.isEmpty {
+            if let diff = await gitClient.diffForPush(repo: repoURL, branch: upstreamBranch, remote: remote) {
+                let diffLines = DiffParser.parse(diff)
+                findings = await secretScanner.scan(
+                    diffLines: diffLines,
+                    repoId: repo.id,
+                    falsePositiveMarks: repo.falsePositiveMarks
+                )
+            }
+        }
 
         let preflight = PushSession.Preflight(
             repoId: repo.id,
@@ -217,15 +285,83 @@ final class AppState {
             remote: remote,
             branch: branch,
             willSetUpstream: willSetUpstream,
-            commits: commits
+            commits: commits,
+            findings: findings,
+            scanSkippedByKillSwitch: scanSkipped,
+            bypassConfirmed: false
         )
         self.pushSession = PushSession(preflight: preflight)
+    }
+
+    /// BypassConfirmDialog 验证通过后调用：用户已输入仓库名解锁推送。
+    func confirmBypassForCurrentPush() {
+        guard let session = pushSession,
+              case .preflight(var pre) = session.state else { return }
+        pre.bypassConfirmed = true
+        var s = session
+        s.state = .preflight(pre)
+        pushSession = s
+    }
+
+    // MARK: - 误报标记
+
+    /// 用户从 finding 卡片点"标记为误报"时调用。
+    func markFalsePositive(_ finding: ScanFinding, scope: FalsePositiveMark.Scope) async {
+        guard let repoIdx = repositories.firstIndex(where: { $0.id == finding.repoId }) else { return }
+        guard let rule = await secretScanner.rule(id: finding.ruleId) else { return }
+        let mark = FalsePositiveMark(rule: rule, scope: scope, finding: finding)
+        repositories[repoIdx].falsePositiveMarks.append(mark)
+        saveRepositoriesToDisk()
+
+        // 从当前 preflight findings 立即把命中的去掉
+        if let session = pushSession, case .preflight(var pre) = session.state {
+            pre.findings.removeAll { mark.matches($0) }
+            var s = session
+            s.state = .preflight(pre)
+            pushSession = s
+        }
+        // 关闭范围选择器
+        falsePositivePickerTarget = nil
+    }
+
+    // MARK: - Kill switch
+
+    func activateKillSwitch(durationHours: Int = 24) {
+        let expiry = Date().addingTimeInterval(TimeInterval(durationHours) * 3600)
+        self.killSwitchExpiresAt = expiry
+        UserDefaults.standard.set(expiry.timeIntervalSince1970, forKey: SettingsKey.killSwitchExpiresAt.rawValue)
+        scheduleKillSwitchExpiry(at: expiry)
+    }
+
+    func deactivateKillSwitch() {
+        self.killSwitchExpiresAt = nil
+        UserDefaults.standard.removeObject(forKey: SettingsKey.killSwitchExpiresAt.rawValue)
+        killSwitchExpiryTask?.cancel()
+        killSwitchExpiryTask = nil
+    }
+
+    private func scheduleKillSwitchExpiry(at date: Date) {
+        killSwitchExpiryTask?.cancel()
+        let interval = date.timeIntervalSinceNow
+        guard interval > 0 else { return }
+        killSwitchExpiryTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            await MainActor.run {
+                guard let self else { return }
+                if let exp = self.killSwitchExpiresAt, exp <= Date() {
+                    self.killSwitchExpiresAt = nil
+                    UserDefaults.standard.removeObject(forKey: SettingsKey.killSwitchExpiresAt.rawValue)
+                }
+            }
+        }
     }
 
     /// PushConfirmDialog 的"推送"按钮调用。从 preflight → running → completed。
     func executePush() async {
         guard let session = pushSession,
               case .preflight(let pre) = session.state else { return }
+        // 安全闸门：critical findings 必须 bypass 才能继续。UI 应该已经禁推，这里再兜底。
+        guard pre.canPushDirectly else { return }
 
         // 切到 running 状态
         var s = session
@@ -303,7 +439,8 @@ final class AppState {
                     customTags: prior.customTags,
                     lastScanDate: Date(),
                     skipFetch: prior.skipFetch,
-                    skipMainBranchWarning: prior.skipMainBranchWarning
+                    skipMainBranchWarning: prior.skipMainBranchWarning,
+                    falsePositiveMarks: prior.falsePositiveMarks
                 )
             }
             byHash[fresh.pathHash] = fresh
