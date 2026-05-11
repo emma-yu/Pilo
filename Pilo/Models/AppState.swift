@@ -70,6 +70,28 @@ final class AppState {
     var scanProgressMessage: String?
     var isScanning: Bool = false
 
+    /// 当前选中 repo 的待推送 commit 列表（panel detail 实时展示）
+    var currentCommits: [CommitSummary] = []
+    private var commitsFetchTask: Task<Void, Never>?
+
+    /// 按"活跃 / 沉睡"分组（HTML 参考 panel 左栏的两组）
+    /// 活跃：有 work（待推/待提交）或最近 30 天有提交
+    /// 沉睡：最近 commit 早于 30 天
+    var activeRepos: [Repository] {
+        sortedRepos.filter { repo in
+            if repo.hasWork { return true }
+            guard let last = repo.lastCommitDate else { return true }
+            return Date().timeIntervalSince(last) < 30 * 24 * 3600
+        }
+    }
+    var sleepingRepos: [Repository] {
+        sortedRepos.filter { repo in
+            if repo.hasWork { return false }
+            guard let last = repo.lastCommitDate else { return false }
+            return Date().timeIntervalSince(last) >= 30 * 24 * 3600
+        }
+    }
+
     var pendingRepos: [Repository] {
         repositories.filter { $0.hasWork && !$0.isHidden }
     }
@@ -493,6 +515,28 @@ final class AppState {
     }
 
     // MARK: - 隐藏 / 取消隐藏仓库
+
+    // MARK: - 选中 repo + 加载 commit 列表
+
+    /// 选中 repo 时拉取真实的待推送 commit（异步，UI 显示加载态前留空数组）。
+    func selectRepo(_ id: UUID?) {
+        selectedRepoId = id
+        currentCommits = []
+        commitsFetchTask?.cancel()
+        guard let id, let repo = repositories.first(where: { $0.id == id }),
+              let branch = repo.currentBranch else { return }
+        let repoURL = URL(fileURLWithPath: repo.path)
+        let upstreamRemote = repo.defaultPushRemote
+        commitsFetchTask = Task { [weak self] in
+            let commits = await self?.gitClient.pendingPushCommits(
+                repo: repoURL, branch: branch, remote: upstreamRemote
+            ) ?? []
+            await MainActor.run {
+                guard let self, self.selectedRepoId == id else { return }
+                self.currentCommits = commits
+            }
+        }
+    }
 
     func setHidden(_ hidden: Bool, repoId: UUID) {
         guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }

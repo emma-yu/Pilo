@@ -17,6 +17,7 @@
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
 		1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6AB9592230B7D21B964718 /* PiloHero.swift */; };
 		202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */; };
+		20F8F67C89869699F09BFABB /* MainPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49EB184843D10170900A08BA /* MainPanel.swift */; };
 		21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E05A4CA192EA6913C4E82F /* SecretScanner.swift */; };
 		21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE45D55C757CD61606DCF1C /* SecretRule.swift */; };
 		22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16B037F569F8B168CAFE426 /* PiloMascot.swift */; };
@@ -106,6 +107,7 @@
 		3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassConfirmDialog.swift; sourceTree = "<group>"; };
 		4995B80B410566214FB4ACE8 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
 		49D4B0350924B1B73E0796E9 /* Pilo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pilo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		49EB184843D10170900A08BA /* MainPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanel.swift; sourceTree = "<group>"; };
 		4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitGuardScannerTests.swift; sourceTree = "<group>"; };
 		4A11D640FBE8823567CB8EF4 /* AppPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppPaths.swift; sourceTree = "<group>"; };
 		4BD4DE05816DDAC61F53E4E9 /* ScanFinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanFinding.swift; sourceTree = "<group>"; };
@@ -182,6 +184,7 @@
 		353047D2205A5A9E8D45F688 /* MainWindow */ = {
 			isa = PBXGroup;
 			children = (
+				49EB184843D10170900A08BA /* MainPanel.swift */,
 				8B511655D28B12989BAB8A01 /* MainWindowView.swift */,
 				DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */,
 				60E9C40F45449667A059ED60 /* RepoListView.swift */,
@@ -468,6 +471,7 @@
 				B46E8DDFA74F315E320FB0A1 /* GitignoreEditor.swift in Sources */,
 				AA0D9C0590E28AEC610A6060 /* HoverableRow.swift in Sources */,
 				5B0E6BF6D379DCF7558E6BFD /* Language.swift in Sources */,
+				20F8F67C89869699F09BFABB /* MainPanel.swift in Sources */,
 				F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */,
 				E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */,
 				A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */,

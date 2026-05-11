@@ -1,53 +1,88 @@
 import SwiftUI
 
+/// v3.4 主窗口：彻底放弃 NavigationSplitView，按 HTML 参考 scene 2 复刻——
+/// 整个窗口背景 cream + 顶部「Pilo · 产品 Demo」衬线标题 + 居中 MainPanel 卡片。
 struct MainWindowView: View {
 
     @Environment(AppState.self) private var appState
 
-    var body: some View {
-        NavigationSplitView {
-            RepoListView()
-                .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 360)
-        } detail: {
-            ZStack {
-                // Bear-vibe：纯纸品色底，无渐变，靠留白和文字呼吸
-                Color.creamBg
-                    .ignoresSafeArea()
+    private var lang: Language { appState.language }
 
-                Group {
-                    if let id = appState.selectedRepoId,
-                       let repo = appState.repositories.first(where: { $0.id == id }) {
-                        RepoDetailView(repo: repo)
-                    } else if let first = appState.sortedRepos.first {
-                        RepoDetailView(repo: first)
-                            .onAppear { appState.selectedRepoId = first.id }
+    var body: some View {
+        ZStack {
+            // 整窗 cream 底色（HTML body bg #F5F2EC）
+            Color.creamBg
+                .ignoresSafeArea()
+
+            ScrollView {
+                VStack(spacing: PiloSpacing.l) {
+                    // 顶部页面标题（衬线居中 + 斜体副标题）
+                    pageHeader
+                        .padding(.top, PiloSpacing.xl)
+                        .padding(.bottom, PiloSpacing.s)
+
+                    if appState.repositories.isEmpty {
+                        emptyState
+                            .padding(.top, PiloSpacing.xxxl)
                     } else {
-                        emptyDetail
+                        MainPanel()
+                            .padding(.horizontal, PiloSpacing.xl)
+                            .padding(.bottom, PiloSpacing.xl)
                     }
                 }
             }
+            .sheet(item: Binding(
+                get: { appState.pushSession },
+                set: { appState.pushSession = $0 }
+            )) { _ in
+                PushConfirmDialog(
+                    session: Binding(
+                        get: { appState.pushSession },
+                        set: { appState.pushSession = $0 }
+                    ),
+                    onDismiss: { appState.dismissPushSession() }
+                )
+            }
         }
         .navigationTitle("Pilo")
-        .frame(minWidth: 920, minHeight: 540)
+        .frame(minWidth: 800, minHeight: 580)
+        // 默认选中第一个 repo（lazy 加载 commits）
+        .onAppear {
+            if appState.selectedRepoId == nil,
+               let first = appState.activeRepos.first ?? appState.sortedRepos.first {
+                appState.selectRepo(first.id)
+            }
+        }
     }
 
-    private var emptyDetail: some View {
-        VStack(spacing: PiloSpacing.xl) {
-            Spacer()
-            PiloMascot(mood: .sleeping, size: 140, breathing: true)
-            VStack(spacing: PiloSpacing.s) {
-                Text("还没有发现仓库")
-                    .font(.piloHero)
-                    .tracking(-0.5)
-                    .foregroundStyle(Color.inkPrimary)
-                Text(Copy.emptyNoRepos(appState.tone))
-                    .font(.piloBody)
-                    .foregroundStyle(Color.inkSecondary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: 400)
-            }
-            Spacer()
+    private var pageHeader: some View {
+        VStack(spacing: 2) {
+            Text(lang == .zh ? "Pilo · 我的小邮局" : "Pilo · My Post Office")
+                .font(.piloSerifTitle)
+                .tracking(1.0)
+                .foregroundStyle(Color.inkPrimary)
+            Text(lang == .zh ? "— 一只帮你安全送出代码的小信鸽 —"
+                              : "— a little pigeon delivering your code —")
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkTertiary)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: PiloSpacing.l) {
+            OrnamentDivider(width: 220)
+            PiloMascot(mood: .sleeping, size: 140, breathing: true)
+            Text(lang == .zh ? "还没有发现仓库" : "No repos yet")
+                .font(.piloSerifHero)
+                .foregroundStyle(Color.inkPrimary)
+            Text(Copy.emptyNoRepos(appState.tone, lang))
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 400)
+        }
+        .padding(PiloSpacing.xxxl)
+        .frame(maxWidth: .infinity)
     }
 }
