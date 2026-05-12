@@ -11,7 +11,15 @@ struct OnboardingPrivacyView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 110, breathing: true)
+            // Privacy 屏是"承诺贴在信件上"的时刻——用邮票（带翅膀爱心）取代 mascot。
+            // 爱心邮票的语义：贴在你信件上的关心承诺。
+            Image("PostalStamp")
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 130, height: 130)
+                .rotationEffect(.degrees(-4))
+                .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 4, y: 3)
 
             Text(Copy.Onboarding.privacyTitle(lang))
                 .font(.piloHero)

@@ -16,7 +16,14 @@ struct OnboardingDirectoriesView: View {
         VStack(spacing: 16) {
             Spacer(minLength: 8)
 
-            PiloMascot(mood: .alert, size: 110, breathing: true)
+            // Directories 屏是"告诉 Pilo 投信地址"的功能时刻——用邮筒取代 mascot。
+            // mascot 留给 Welcome（角色登场）+ Complete（情感告别）两屏。
+            Image("PostBox")
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 130, height: 130)
+                .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 4, y: 3)
 
             Text(Copy.Onboarding.directoriesTitle(lang))
                 .font(.piloHero)
