@@ -132,6 +132,19 @@ struct PushConfirmDialog: View {
                     .foregroundStyle(Color.lavenderInfo)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        // 右上角 PostalParcel 邮包 —— "已打包好等你确认寄出"
+        // 跟标题"准备寄出去啦"语义对应：信件已被装箱
+        .overlay(alignment: .topTrailing) {
+            Image("PostalParcel")
+                .resizable()
+                .interpolation(.high)
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 72, height: 72)
+                .rotationEffect(.degrees(-4))
+                .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 2, y: 1.5)
+                .offset(x: -4, y: -8)
+        }
     }
 
     private func commitsList(_ commits: [CommitSummary]) -> some View {

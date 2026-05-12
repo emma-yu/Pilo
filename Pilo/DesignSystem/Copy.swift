@@ -388,7 +388,8 @@ enum Copy {
         static func successTitle(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
             case .friendly:
-                return Loc(zh: "🌸 寄到啦！", en: "🌸 Delivered!").text(lang)
+                // 不带 emoji —— P 蜡封 + 信件堆叠的视觉已经承担了"完成感"
+                return Loc(zh: "寄到啦！", en: "Delivered!").text(lang)
             case .minimal:
                 return Loc(zh: "推送完成", en: "Push complete").text(lang)
             }
