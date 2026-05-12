@@ -244,21 +244,6 @@ private struct PanelSidebar: View {
                                 .stroke(categoryStampColor(repo.category).opacity(0.5), lineWidth: 0.6)
                         )
                 }
-                // AI 工具配置 mini stamps（per-repo detector 的结果）
-                // 最多 2 个 icon 可见；3+ 折成 "+N" —— sidebar 220pt 宽度紧张
-                if !repo.aiToolsDetected.isEmpty {
-                    let sorted = AIToolStamp.sortedForDisplay(repo.aiToolsDetected)
-                    HStack(spacing: 3) {
-                        ForEach(sorted.prefix(2), id: \.self) { tool in
-                            AIToolStamp(tool: tool, style: .iconOnly, lang: lang)
-                        }
-                        if repo.aiToolsDetected.count > 2 {
-                            Text("+\(repo.aiToolsDetected.count - 2)")
-                                .font(.system(size: 9, weight: .medium))
-                                .foregroundStyle(Color.inkTertiary)
-                        }
-                    }
-                }
                 Spacer(minLength: 4)
                 if let count = countLabel(for: repo) {
                     Text(count)
@@ -370,13 +355,9 @@ private struct PanelDetail: View {
                     )
                     .padding(.top, 16)
 
-                    // Phase B: 项目体检行（mood + README + tests）
+                    // Phase B: 项目体检行（mood + README + tests + 检测到的 AI 工具）
                     healthRow(for: repo)
                         .padding(.top, 12)
-
-                    // AI 工具配置行 —— 仅当检测到至少 1 个工具
-                    // 诚实文案："Configured for / 在这仓库里看到了"，不暗示活跃使用
-                    aiToolsRow(for: repo)
 
                     // Phase B: abandoned 温和提醒（仅 abandoned 且无 work 显示）
                     if repo.mood == .abandoned && !repo.hasWork {
@@ -515,35 +496,19 @@ private struct PanelDetail: View {
         .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 10)
     }
 
-    /// AI 工具配置行：仅当 `aiToolsDetected` 非空时显示。
-    /// 引导文案 + 一排 PiloChip。诚实：永远说 "Configured for"，永不说 "Maintained by"
-    @ViewBuilder
-    private func aiToolsRow(for repo: Repository) -> some View {
-        if !repo.aiToolsDetected.isEmpty {
-            HStack(alignment: .center, spacing: 8) {
-                Image(systemName: "wrench.and.screwdriver.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color.piloGoldDark)
-                Text(Copy.AIRepo.configuredFor(tone, lang))
-                    .font(.piloSerifCaption)
-                    .italic()
-                    .foregroundStyle(Color.inkSecondary)
-                ForEach(AIToolStamp.sortedForDisplay(repo.aiToolsDetected), id: \.self) { tool in
-                    AIToolStamp(tool: tool, style: .full, lang: lang)
-                }
-            }
-            .padding(.top, 8)
-        }
-    }
-
-    /// 健康体检行：mood / README 缺失 / 无测试 三类 chip。
+    /// 健康体检行：mood / README 缺失 / 无测试 + 检测到的 AI 工具
+    /// AI 工具 chip 用各自 brand tint，跟 health pill 同视觉权重（PiloChip small）
     @ViewBuilder
     private func healthRow(for repo: Repository) -> some View {
         let pills = healthPills(for: repo)
-        if !pills.isEmpty {
+        let aiTools = AIToolStamp.sortedForDisplay(repo.aiToolsDetected)
+        if !pills.isEmpty || !aiTools.isEmpty {
             HStack(spacing: 6) {
                 ForEach(Array(pills.enumerated()), id: \.offset) { _, pill in
                     healthPill(text: pill.text, tint: pill.tint)
+                }
+                ForEach(aiTools, id: \.self) { tool in
+                    AIToolStamp(tool: tool, lang: lang)
                 }
             }
         }
