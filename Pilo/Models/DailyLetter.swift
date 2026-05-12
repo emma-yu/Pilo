@@ -20,6 +20,10 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
     let totalCommits: Int
     /// active repo count（commit + 草稿不重复计算）
     let activeRepoCount: Int
+    /// 工作时段（仅 totalCommits > 0 时有）
+    var workSpan: WorkSpan? = nil
+    /// 收信人称呼（dynamic name；空 = fallback 到 "朋友"）
+    var addressee: String? = nil
 
     struct RepoSummary: Codable, Sendable, Hashable {
         let repoName: String
@@ -31,6 +35,9 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
         let commits: [LetterCommit]
         /// 实际 commit 总数 - 5 = 省略数
         var moreCount: Int { max(0, commitCount - commits.count) }
+        /// 今天累加 +/- 行数
+        var linesAdded: Int = 0
+        var linesRemoved: Int = 0
     }
 
     struct LetterCommit: Codable, Sendable, Hashable {
@@ -42,6 +49,20 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
         let repoName: String
         let repoPath: String
         let uncommittedCount: Int
+        /// 前 3 个未提交文件的相对路径
+        var topFiles: [String] = []
+    }
+
+    /// 工作时段：今天第一个 commit → 最后一个 commit。
+    /// 仅在 totalCommits > 0 时生成；可 nil。
+    struct WorkSpan: Codable, Sendable, Hashable {
+        let firstCommit: Date
+        let lastCommit: Date
+
+        /// 跨度小时数（lastCommit - firstCommit）
+        var hours: Double {
+            max(0, lastCommit.timeIntervalSince(firstCommit) / 3600)
+        }
     }
 
     /// 没活动 → 没信件（caller 应判断 isWorthSending 决定要不要存）

@@ -24,6 +24,9 @@ enum SettingsKey: String {
     case identityWork
     case identityPersonal
     case identityExperiment
+
+    /// 用户在信件里被称呼的名字。空则 fallback 到 git config user.name，再 fallback 到 "朋友"
+    case userDisplayName
 }
 
 enum AppSettingsDefaults {

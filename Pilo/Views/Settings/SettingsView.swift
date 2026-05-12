@@ -76,6 +76,9 @@ struct SettingsView: View {
                             .foregroundStyle(Color.inkSecondary)
                     }
 
+                    // 信件称呼 —— 信件里 Pilo 怎么叫你
+                    addresseeSection
+
                     // S3 Identity Sentinel —— 身份分拣
                     identityPoolSection
                 }
@@ -84,6 +87,40 @@ struct SettingsView: View {
             }
         }
         .background(Color.creamBg)
+    }
+
+    // MARK: - 信件称呼
+
+    @ViewBuilder
+    private var addresseeSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.s) {
+            sectionLabel(lang == .zh ? "信件称呼 / Addressee" : "Letter Addressee")
+            Text(lang == .zh
+                 ? "每日邮局信里 Pilo 怎么叫你。留空 → 「朋友」"
+                 : "How Pilo addresses you in the daily letter. Empty → \"friend\"")
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+            TextField(
+                lang == .zh ? "你的名字（例如 Emma）" : "Your name (e.g. Emma)",
+                text: Binding(
+                    get: { appState.userDisplayName },
+                    set: { appState.updateUserDisplayName($0) }
+                )
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 14, weight: .medium, design: .rounded))
+            .foregroundStyle(Color.inkPrimary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5)
+            )
+        }
     }
 
     // MARK: - S3 Identity Sentinel · 身份分拣

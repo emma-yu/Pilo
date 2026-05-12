@@ -18,14 +18,15 @@ actor LetterComposer {
     /// - Parameters:
     ///   - repos: 全部 watch repos
     ///   - date: 哪一天的信（默认今天）—— 用于补发
-    func compose(repos: [Repository], date: Date = Date()) async -> DailyLetter {
+    ///   - addressee: 收信人称呼（dynamic name；空时 reader view 会 fallback）
+    func compose(repos: [Repository], date: Date = Date(), addressee: String? = nil) async -> DailyLetter {
         let cal = Calendar.current
         let startOfDay = cal.startOfDay(for: date)
         let endOfDay = cal.date(byAdding: .day, value: 1, to: startOfDay) ?? Date()
 
         let visible = repos.filter { !$0.isHidden }
 
-        // 并发拉每个 repo 的"今天 commits"
+        // 并发拉每个 repo 的"今天 commits + 行数 stat + 草稿文件列表"
         let activities = await withTaskGroup(of: RepoActivity?.self) { group in
             for repo in visible {
                 let gc = gitClient
@@ -48,6 +49,8 @@ actor LetterComposer {
         // 分桶：有 commit 的 → RepoSummary；没 commit 但有未提交的 → DraftSummary
         var summaries: [DailyLetter.RepoSummary] = []
         var drafts: [DailyLetter.DraftSummary] = []
+        // 收集所有 commit 时间用于 workSpan
+        var allCommitDates: [Date] = []
 
         for a in activities {
             if a.todayCommits.isEmpty {
@@ -55,31 +58,39 @@ actor LetterComposer {
                     drafts.append(.init(
                         repoName: a.repoName,
                         repoPath: a.repoPath,
-                        uncommittedCount: a.uncommittedCount
+                        uncommittedCount: a.uncommittedCount,
+                        topFiles: a.topUncommittedFiles
                     ))
                 }
                 continue
             }
-            // 取前 5 个 commits 写信
             let topCommits = a.todayCommits.prefix(5).map {
                 DailyLetter.LetterCommit(hash: $0.hash, subject: $0.subject)
             }
+            allCommitDates.append(contentsOf: a.todayCommits.map(\.date))
             summaries.append(.init(
                 repoName: a.repoName,
                 repoPath: a.repoPath,
                 commitCount: a.todayCommits.count,
                 pushed: a.pushedToday,
                 remote: a.defaultRemote,
-                commits: Array(topCommits)
+                commits: Array(topCommits),
+                linesAdded: a.linesAdded,
+                linesRemoved: a.linesRemoved
             ))
         }
 
-        // 按 commit 数倒序（产出最多的排前）
         summaries.sort { $0.commitCount > $1.commitCount }
         drafts.sort { $0.uncommittedCount > $1.uncommittedCount }
 
         let totalCommits = summaries.reduce(0) { $0 + $1.commitCount }
         let activeCount = summaries.count + drafts.count
+
+        // 工作时段：所有 commit 时间的 first → last
+        let workSpan: DailyLetter.WorkSpan? = {
+            guard let first = allCommitDates.min(), let last = allCommitDates.max() else { return nil }
+            return DailyLetter.WorkSpan(firstCommit: first, lastCommit: last)
+        }()
 
         return DailyLetter(
             id: UUID(),
@@ -89,7 +100,9 @@ actor LetterComposer {
             repoSummaries: summaries,
             draftRepos: drafts,
             totalCommits: totalCommits,
-            activeRepoCount: activeCount
+            activeRepoCount: activeCount,
+            workSpan: workSpan,
+            addressee: addressee
         )
     }
 
@@ -100,8 +113,11 @@ actor LetterComposer {
         let repoName: String
         let repoPath: String
         let todayCommits: [CommitSummary]
+        let linesAdded: Int
+        let linesRemoved: Int
         let pushedToday: Bool
         let uncommittedCount: Int
+        let topUncommittedFiles: [String]
         let defaultRemote: String?
     }
 
@@ -112,21 +128,33 @@ actor LetterComposer {
         gitClient: GitClient
     ) async -> RepoActivity? {
         let url = URL(fileURLWithPath: repo.path)
-        // 拉今天 commits
-        let all = await gitClient.commitsSince(repo: url, since: startOfDay)
-        // 过滤到今天范围内（commitsSince 是 >= since，但用户期望严格 today）
-        let todayCommits = all.filter { $0.date < endOfDay }
+        // 拉今天 commits + 行数 stat
+        let pairs = await gitClient.commitsSinceWithStats(repo: url, since: startOfDay)
+        let todayPairs = pairs.filter { $0.0.date < endOfDay }
+        let todayCommits = todayPairs.map(\.0)
+        let totalAdded = todayPairs.reduce(0) { $0 + $1.1 }
+        let totalRemoved = todayPairs.reduce(0) { $0 + $1.2 }
 
         // pushedToday 启发：commits > 0 && aheadCount == 0
         let pushedToday = !todayCommits.isEmpty && repo.aheadCount == 0
+
+        // 草稿文件（前 3 个）
+        var topFiles: [String] = []
+        if repo.uncommittedCount > 0 {
+            let files = await gitClient.uncommittedFiles(repo: url, limit: 3)
+            topFiles = files.map(\.path)
+        }
 
         return RepoActivity(
             repoId: repo.id,
             repoName: repo.name,
             repoPath: repo.path,
             todayCommits: todayCommits,
+            linesAdded: totalAdded,
+            linesRemoved: totalRemoved,
             pushedToday: pushedToday,
             uncommittedCount: repo.uncommittedCount,
+            topUncommittedFiles: topFiles,
             defaultRemote: repo.defaultPushRemote
         )
     }

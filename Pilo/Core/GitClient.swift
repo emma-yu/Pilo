@@ -285,6 +285,75 @@ actor GitClient {
         return out
     }
 
+    /// 读全局 git config user.name —— 用作信件称呼的兜底来源
+    func globalUserName() async -> String? {
+        let home = URL(fileURLWithPath: NSHomeDirectory())
+        guard let r = await runGit(["config", "--global", "user.name"], in: home), r.ok else { return nil }
+        let trimmed = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// 信件用：拉 since 之后的 commits 带 +/- 行数 stat。
+    /// 每个 commit 一对 (CommitSummary, linesAdded, linesRemoved)
+    /// 用 `git log --shortstat` 拿 numstat 风格摘要
+    func commitsSinceWithStats(repo: URL, since: Date) async -> [(CommitSummary, Int, Int)] {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        let isoSince = formatter.string(from: since)
+        // 用 numstat：每个 commit 后跟 N 行 "+\t-\tpath"
+        // 用唯一前缀 "PILOCOMMIT:" 分隔 commit
+        let format = "PILOCOMMIT:%h%x00%s%x00%ct%x00%an%x00%ae"
+        guard let r = await runGit(
+            ["log", "--since=\(isoSince)", "--numstat", "--format=\(format)"],
+            in: repo
+        ), r.ok else { return [] }
+
+        var out: [(CommitSummary, Int, Int)] = []
+        var currentCommit: CommitSummary?
+        var added = 0
+        var removed = 0
+
+        func flush() {
+            if let c = currentCommit {
+                out.append((c, added, removed))
+            }
+            currentCommit = nil
+            added = 0
+            removed = 0
+        }
+
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: false) {
+            let str = String(line)
+            if str.hasPrefix("PILOCOMMIT:") {
+                flush()
+                let payload = String(str.dropFirst("PILOCOMMIT:".count))
+                let cols = payload.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+                guard cols.count >= 4, let ts = TimeInterval(cols[2]) else { continue }
+                let author = cols[3]
+                let email = cols.count >= 5 ? cols[4] : nil
+                let likelihood = AICommitDetector.detect(
+                    author: author, authorEmail: email, subject: cols[1], changedFileCount: 0
+                )
+                currentCommit = CommitSummary(
+                    hash: cols[0],
+                    subject: cols[1],
+                    date: Date(timeIntervalSince1970: ts),
+                    author: author,
+                    authorEmail: email,
+                    aiLikelihood: likelihood
+                )
+            } else if !str.isEmpty {
+                // numstat row: "<added>\t<removed>\t<path>"
+                let parts = str.split(separator: "\t", omittingEmptySubsequences: false).map(String.init)
+                guard parts.count >= 3 else { continue }
+                if let a = Int(parts[0]) { added += a }
+                if let r = Int(parts[1]) { removed += r }
+            }
+        }
+        flush()
+        return out
+    }
+
     /// S3 Identity Sentinel：读 repo 本地的 git config user.email
     /// （local 优先 local config，没有再 fallback global）。
     func localUserEmail(repo: URL) async -> String? {

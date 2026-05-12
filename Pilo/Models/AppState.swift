@@ -184,6 +184,9 @@ final class AppState {
     /// S3 Identity Sentinel —— 用户配的"work/personal/experiment" 各自期望 email
     var identityPool: IdentityPool = IdentityPool(work: nil, personal: nil, experiment: nil)
 
+    /// 信件称呼用的用户名字。空 = fallback 到 git config user.name，再 fallback 到 "朋友"
+    var userDisplayName: String = ""
+
     /// S2 跨 Repo 工作日报 —— 当前刚算出的 daily digest（每次 rescan / 5min 刷一次）
     var dailyDigest: DailyDigest?
     private var dailyDigestTask: Task<Void, Never>?
@@ -237,6 +240,7 @@ final class AppState {
         self.watchDirectories = WatchDirectoriesStorage.load()
         self.identityPool = IdentityPool.load()
         self.letterArchive = LetterStore.load()
+        self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
         // 在 MainActor 的下一个 tick 启动后端检测和首扫；
@@ -257,6 +261,14 @@ final class AppState {
             AIToolDetector.detect()
         }.value
         self.detectedAITools = tools
+
+        // 用户没在 Settings 配名字 → 用 git global user.name 兜底（仅当 displayName 空）
+        if userDisplayName.isEmpty {
+            if let gitName = await gitClient.globalUserName() {
+                self.userDisplayName = gitName
+                // 不写 UserDefaults —— 让用户在 Settings 主动确认 / 改后才持久化
+            }
+        }
 
         // 即使没有 watch dirs 也标记完成；空状态由 view 决定显示什么
         if watchDirectories.isEmpty {
@@ -341,8 +353,9 @@ final class AppState {
 
         let repos = self.repositories
         let composer = self.letterComposer
+        let addressee = self.userDisplayName.isEmpty ? nil : self.userDisplayName
         composeTask = Task { [weak self] in
-            let letter = await composer.compose(repos: repos)
+            let letter = await composer.compose(repos: repos, addressee: addressee)
             guard letter.isWorthSending else { return }
             await MainActor.run {
                 guard let self else { return }
@@ -360,6 +373,17 @@ final class AppState {
         guard letterArchive.letters[idx].readAt == nil else { return }
         letterArchive.letters[idx].readAt = Date()
         LetterStore.save(letterArchive)
+    }
+
+    /// 用户在 Settings 改了"你叫什么"时调用 —— 持久化 + in-memory state
+    func updateUserDisplayName(_ name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.userDisplayName = trimmed
+        if trimmed.isEmpty {
+            UserDefaults.standard.removeObject(forKey: SettingsKey.userDisplayName.rawValue)
+        } else {
+            UserDefaults.standard.set(trimmed, forKey: SettingsKey.userDisplayName.rawValue)
+        }
     }
 
     /// 用户在 PanelHeader 点信箱

@@ -1098,8 +1098,13 @@ enum Copy {
         static func letterHeader(_ lang: Language) -> String {
             lang == .zh ? "今日工作总结" : "Today's Summary"
         }
-        static func greeting(_ lang: Language) -> String {
-            lang == .zh ? "亲爱的 Emma，" : "Dear friend,"
+        /// 收信人称呼：name 非 nil 用名字；nil/空 → fallback "朋友" / "friend"
+        static func greeting(name: String?, _ lang: Language) -> String {
+            let safe = name?.trimmingCharacters(in: .whitespaces) ?? ""
+            if safe.isEmpty {
+                return lang == .zh ? "亲爱的朋友，" : "Dear friend,"
+            }
+            return lang == .zh ? "亲爱的 \(safe)，" : "Dear \(safe),"
         }
         static func openingLine(_ lang: Language) -> String {
             lang == .zh ? "今天你完成了：" : "Today you finished:"
@@ -1124,6 +1129,26 @@ enum Copy {
                 return "今日累计 \(commits) 个 commit · \(repos) 个仓库"
             }
             return "\(commits) commit\(commits == 1 ? "" : "s") · \(repos) repo\(repos == 1 ? "" : "s") today"
+        }
+        /// 行数变化简短表达：+120 / -45
+        static func lineChangeBadge(added: Int, removed: Int) -> String {
+            "+\(added) / -\(removed)"
+        }
+        /// 工作时段：09:30 - 17:45
+        static func workSpanLine(first: Date, last: Date, hours: Double, _ lang: Language) -> String {
+            let f = DateFormatter()
+            f.dateFormat = "HH:mm"
+            let fs = f.string(from: first)
+            let ls = f.string(from: last)
+            let h = String(format: "%.1f", hours)
+            if lang == .zh {
+                return "工作时段 \(fs) – \(ls) · 约 \(h) 小时"
+            }
+            return "Work span \(fs) – \(ls) · about \(h)h"
+        }
+        /// 草稿仓库的"还有 N 个改动"小字
+        static func draftFilesMore(count: Int, _ lang: Language) -> String {
+            lang == .zh ? "……还有 \(count) 个改动" : "…and \(count) more"
         }
         static func closingLine(_ tone: Tone, _ lang: Language) -> String {
             switch (tone, lang) {
