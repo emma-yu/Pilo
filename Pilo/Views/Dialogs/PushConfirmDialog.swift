@@ -673,7 +673,7 @@ struct PushConfirmDialog: View {
     private func loadingView(repoName: String) -> some View {
         VStack(spacing: 18) {
             Spacer()
-            PiloMascot(mood: .alert, size: 80, breathing: !reduceMotion)
+            animatedLoadingMascot
             Text(Copy.Push.loadingTitle(tone, lang))
                 .font(.piloTitle)
                 .foregroundStyle(Color.inkPrimary)
@@ -690,6 +690,32 @@ struct PushConfirmDialog: View {
             Spacer()
         }
         .padding(24)
+    }
+
+    /// Loading 态的 mascot —— 在静态 breathing 基础上叠加"信使巡视"运动：
+    ///   - 头部左右轻摆（rotation ±3°，正弦 2.4s 周期）
+    ///   - 身体上下小幅 bob（offset ±1.5pt，相位差 π/2 让"头扭+身体起伏"形成
+    ///     pigeon walk 的自然律动）
+    ///   - 跟 PostalWaveDots 一样用 TimelineView 驱动，保持 60fps 顺滑
+    ///   - reduce motion → 静态 PiloMascot，不抛弃 motion-sensitive 用户
+    @ViewBuilder
+    private var animatedLoadingMascot: some View {
+        if reduceMotion {
+            PiloMascot(mood: .alert, size: 80, breathing: false)
+        } else {
+            TimelineView(.animation) { context in
+                let t = context.date.timeIntervalSinceReferenceDate
+                let phase = t * 2 * .pi / 2.4    // 2.4s 周期，calming
+                let tilt = sin(phase) * 3.0      // ±3°
+                let bob = -cos(phase) * 1.5      // ±1.5pt，相位差 π/2
+
+                PiloMascot(mood: .alert, size: 80, breathing: true)
+                    .rotationEffect(.degrees(tilt), anchor: .bottom)
+                    .offset(y: bob)
+            }
+            // 固定外框防 mascot 摆动时挤其它内容
+            .frame(width: 96, height: 96)
+        }
     }
 
     // MARK: - Completed
