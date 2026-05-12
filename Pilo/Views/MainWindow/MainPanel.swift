@@ -264,7 +264,7 @@ private struct PanelDetail: View {
                             .padding(.top, 8)          // 让 stamp 顶部有空间往上"歪"
                             .overlay(alignment: .topTrailing) {
                                 stampOverlay(for: repo)
-                                    .offset(x: 28, y: -14)   // 部分压在标题字 / 部分超出
+                                    .offset(x: 14, y: -12)   // ~50% 压在标题最后字上 / ~50% 超出
                             }
                         Spacer(minLength: 8)
                         PrivacyPill(repoId: repo.id)
@@ -323,13 +323,15 @@ private struct PanelDetail: View {
     // MARK: - Phase B: Project Inventory pieces
 
     /// 标题右上方的大邮戳 overlay —— 60pt + 倾斜 + 部分压在标题字上。
-    /// unset 时是 dashed 金圈 + sparkle（"待盖印的圆位置"），点击触发 popover；
-    /// 已贴时是双线圆环 + 楷书字戳（油墨痕迹），点击重选。
+    /// **用完整 illustrated asset**（不是简笔抽象）—— 你已经做了精美的三张邮戳插画，
+    /// 这个位置就是让它们 deliver 视觉冲击的地方。
+    /// unset 时是 dashed 金圈 + sparkle，点击触发 popover；
+    /// 已贴时是完整 illustrated 邮戳，点击重选。
     private func stampOverlay(for repo: Repository) -> some View {
         Button {
             isStampPickerOpen.toggle()
         } label: {
-            StampBadge(category: repo.category, size: 60, style: .glyph)
+            StampBadge(category: repo.category, size: 60, style: .illustrated)
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -794,15 +796,17 @@ private struct StampBadge: View {
             .opacity(0.82)
     }
 
-    /// 完整插画邮戳（popover 大尺寸专用）：保留 -3° 旋转 + 软阴影加"盖在纸上"质感
+    /// 完整插画邮戳：用户提供的 illustrated 邮戳 asset。
+    /// 在 popover (64pt) 和 detail trigger overlay (60pt) 两处用同一渲染。
+    /// -8° 旋转 + 较重阴影模拟"刚被盖在纸上"的物理感。
     private var illustratedBadge: some View {
         Image(assetName)
             .resizable()
             .interpolation(.high)
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .rotationEffect(.degrees(-3))
-            .shadow(color: Color.black.opacity(0.10), radius: 1.5, y: 0.8)
+            .rotationEffect(.degrees(-8))
+            .shadow(color: Color.black.opacity(0.18), radius: 2, y: 1.2)
     }
 
     /// 双线圆环 + 单色透明字戳，模拟"盖在纸上的油墨痕迹"。
