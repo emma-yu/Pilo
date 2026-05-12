@@ -74,6 +74,13 @@ struct MainPanel: View {
         )) { letter in
             ReleaseLetterReaderView(letter: letter)
         }
+        // 「新版本已发车」推送 reader sheet
+        .sheet(item: Binding(
+            get: { appState.readingUpdateLetter },
+            set: { if $0 == nil { appState.closeReadingUpdateLetter() } }
+        )) { letter in
+            UpdateAvailableReaderView(letter: letter)
+        }
     }
 }
 

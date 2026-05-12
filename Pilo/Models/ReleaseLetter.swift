@@ -29,30 +29,35 @@ struct ReleaseLetter: Codable, Sendable, Identifiable, Hashable {
 }
 
 /// 信箱里的统一项（**仅 UI 层用**，不持久化）—— LetterArchiveView 把
-/// DailyLetter 和 ReleaseLetter 合到一个数组按时间排序。
+/// DailyLetter / ReleaseLetter / UpdateAvailableLetter 合到一个数组排序。
 enum InboxItem: Identifiable, Hashable, Sendable {
     case daily(DailyLetter)
     case release(ReleaseLetter)
+    /// 「新版本已发车」推送信 —— 总排在信箱最顶（最重要的引导）
+    case updateAvailable(UpdateAvailableLetter)
 
     var id: String {
         switch self {
-        case .daily(let l):   return "d-\(l.id.uuidString)"
-        case .release(let l): return "r-\(l.id.uuidString)"
+        case .daily(let l):           return "d-\(l.id.uuidString)"
+        case .release(let l):         return "r-\(l.id.uuidString)"
+        case .updateAvailable(let l): return "u-\(l.id.uuidString)"
         }
     }
 
-    /// 排序键 —— release 用 releaseDate，daily 用 date
+    /// 排序键 —— release 用 releaseDate，daily 用 date，update 用 detectedAt
     var sortDate: Date {
         switch self {
-        case .daily(let l):   return l.date
-        case .release(let l): return l.releaseDate
+        case .daily(let l):           return l.date
+        case .release(let l):         return l.releaseDate
+        case .updateAvailable(let l): return l.detectedAt
         }
     }
 
     var isUnread: Bool {
         switch self {
-        case .daily(let l):   return l.isUnread
-        case .release(let l): return l.isUnread
+        case .daily(let l):           return l.isUnread
+        case .release(let l):         return l.isUnread
+        case .updateAvailable(let l): return l.isUnread
         }
     }
 }

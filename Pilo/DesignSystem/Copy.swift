@@ -1224,6 +1224,29 @@ enum Copy {
             lang == .zh ? "— 这次寄了什么 —" : "— What's in this letter —"
         }
 
+        // MARK: - 「新版本已发车」UpdateAvailableLetter
+
+        /// 信箱行 header，"v0.5 · 新版已发车"
+        static func updateRowHeader(version: String, _ lang: Language) -> String {
+            lang == .zh ? "v\(version) · 新版已发车" : "v\(version) · New version available"
+        }
+        /// Reader 大标题
+        static func updateLetterHeader(_ lang: Language) -> String {
+            lang == .zh ? "邮局新车已发" : "A new version has shipped"
+        }
+        /// 「下载新版本」主 CTA
+        static func updateDownloadCTA(_ lang: Language) -> String {
+            lang == .zh ? "下载新版本" : "Download new version"
+        }
+        /// 「在浏览器看完整 release notes」次要 CTA
+        static func updateViewNotesCTA(_ lang: Language) -> String {
+            lang == .zh ? "查看完整 release notes" : "Read full release notes"
+        }
+        /// 「以后再说」dismiss
+        static func updateDismissCTA(_ lang: Language) -> String {
+            lang == .zh ? "以后再说" : "Maybe later"
+        }
+
         // Reader letter content
         static func letterHeader(_ lang: Language) -> String {
             lang == .zh ? "今日工作总结" : "Today's Summary"

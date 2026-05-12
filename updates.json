@@ -1,0 +1,16 @@
+{
+  "latest": {
+    "version": "0.4.0",
+    "releaseDate": "2026-05-12",
+    "title": "AI 时代的小邮局 · v0.4 通告",
+    "highlights": [
+      "仓库里 AI 工具配置自动盖邮戳",
+      "长文档左侧目录 + ⌘F 全文搜",
+      "Commit 通知（opt-in）",
+      "每日邮局信件"
+    ],
+    "downloadURL": "https://github.com/emma-yu/Pilo/releases/latest",
+    "releaseNotesURL": "https://github.com/emma-yu/Pilo/releases/tag/v0.4.0",
+    "minimumSystemVersion": "14.0"
+  }
+}

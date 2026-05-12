@@ -22,7 +22,9 @@ final class AppState {
     let dailyDigestService: DailyDigestService
     let letterComposer: LetterComposer
     let commitNotifier: CommitNotifier
+    let updateChecker: UpdateChecker
     private let fsMonitor: FSEventMonitor
+    private var updateCheckTask: Task<Void, Never>?
 
     // MARK: - 仓库可见性缓存（24h TTL）
 
@@ -218,17 +220,31 @@ final class AppState {
     /// 当前正在阅读的版本通告（reader sheet binding）
     var readingReleaseLetter: ReleaseLetter?
 
-    /// 信箱总未读数（DailyLetter + ReleaseLetter 合计）—— PanelHeader pill 用
+    // === 「新版本已发车」推送信 ===
+    /// 当前已知可下载的新版本通告（至多 1 封；nil = 没新版本/未检查）
+    var updateAvailableArchive: UpdateAvailableArchive = .empty
+    /// 当前正在阅读的更新通告
+    var readingUpdateLetter: UpdateAvailableLetter?
+
+    /// 信箱总未读数（DailyLetter + ReleaseLetter + UpdateAvailableLetter）
     var inboxUnreadCount: Int {
-        letterArchive.unreadCount + releaseLetterArchive.letters.filter(\.isUnread).count
+        let daily = letterArchive.unreadCount
+        let release = releaseLetterArchive.letters.filter(\.isUnread).count
+        let update = (updateAvailableArchive.current?.isUnread ?? false) ? 1 : 0
+        return daily + release + update
     }
     var inboxHasUnread: Bool { inboxUnreadCount > 0 }
 
     /// 信箱按时间倒序排好的统一项 —— LetterArchiveView 直接遍历
+    /// UpdateAvailableLetter 总排第一位（最重要的提醒，引导下载）
     var inboxItems: [InboxItem] {
         let daily = letterArchive.letters.map { InboxItem.daily($0) }
         let release = releaseLetterArchive.letters.map { InboxItem.release($0) }
-        return (daily + release).sorted { $0.sortDate > $1.sortDate }
+        let sorted = (daily + release).sorted { $0.sortDate > $1.sortDate }
+        if let update = updateAvailableArchive.current {
+            return [.updateAvailable(update)] + sorted
+        }
+        return sorted
     }
 
     // MARK: - 启动
@@ -244,6 +260,7 @@ final class AppState {
         self.dailyDigestService = DailyDigestService(gitClient: git)
         self.letterComposer = LetterComposer(gitClient: git)
         self.commitNotifier = CommitNotifier()
+        self.updateChecker = UpdateChecker()
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -273,6 +290,7 @@ final class AppState {
         self.identityPool = IdentityPool.load()
         self.letterArchive = LetterStore.load()
         self.releaseLetterArchive = ReleaseLetterStore.load()
+        self.updateAvailableArchive = UpdateAvailableStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
@@ -309,6 +327,10 @@ final class AppState {
 
         // 版本通告信投递 —— 在 watch dirs / repo scan 之前跑，让用户一打开就看到
         injectNewReleaseLettersIfNeeded()
+
+        // 「新版本已发车」推送检查 —— 异步 fire-and-forget，不阻塞 bootstrap
+        // 24h 频控由 UpdateChecker 自己管，频繁启动 app 不会重复 GET
+        kickoffUpdateCheck()
 
         // 恢复 Commit 通知偏好。注意：opt-in only —— 用户没在 Settings 主动打开过 → 永远 false
         // 即使 UserDefaults 是 true，也要再 check 系统权限是否被撤销（在 macOS 系统设置里手动关）
@@ -507,6 +529,76 @@ final class AppState {
             UserDefaults.standard.set(latest.version, forKey: lastSeenKey)
         }
     }
+
+    // MARK: - 「新版本已发车」推送
+
+    /// 启动 fire-and-forget 检查 —— UpdateChecker 内部有 24h 频控
+    func kickoffUpdateCheck() {
+        updateCheckTask?.cancel()
+        let checker = updateChecker
+        let currentVersion = ReleaseNotesLoader.currentAppVersion() ?? "0.0.0"
+        updateCheckTask = Task { [weak self] in
+            guard await checker.shouldCheckNow() else { return }
+            guard let new = await checker.check(currentAppVersion: currentVersion) else { return }
+            await MainActor.run {
+                self?.applyUpdateAvailableLetter(new)
+            }
+        }
+    }
+
+    /// 检查发现新版本 → 写入信箱（覆盖已有）
+    private func applyUpdateAvailableLetter(_ new: UpdateAvailableLetter) {
+        // 如果当前信箱里已经是同版本，保留旧的 readAt 状态（避免反复刷成未读）
+        if let existing = updateAvailableArchive.current,
+           Semver.compare(existing.version, new.version) == .orderedSame {
+            return
+        }
+        var archive = updateAvailableArchive
+        archive.current = new
+        updateAvailableArchive = archive
+        UpdateAvailableStore.save(archive)
+    }
+
+    /// 用户从信箱点更新通告 → 进入 reader
+    func openUpdateLetter(_ letter: UpdateAvailableLetter) {
+        isArchiveSheetOpen = false
+        readingUpdateLetter = letter
+    }
+
+    /// 关闭更新通告 reader → 标记已读
+    func closeReadingUpdateLetter() {
+        if let letter = readingUpdateLetter, letter.readAt == nil {
+            markUpdateLetterRead(letter)
+        }
+        readingUpdateLetter = nil
+    }
+
+    /// 标记更新通告已读 + 持久化
+    func markUpdateLetterRead(_ letter: UpdateAvailableLetter) {
+        guard var archive = updateAvailableArchive.current.map({ _ in updateAvailableArchive }),
+              archive.current?.id == letter.id else { return }
+        archive.current?.readAt = Date()
+        updateAvailableArchive = archive
+        UpdateAvailableStore.save(archive)
+    }
+
+    /// 用户点「下载新版本」按钮 → 在浏览器打开 downloadURL
+    func downloadUpdate(_ letter: UpdateAvailableLetter) {
+        NSWorkspace.shared.open(letter.downloadURL)
+        // 标记已读（用户已经响应了行动）
+        markUpdateLetterRead(letter)
+    }
+
+    /// 用户点「以后再说」/「不感兴趣」—— 从信箱清掉这条通告
+    func dismissUpdateLetter() {
+        var archive = updateAvailableArchive
+        archive.current = nil
+        updateAvailableArchive = archive
+        UpdateAvailableStore.save(archive)
+        readingUpdateLetter = nil
+    }
+
+    // MARK: - 版本通告信（已升级到此版本后的回顾）
 
     /// 把指定版本通告标记为已读 + 持久化
     func markReleaseLetterRead(_ letter: ReleaseLetter) {

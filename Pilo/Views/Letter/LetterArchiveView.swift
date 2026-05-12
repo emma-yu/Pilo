@@ -29,6 +29,8 @@ struct LetterArchiveView: View {
                                 letterRow(l)
                             case .release(let r):
                                 releaseRow(r)
+                            case .updateAvailable(let u):
+                                updateRow(u)
                             }
                         }
                     }
@@ -166,6 +168,55 @@ struct LetterArchiveView: View {
         }
         .buttonStyle(.plain)
         .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 7)
+    }
+
+    /// 「新版本已发车」行 —— 视觉最显眼（蓝色 piloBlue 引导动作）
+    ///   - paperplane icon（已发车的意象）
+    ///   - 蓝色 bg 淡淡填充 + piloBlue 描边强调"action needed"
+    ///   - 标题 "v0.5 · 新版已发车"
+    private func updateRow(_ letter: UpdateAvailableLetter) -> some View {
+        Button {
+            appState.openUpdateLetter(letter)
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "paperplane.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(letter.isUnread ? Color.piloBlue : Color.piloBlue.opacity(0.55))
+                    .frame(width: 14)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(Copy.Letter.updateRowHeader(version: letter.version, lang))
+                            .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
+                            .foregroundStyle(Color.inkPrimary)
+                        Spacer()
+                        Text(Self.relativeFormatter.localizedString(for: letter.detectedAt, relativeTo: Date()))
+                            .font(.piloSerifCaption)
+                            .italic()
+                            .foregroundStyle(Color.inkTertiary)
+                    }
+                    Text(letter.title)
+                        .font(.piloSerifCaption)
+                        .italic()
+                        .foregroundStyle(Color.inkSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(letter.isUnread ? Color.piloBlue.opacity(0.08) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .stroke(letter.isUnread ? Color.piloBlue.opacity(0.3) : Color.clear, lineWidth: 0.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloBlue.opacity(0.08), cornerRadius: 7)
     }
 
     private func summary(for letter: DailyLetter) -> Text {
