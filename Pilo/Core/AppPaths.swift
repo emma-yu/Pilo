@@ -24,6 +24,11 @@ enum AppPaths {
         applicationSupport.appendingPathComponent("letters.json", isDirectory: false)
     }
 
+    /// 版本通告信箱：Pilo 每发新版投递的"邮局通告"信
+    static var releaseLettersJSON: URL {
+        applicationSupport.appendingPathComponent("release-letters.json", isDirectory: false)
+    }
+
     static var logsDir: URL {
         let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
         let dir = base.appendingPathComponent("Logs/Pilo", isDirectory: true)

@@ -67,6 +67,13 @@ struct MainPanel: View {
         )) { letter in
             LetterReaderView(letter: letter)
         }
+        // 版本通告 reader sheet（跟 daily reader 平行，互不干扰）
+        .sheet(item: Binding(
+            get: { appState.readingReleaseLetter },
+            set: { if $0 == nil { appState.closeReadingReleaseLetter() } }
+        )) { letter in
+            ReleaseLetterReaderView(letter: letter)
+        }
     }
 }
 
@@ -103,7 +110,8 @@ private struct PanelHeader: View {
     /// 有未读 → stampRed tint + 数字 badge
     /// 无未读 → piloGoldDark 中性
     private var inboxPill: some View {
-        let unread = appState.letterArchive.unreadCount
+        // 合计 DailyLetter + ReleaseLetter 的未读数 —— 版本通告也算未读
+        let unread = appState.inboxUnreadCount
         let hasUnread = unread > 0
         let tint: Color = hasUnread ? .stampRed : .piloGoldDark
         return Button {

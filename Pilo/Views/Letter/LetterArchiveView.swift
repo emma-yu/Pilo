@@ -15,13 +15,21 @@ struct LetterArchiveView: View {
             Rectangle()
                 .fill(Color.piloGold.opacity(0.4))
                 .frame(height: 0.5)
-            if appState.letterArchive.letters.isEmpty {
+            // 信箱混合：DailyLetter（每日工作总结）+ ReleaseLetter（版本通告）
+            // 通过 InboxItem 合并 + 按 sortDate 倒序排
+            let items = appState.inboxItems
+            if items.isEmpty {
                 emptyState
             } else {
                 ScrollView {
                     VStack(spacing: 4) {
-                        ForEach(appState.letterArchive.letters) { letter in
-                            letterRow(letter)
+                        ForEach(items) { item in
+                            switch item {
+                            case .daily(let l):
+                                letterRow(l)
+                            case .release(let r):
+                                releaseRow(r)
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -107,6 +115,53 @@ struct LetterArchiveView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 7)
+    }
+
+    /// 版本通告行 —— 跟 DailyLetter 行平级排，视觉差异化：
+    ///   - stampRed 圆点（红蜡封感）替代普通已读/未读 dot
+    ///   - `scroll.fill` 邮局通告 icon
+    ///   - 标题 "v0.4 · AI 时代的小邮局" Songti 衬线
+    private func releaseRow(_ letter: ReleaseLetter) -> some View {
+        Button {
+            appState.openReleaseLetter(letter)
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                // 通告专属：scroll icon + stampRed 红蜡封感
+                Image(systemName: "scroll.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(letter.isUnread ? Color.stampRed : Color.stampRed.opacity(0.45))
+                    .frame(width: 14)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(Copy.Letter.releaseRowHeader(version: letter.version, lang))
+                            .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
+                            .foregroundStyle(Color.inkPrimary)
+                        Spacer()
+                        Text(Self.relativeFormatter.localizedString(for: letter.releaseDate, relativeTo: Date()))
+                            .font(.piloSerifCaption)
+                            .italic()
+                            .foregroundStyle(Color.inkTertiary)
+                    }
+                    Text(letter.title)
+                        .font(.piloSerifCaption)
+                        .italic()
+                        .foregroundStyle(Color.inkSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                // 通告底色比 daily 行多一层 piloAccent（心粉）淡淡感，视觉分层
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(letter.isUnread ? Color.piloAccent.opacity(0.08) : Color.clear)
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

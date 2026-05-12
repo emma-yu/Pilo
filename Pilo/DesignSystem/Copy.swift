@@ -1183,22 +1183,45 @@ enum Copy {
         }
         static func archiveSubtitle(_ tone: Tone, _ lang: Language) -> String {
             switch (tone, lang) {
-            case (.friendly, .zh): return "Pilo 每天 18:00 寄一封工作总结来"
-            case (.friendly, .en): return "Pilo posts your daily summary at 18:00"
-            case (.minimal, .zh):  return "每日 18:00 投递"
-            case (.minimal, .en):  return "Delivered at 18:00 daily"
+            // 不写"18:00"这种工程数字——保留邮局诗意；用"傍晚"传达"下班时分"的感觉
+            case (.friendly, .zh): return "傍晚有一封小信飞来"
+            case (.friendly, .en): return "An evening letter, every day"
+            case (.minimal, .zh):  return "每日投递"
+            case (.minimal, .en):  return "Daily delivery"
             }
         }
         static func archiveEmpty(_ tone: Tone, _ lang: Language) -> String {
             switch (tone, lang) {
-            case (.friendly, .zh): return "信箱还是空的\n下班时分会有第一封信飞来"
-            case (.friendly, .en): return "Your inbox is empty\nThe first letter will arrive after 18:00"
+            case (.friendly, .zh): return "信箱还是空的\n等傍晚第一封信飞来"
+            case (.friendly, .en): return "Your inbox is empty\nThe first letter will arrive this evening"
             case (.minimal, .zh):  return "暂无信件"
             case (.minimal, .en):  return "No letters yet"
             }
         }
         static func unreadBadge(_ lang: Language) -> String {
             lang == .zh ? "未读" : "Unread"
+        }
+
+        // MARK: - 版本通告信（ReleaseLetter）
+
+        /// 信箱行的标题前缀，如 "v0.4 · 邮局通告"
+        static func releaseRowHeader(version: String, _ lang: Language) -> String {
+            lang == .zh ? "v\(version) · 邮局通告" : "v\(version) · From Pilo HQ"
+        }
+
+        /// Reader 标题
+        static func releaseLetterHeader(_ lang: Language) -> String {
+            lang == .zh ? "邮局通告" : "From the Post Office"
+        }
+
+        /// Reader 落款
+        static func releaseLetterSignature(_ lang: Language) -> String {
+            lang == .zh ? "Pilo 邮局总局" : "— Pilo HQ"
+        }
+
+        /// Reader 中"亮点 / Highlights" section 标题
+        static func releaseHighlightsLabel(_ lang: Language) -> String {
+            lang == .zh ? "— 这次寄了什么 —" : "— What's in this letter —"
         }
 
         // Reader letter content

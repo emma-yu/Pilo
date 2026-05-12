@@ -154,7 +154,10 @@ final class AppState {
     }
 
     var pendingRepos: [Repository] {
-        repositories.filter { $0.hasWork && !$0.isHidden }
+        repositories
+            .filter { $0.hasWork && !$0.isHidden }
+            // 按 lastCommitDate 倒序：最近动过的 repo 排前面 —— 跟用户的工作记忆同步
+            .sorted { ($0.lastCommitDate ?? .distantPast) > ($1.lastCommitDate ?? .distantPast) }
     }
 
     var sortedRepos: [Repository] {
@@ -209,6 +212,25 @@ final class AppState {
     var isArchiveSheetOpen: Bool = false
     private var composeTask: Task<Void, Never>?
 
+    // === 版本通告信（独立持久化，跟 DailyLetter 互不干扰）===
+    /// release-letters.json 归档
+    var releaseLetterArchive: ReleaseLetterArchive = .empty
+    /// 当前正在阅读的版本通告（reader sheet binding）
+    var readingReleaseLetter: ReleaseLetter?
+
+    /// 信箱总未读数（DailyLetter + ReleaseLetter 合计）—— PanelHeader pill 用
+    var inboxUnreadCount: Int {
+        letterArchive.unreadCount + releaseLetterArchive.letters.filter(\.isUnread).count
+    }
+    var inboxHasUnread: Bool { inboxUnreadCount > 0 }
+
+    /// 信箱按时间倒序排好的统一项 —— LetterArchiveView 直接遍历
+    var inboxItems: [InboxItem] {
+        let daily = letterArchive.letters.map { InboxItem.daily($0) }
+        let release = releaseLetterArchive.letters.map { InboxItem.release($0) }
+        return (daily + release).sorted { $0.sortDate > $1.sortDate }
+    }
+
     // MARK: - 启动
 
     init() {
@@ -250,6 +272,7 @@ final class AppState {
         self.watchDirectories = WatchDirectoriesStorage.load()
         self.identityPool = IdentityPool.load()
         self.letterArchive = LetterStore.load()
+        self.releaseLetterArchive = ReleaseLetterStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
@@ -283,6 +306,9 @@ final class AppState {
         // 安装通知点击 delegate —— 无论用户当前开没开通知都装：
         // 防御场景：用户在系统设置里把权限重开后，老通知（如果存在）也能正确路由
         installNotificationDelegate()
+
+        // 版本通告信投递 —— 在 watch dirs / repo scan 之前跑，让用户一打开就看到
+        injectNewReleaseLettersIfNeeded()
 
         // 恢复 Commit 通知偏好。注意：opt-in only —— 用户没在 Settings 主动打开过 → 永远 false
         // 即使 UserDefaults 是 true，也要再 check 系统权限是否被撤销（在 macOS 系统设置里手动关）
@@ -434,6 +460,74 @@ final class AppState {
                 LetterStore.save(archive)
             }
         }
+    }
+
+    // MARK: - 版本通告信
+
+    /// 启动时调用：对比 release-notes.json 跟用户上次见到的版本，
+    /// 把所有「未见过」的版本生成 ReleaseLetter 写入信箱。幂等：同版本不重投。
+    private func injectNewReleaseLettersIfNeeded() {
+        let bundled = ReleaseNotesLoader.bundledReleases()
+        guard !bundled.isEmpty else { return }
+
+        let lastSeenKey = "lastSeenReleaseVersion"
+        let lastSeen = UserDefaults.standard.string(forKey: lastSeenKey) ?? "0.0.0"
+
+        // 找出比 lastSeen 新的所有版本
+        let newReleases = bundled.filter {
+            Semver.compare($0.version, lastSeen) == .orderedDescending
+        }
+        guard !newReleases.isEmpty else { return }
+
+        // 防御：archive 里如果已经有这个 version 的信，跳过（极端 case 防双发）
+        let existingVersions = Set(releaseLetterArchive.letters.map(\.version))
+
+        var archive = releaseLetterArchive
+        let now = Date()
+        for release in newReleases where !existingVersions.contains(release.version) {
+            archive.letters.insert(
+                ReleaseLetter(
+                    id: UUID(),
+                    version: release.version,
+                    releaseDate: release.releaseDate,
+                    deliveredAt: now,
+                    readAt: nil,
+                    title: release.title,
+                    highlights: release.highlights,
+                    bodyParagraphs: release.body
+                ),
+                at: 0
+            )
+        }
+        releaseLetterArchive = archive
+        ReleaseLetterStore.save(archive)
+
+        // 把"已见过"标记推到最新（即便有信延迟读，下次启动也不会再投）
+        if let latest = bundled.max(by: { Semver.compare($0.version, $1.version) == .orderedAscending }) {
+            UserDefaults.standard.set(latest.version, forKey: lastSeenKey)
+        }
+    }
+
+    /// 把指定版本通告标记为已读 + 持久化
+    func markReleaseLetterRead(_ letter: ReleaseLetter) {
+        guard let idx = releaseLetterArchive.letters.firstIndex(where: { $0.id == letter.id }) else { return }
+        guard releaseLetterArchive.letters[idx].readAt == nil else { return }
+        releaseLetterArchive.letters[idx].readAt = Date()
+        ReleaseLetterStore.save(releaseLetterArchive)
+    }
+
+    /// 用户从信箱点版本通告 → 进入 reader
+    func openReleaseLetter(_ letter: ReleaseLetter) {
+        isArchiveSheetOpen = false
+        readingReleaseLetter = letter
+    }
+
+    /// 关闭版本通告 reader → 标记已读
+    func closeReadingReleaseLetter() {
+        if let letter = readingReleaseLetter {
+            markReleaseLetterRead(letter)
+        }
+        readingReleaseLetter = nil
     }
 
     /// 把指定信件标记为已读 + 持久化
