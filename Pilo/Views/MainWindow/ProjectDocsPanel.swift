@@ -147,7 +147,8 @@ private struct DocRow: View {
                     .foregroundStyle(Color.inkTertiary)
                     .frame(minWidth: 70, alignment: .trailing)
 
-                // hover 时副按钮组：↗ 外部编辑器 + ⋯ menu
+                // hover 时副按钮组：↗ 外部编辑器 + 📥 收进抽屉
+                // 移除 ⋯ —— 右键 contextMenu 已足够；邮局世界不该出现工程符号
                 if isHovered {
                     Button(action: openInDefaultApp) {
                         Image(systemName: "arrow.up.right.square")
@@ -158,28 +159,22 @@ private struct DocRow: View {
                     .help(lang == .zh ? "用编辑器打开" : "Open in editor")
                     .transition(.opacity)
 
-                    Menu {
-                        rowMenuContent
-                    } label: {
-                        Image(systemName: "ellipsis")
+                    Button(action: hideThis) {
+                        Image(systemName: "archivebox")
                             .font(.system(size: 11))
-                            .foregroundStyle(Color.inkSecondary)
+                            .foregroundStyle(Color.piloGoldDark)
                     }
-                    .menuStyle(.borderlessButton)
-                    .menuIndicator(.hidden)
-                    .fixedSize()
-                    .frame(width: 16)
-                    .help(Copy.Docs.moreActions(lang))
+                    .buttonStyle(.plain)
+                    .help(Copy.Docs.setAsideHint(lang))
                     .transition(.opacity)
                 } else {
                     // 占位让 row 宽度不跳
                     Image(systemName: "arrow.up.right.square")
                         .font(.system(size: 11))
                         .foregroundStyle(Color.clear)
-                    Image(systemName: "ellipsis")
+                    Image(systemName: "archivebox")
                         .font(.system(size: 11))
                         .foregroundStyle(Color.clear)
-                        .frame(width: 16)
                 }
             }
             .padding(.horizontal, 10)
@@ -221,7 +216,7 @@ private struct DocRow: View {
         Button {
             hideThis()
         } label: {
-            Label(Copy.Docs.hideAction(lang), systemImage: "eye.slash")
+            Label(Copy.Docs.hideAction(lang), systemImage: "archivebox")
         }
     }
 
@@ -290,35 +285,34 @@ private struct HiddenDocsFooter: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // 上方分隔：金色 OrnamentDivider 而非纯灰线，进入"邮局抽屉"的仪式感
             if hasVisibleAbove {
-                Rectangle()
-                    .fill(Color.cloudDivider.opacity(0.5))
-                    .frame(height: 0.5)
-                    .padding(.vertical, 10)
+                OrnamentDivider(width: 160)
+                    .padding(.vertical, 12)
             }
 
             Button {
-                withAnimation(.easeInOut(duration: 0.2)) { isOpen.toggle() }
+                withAnimation(.easeInOut(duration: 0.25)) { isOpen.toggle() }
             } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "eye.slash")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.inkTertiary)
+                HStack(spacing: 8) {
+                    Image(systemName: hiddenDocs.isEmpty ? "archivebox" : "archivebox.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.piloGoldDark)
                     Text(Copy.Docs.hiddenSectionHeader(count: hiddenDocs.count, lang))
-                        .font(.piloSerifCaption)
+                        .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.inkSecondary)
                     Spacer()
                     HStack(spacing: 3) {
-                        Image(systemName: isOpen ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 9))
                         Text(isOpen ? Copy.Docs.hiddenSectionToggleHide(lang)
                                     : Copy.Docs.hiddenSectionToggleShow(lang))
                             .font(.piloSerifCaption)
+                        Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9))
                     }
                     .foregroundStyle(Color.piloGoldDark)
                 }
                 .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.vertical, 8)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -329,14 +323,14 @@ private struct HiddenDocsFooter: View {
                         HiddenDocRow(doc: doc, repoPath: repoPath, lang: lang)
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 6)
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
     }
 }
 
-/// 隐藏列表里的单行——半透明 + "翻出来"按钮
+/// 隐藏列表里的单行——左侧带"暂搁"小邮戳 + 金色"重新投递"文字链
 private struct HiddenDocRow: View {
     let doc: RepoDoc
     let repoPath: String
@@ -347,42 +341,66 @@ private struct HiddenDocRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
+            // 暂搁邮戳：italic Songti + 虚线 border + 轻微旋转，邮局信件上的"do not deliver"印章
+            pausedStamp
+
             Image(systemName: "envelope")
                 .font(.system(size: 11))
                 .foregroundStyle(Color.inkTertiary)
-                .frame(width: 16)
+                .frame(width: 14)
+
             Text(doc.relativePath)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(Color.inkSecondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
+
             Spacer(minLength: 8)
+
             Text(Copy.Docs.relativeModified(doc.modifiedAt, lang))
                 .font(.piloSerifCaption)
                 .foregroundStyle(Color.inkTertiary)
 
             Button {
                 guard let repoId = appState.repositories.first(where: { $0.path == repoPath })?.id else { return }
-                withAnimation(.easeInOut(duration: 0.25)) {
+                withAnimation(.easeInOut(duration: 0.3)) {
                     appState.unhideDoc(doc, repoId: repoId)
                 }
             } label: {
                 Text(Copy.Docs.unhideAction(lang))
                     .font(.piloSerifCaption)
-                    .foregroundStyle(Color.piloBlue)
+                    .italic()
+                    .foregroundStyle(Color.piloGoldDark)
             }
             .buttonStyle(.plain)
-            .opacity(isHovered ? 1 : 0.6)
+            .opacity(isHovered ? 1 : 0.7)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .opacity(0.75)
+        .opacity(0.78)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isHovered ? Color.piloPaper.opacity(0.4) : Color.clear)
+                .fill(isHovered ? Color.piloPaper.opacity(0.5) : Color.clear)
         )
         .onHover { hovered in
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovered }
         }
+    }
+
+    /// "暂搁" / "PAUSED" 小邮戳：italic Songti + 虚线 stamp 边框 + -6° 旋转
+    private var pausedStamp: some View {
+        Text(Copy.Docs.setAsideStamp(lang))
+            .font(.piloSerifCaption)
+            .italic()
+            .foregroundStyle(Color.stampRed.opacity(0.7))
+            .padding(.horizontal, 4)
+            .padding(.vertical, 1)
+            .overlay(
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .stroke(Color.stampRed.opacity(0.55),
+                            style: StrokeStyle(lineWidth: 0.6, dash: [2, 1.5]))
+            )
+            .rotationEffect(.degrees(-6))
+            .frame(width: 36)
     }
 }

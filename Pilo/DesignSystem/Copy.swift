@@ -969,28 +969,33 @@ enum Copy {
             lang == .zh ? "收起，只看前 \(top) 份" : "Collapse to top \(top)"
         }
 
-        // 隐藏 / 取消隐藏（右键 menu + footer）
+        // 隐藏 / 取消隐藏（右键 menu + footer）—— 邮局意象：把信收进抽屉、再投递
         static func hideAction(_ lang: Language) -> String {
-            lang == .zh ? "藏起来不再显示" : "Hide from this list"
+            lang == .zh ? "收进抽屉" : "Set aside"
         }
         static func unhideAction(_ lang: Language) -> String {
-            lang == .zh ? "翻出来" : "Bring back"
+            lang == .zh ? "重新投递" : "Bring back"
         }
         static func showInFinder(_ lang: Language) -> String {
             lang == .zh ? "在 Finder 显示" : "Show in Finder"
         }
         static func hiddenSectionHeader(count: Int, _ lang: Language) -> String {
-            if lang == .zh { return "已藏起 \(count) 份" }
-            return count == 1 ? "1 hidden" : "\(count) hidden"
+            if lang == .zh { return "抽屉里还有 \(count) 封" }
+            return count == 1 ? "1 letter set aside" : "\(count) letters set aside"
         }
         static func hiddenSectionToggleShow(_ lang: Language) -> String {
-            lang == .zh ? "翻出来看看" : "Peek inside"
+            lang == .zh ? "打开抽屉" : "Open the drawer"
         }
         static func hiddenSectionToggleHide(_ lang: Language) -> String {
-            lang == .zh ? "收起" : "Tuck away"
+            lang == .zh ? "盖上抽屉" : "Close the drawer"
         }
-        static func moreActions(_ lang: Language) -> String {
-            lang == .zh ? "更多操作" : "More actions"
+        /// 行内 hover 时露出的"收进抽屉"按钮 tooltip（不显示文字，只用 icon）
+        static func setAsideHint(_ lang: Language) -> String {
+            lang == .zh ? "收进抽屉" : "Set aside"
+        }
+        /// HiddenDocRow 左侧的"暂搁"小邮戳
+        static func setAsideStamp(_ lang: Language) -> String {
+            lang == .zh ? "暂搁" : "PAUSED"
         }
     }
 
