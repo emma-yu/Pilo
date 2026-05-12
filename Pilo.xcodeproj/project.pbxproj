@@ -11,6 +11,7 @@
 		060075849867E4E6BA387EE6 /* DiffParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12738ED463FC35FD0587E770 /* DiffParser.swift */; };
 		060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */; };
 		074F87BEC963C83A10C56E6F /* DailyDigestServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E585BC45736BD031CCC12B /* DailyDigestServiceTests.swift */; };
+		076492815CE25BC44F350A1B /* LetterArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */; };
 		0AFCF84CEDE16D222E15DBE7 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */; };
 		0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E9C40F45449667A059ED60 /* RepoListView.swift */; };
 		0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */; };
@@ -20,6 +21,7 @@
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
 		1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6AB9592230B7D21B964718 /* PiloHero.swift */; };
 		202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */; };
+		203D1FE0BDAAF39456197118 /* DailyLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = B56EF0D8A5EC94D206A25865 /* DailyLetter.swift */; };
 		20F8F67C89869699F09BFABB /* MainPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49EB184843D10170900A08BA /* MainPanel.swift */; };
 		21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20E05A4CA192EA6913C4E82F /* SecretScanner.swift */; };
 		21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAE45D55C757CD61606DCF1C /* SecretRule.swift */; };
@@ -59,6 +61,7 @@
 		6B58B4EFD7941301409A146F /* DiffParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA8A635B27743E4BB1A0078 /* DiffParserTests.swift */; };
 		6B9AB949B4914CA020229558 /* IdentityPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FEF8617500F6E861847FA9 /* IdentityPool.swift */; };
 		6CF51C11E1DF49DCD24C7E21 /* CopyLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8EFDE51151A74B99FD3027 /* CopyLanguageTests.swift */; };
+		6DD4F5DD058AD437E8FB144E /* LetterComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */; };
 		753DBF7C58E92A72A507CBEB /* RepoHealthDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70096C69DB23DA00D2156EFB /* RepoHealthDetector.swift */; };
 		75660C7C06D989B456AD23EF /* DailyDigestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329FE34277A4F2C52BAE2CA5 /* DailyDigestCard.swift */; };
 		7B45AF54D2420D669C4482CE /* UncommittedFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E4E92B76ABE6E34A7E241 /* UncommittedFile.swift */; };
@@ -69,9 +72,11 @@
 		86FEBAEA96BF374816E8B9B4 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904EB76716C0484B1818DB33 /* MarkdownRenderer.swift */; };
 		899FC4F8FED55E28DE2BA83E /* FalsePositiveMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5D85F98C2D52B4B9888F05 /* FalsePositiveMark.swift */; };
 		8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9599F1E6035D5ECFE609460 /* AppSettings.swift */; };
+		8CA43165BADE530DC18C04B7 /* LetterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */; };
 		8CF12033FE476F193D4DEA31 /* ResumeWorkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F67DC1463A93D6A38D78CB24 /* ResumeWorkCard.swift */; };
 		8D26D59EC29DFACD7BF4E59B /* CommitGuardScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */; };
 		8F4FCBC600D92304B724494C /* DiffHunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */; };
+		8F6A6D248A5E4B279F628D2B /* DailyLetterScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B304A773A8905DDBC2B13CE9 /* DailyLetterScheduler.swift */; };
 		8FF4DA132472F527B5E480C2 /* UncommittedFileParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5B37440B334B6D98141BE2 /* UncommittedFileParsingTests.swift */; };
 		9194E5D6EC23243FE854C5E9 /* RepoDoc.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC91E39A53092AC90E49BC40 /* RepoDoc.swift */; };
 		9393DA5C1346CD914EB98299 /* MarkdownRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */; };
@@ -100,6 +105,7 @@
 		E3AE6AB6585ED6584584379A /* HiddenDocsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7747DA50B33BDF3487EA9375 /* HiddenDocsTests.swift */; };
 		E429E747B5CFC800E97CEFB0 /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A3F29AAD6917CE94CA37F5 /* AITool.swift */; };
 		E6DFD3295199C54D49A40D6E /* CommitGuardFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB9D8EFB0D5FF1BCC5163D5 /* CommitGuardFinding.swift */; };
+		E7733C68F2808E3F1A503BD3 /* LetterReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279CD1141320BA5276C54B33 /* LetterReaderView.swift */; };
 		E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */; };
 		E9CD0AAD574561F095D8946A /* GitClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE9C13BCCED7CDF23020AF7B /* GitClient.swift */; };
 		EE7D1C10A4803C61E8C57FAD /* Tone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F804131774A1192A06DF985 /* Tone.swift */; };
@@ -136,6 +142,7 @@
 		24350EC29C81DF1D56726155 /* RepoMoodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoMoodTests.swift; sourceTree = "<group>"; };
 		25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
 		25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaperDecorations.swift; sourceTree = "<group>"; };
+		279CD1141320BA5276C54B33 /* LetterReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterReaderView.swift; sourceTree = "<group>"; };
 		2816BB1B08D909A526BF8266 /* DailyDigestService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyDigestService.swift; sourceTree = "<group>"; };
 		293B1078830934FFC5D83AFD /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 		2A4B3E0E07D922AC3657E20B /* RepoCategory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCategory.swift; sourceTree = "<group>"; };
@@ -151,6 +158,7 @@
 		3B6B1408663BB77B4BC4675B /* RepoHealthDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoHealthDetectorTests.swift; sourceTree = "<group>"; };
 		3D2A9ADDE4DD19B2703E320E /* CommitSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitSummary.swift; sourceTree = "<group>"; };
 		3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassConfirmDialog.swift; sourceTree = "<group>"; };
+		3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterArchiveView.swift; sourceTree = "<group>"; };
 		4995B80B410566214FB4ACE8 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
 		49D4B0350924B1B73E0796E9 /* Pilo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pilo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49EB184843D10170900A08BA /* MainPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanel.swift; sourceTree = "<group>"; };
@@ -197,6 +205,8 @@
 		AAA8A635B27743E4BB1A0078 /* DiffParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParserTests.swift; sourceTree = "<group>"; };
 		ADF558DE48A0E93A22420D9A /* PiloChip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloChip.swift; sourceTree = "<group>"; };
 		AEA4C256E5B7414451A81ADC /* RepoMood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoMood.swift; sourceTree = "<group>"; };
+		B304A773A8905DDBC2B13CE9 /* DailyLetterScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLetterScheduler.swift; sourceTree = "<group>"; };
+		B56EF0D8A5EC94D206A25865 /* DailyLetter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyLetter.swift; sourceTree = "<group>"; };
 		B9599F1E6035D5ECFE609460 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		BA6AB9592230B7D21B964718 /* PiloHero.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloHero.swift; sourceTree = "<group>"; };
 		BA7F5CCC6815F6E4BA237CBE /* FalsePositiveScopeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FalsePositiveScopeSheet.swift; sourceTree = "<group>"; };
@@ -206,6 +216,8 @@
 		C4A3F29AAD6917CE94CA37F5 /* AITool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITool.swift; sourceTree = "<group>"; };
 		C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDirectoriesView.swift; sourceTree = "<group>"; };
 		CCE88C8A171ED935AA6B683B /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterComposer.swift; sourceTree = "<group>"; };
+		D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterStore.swift; sourceTree = "<group>"; };
 		D7FEF8617500F6E861847FA9 /* IdentityPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityPool.swift; sourceTree = "<group>"; };
 		DAE45D55C757CD61606DCF1C /* SecretRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretRule.swift; sourceTree = "<group>"; };
 		DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDetailView.swift; sourceTree = "<group>"; };
@@ -271,12 +283,15 @@
 				4A11D640FBE8823567CB8EF4 /* AppPaths.swift */,
 				4E64E361A9FA9AB67869B9F4 /* CommitGuardScanner.swift */,
 				2816BB1B08D909A526BF8266 /* DailyDigestService.swift */,
+				B304A773A8905DDBC2B13CE9 /* DailyLetterScheduler.swift */,
 				12738ED463FC35FD0587E770 /* DiffParser.swift */,
 				74D32C6A24E25651AF7F4F08 /* FSEventMonitor.swift */,
 				DE9C13BCCED7CDF23020AF7B /* GitClient.swift */,
 				E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */,
 				04A00990925CEF1AE1105D3A /* GitignoreEditor.swift */,
 				5660290CD15B55F54AE3C4BA /* IdentityValidator.swift */,
+				CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */,
+				D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */,
 				904EB76716C0484B1818DB33 /* MarkdownRenderer.swift */,
 				75A704D753347DA0624F8EE5 /* PushExecutor.swift */,
 				231AF0568E988D86699B2EE4 /* RepoDocsIndexer.swift */,
@@ -319,12 +334,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6AF4ED9EDFDA56AD16D72E33 /* Letter */ = {
+			isa = PBXGroup;
+			children = (
+				3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */,
+				279CD1141320BA5276C54B33 /* LetterReaderView.swift */,
+			);
+			path = Letter;
+			sourceTree = "<group>";
+		};
 		7C481121D8539884305EBE09 /* Views */ = {
 			isa = PBXGroup;
 			children = (
 				4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */,
 				01A4489C48B5FB83C761326D /* Components */,
 				17DF8EC733D28D6CE5F23962 /* Dialogs */,
+				6AF4ED9EDFDA56AD16D72E33 /* Letter */,
 				353047D2205A5A9E8D45F688 /* MainWindow */,
 				F68AA1FA4F2B8FAC35FE2476 /* Onboarding */,
 				DEC3E1750C594E28E436EBE3 /* Settings */,
@@ -350,6 +375,7 @@
 				4FB9D8EFB0D5FF1BCC5163D5 /* CommitGuardFinding.swift */,
 				3D2A9ADDE4DD19B2703E320E /* CommitSummary.swift */,
 				03FB2CDFDBADDC480BCA49BC /* DailyDigest.swift */,
+				B56EF0D8A5EC94D206A25865 /* DailyLetter.swift */,
 				336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */,
 				DE5D85F98C2D52B4B9888F05 /* FalsePositiveMark.swift */,
 				0866CD77575282C41947BADD /* GitRemote.swift */,
@@ -574,6 +600,8 @@
 				F2587E6A5C90A86F2A2F8C28 /* DailyDigest.swift in Sources */,
 				75660C7C06D989B456AD23EF /* DailyDigestCard.swift in Sources */,
 				AD6148766FCC484A7765B2A4 /* DailyDigestService.swift in Sources */,
+				203D1FE0BDAAF39456197118 /* DailyLetter.swift in Sources */,
+				8F6A6D248A5E4B279F628D2B /* DailyLetterScheduler.swift in Sources */,
 				8F4FCBC600D92304B724494C /* DiffHunk.swift in Sources */,
 				060075849867E4E6BA387EE6 /* DiffParser.swift in Sources */,
 				30000FA09B2FFCA646EE4FDA /* Elevation.swift in Sources */,
@@ -589,6 +617,10 @@
 				6B9AB949B4914CA020229558 /* IdentityPool.swift in Sources */,
 				56450D292FF8DBB5706446C7 /* IdentityValidator.swift in Sources */,
 				5B0E6BF6D379DCF7558E6BFD /* Language.swift in Sources */,
+				076492815CE25BC44F350A1B /* LetterArchiveView.swift in Sources */,
+				6DD4F5DD058AD437E8FB144E /* LetterComposer.swift in Sources */,
+				E7733C68F2808E3F1A503BD3 /* LetterReaderView.swift in Sources */,
+				8CA43165BADE530DC18C04B7 /* LetterStore.swift in Sources */,
 				20F8F67C89869699F09BFABB /* MainPanel.swift in Sources */,
 				F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */,
 				026FA4FE51C74681C1D1CA0A /* MarkdownDocument.swift in Sources */,

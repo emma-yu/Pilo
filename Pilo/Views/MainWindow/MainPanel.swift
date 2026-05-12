@@ -53,6 +53,20 @@ struct MainPanel: View {
             let repoPath = appState.repositories.first(where: { $0.id == appState.selectedRepoId })?.path ?? ""
             MarkdownPreviewSheet(doc: doc, repoPath: repoPath)
         }
+        // 信箱 sheet
+        .sheet(isPresented: Binding(
+            get: { appState.isArchiveSheetOpen },
+            set: { appState.isArchiveSheetOpen = $0 }
+        )) {
+            LetterArchiveView()
+        }
+        // 单封信件阅读 sheet
+        .sheet(item: Binding(
+            get: { appState.readingLetter },
+            set: { if $0 == nil { appState.closeReadingLetter() } }
+        )) { letter in
+            LetterReaderView(letter: letter)
+        }
     }
 }
 
@@ -76,11 +90,45 @@ private struct PanelHeader: View {
 
             Spacer()
 
+            // 每日邮局信箱入口 —— 红框位置；跟 healthPill 风格一致
+            inboxPill
             healthPill
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
         .background(Color("CreamBg").opacity(0.35))
+    }
+
+    /// 信箱入口 chip：跟 healthPill 同样的 ~22pt 高 + 7pt 圆角 + 15% bg
+    /// 有未读 → stampRed tint + 数字 badge
+    /// 无未读 → piloGoldDark 中性
+    private var inboxPill: some View {
+        let unread = appState.letterArchive.unreadCount
+        let hasUnread = unread > 0
+        let tint: Color = hasUnread ? .stampRed : .piloGoldDark
+        return Button {
+            appState.openLetterArchive()
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: hasUnread ? "tray.full.fill" : "tray.full")
+                    .font(.system(size: 12, weight: .semibold))
+                Text(Copy.Letter.inboxLabel(lang))
+                    .font(.system(size: 13))
+                if hasUnread {
+                    Text("·")
+                        .font(.system(size: 11))
+                        .foregroundStyle(tint.opacity(0.6))
+                    Text("\(unread)")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+            }
+            .padding(.horizontal, 11)
+            .padding(.vertical, 5)
+            .foregroundStyle(tint)
+            .background(tint.opacity(0.15), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .help(Copy.Letter.inboxTooltip(unread: unread, lang))
     }
 
     private var healthPill: some View {
@@ -273,11 +321,9 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // S2: 跨 Repo 工作日报（仅当今天有活动才显示）
-                    if let digest = appState.dailyDigest, !digest.isEmpty {
-                        DailyDigestCard(digest: digest)
-                            .padding(.bottom, 20)
-                    }
+                    // S2 重构：今日邮局已从"主面板 widget"改为"18:00 定时投递的信件"
+                    // 不再常驻在 repo 详情顶部 —— 释放空间给 repo content
+                    // 信件入口在菜单栏 popover；信件箱可翻阅历史
                     // 标题行：repo 名（独享左侧）| 邮戳（trailing 独立位置）| PrivacyPill
                     // 真实邮件的物理：邮戳在右上角邮票区，跟地址/标签共存但不重叠
                     HStack(alignment: .center, spacing: 14) {

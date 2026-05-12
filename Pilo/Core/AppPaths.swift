@@ -19,6 +19,11 @@ enum AppPaths {
         applicationSupport.appendingPathComponent("state.json", isDirectory: false)
     }
 
+    /// 信件箱：每日邮局生成的历史信件
+    static var lettersJSON: URL {
+        applicationSupport.appendingPathComponent("letters.json", isDirectory: false)
+    }
+
     static var logsDir: URL {
         let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
         let dir = base.appendingPathComponent("Logs/Pilo", isDirectory: true)

@@ -1056,6 +1056,96 @@ enum Copy {
         }
     }
 
+    // MARK: - 每日邮局信件
+
+    enum Letter {
+        // PanelHeader 信箱入口 pill
+        static func inboxLabel(_ lang: Language) -> String {
+            lang == .zh ? "信箱" : "Inbox"
+        }
+        static func inboxTooltip(unread: Int, _ lang: Language) -> String {
+            if unread > 0 {
+                return lang == .zh ? "邮箱里有 \(unread) 封未读" : "\(unread) unread in your inbox"
+            }
+            return lang == .zh ? "查看过往信件" : "Browse past letters"
+        }
+
+        // Archive sheet
+        static func archiveTitle(_ lang: Language) -> String {
+            lang == .zh ? "信箱" : "Letter Inbox"
+        }
+        static func archiveSubtitle(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "Pilo 每天 18:00 寄一封工作总结来"
+            case (.friendly, .en): return "Pilo posts your daily summary at 18:00"
+            case (.minimal, .zh):  return "每日 18:00 投递"
+            case (.minimal, .en):  return "Delivered at 18:00 daily"
+            }
+        }
+        static func archiveEmpty(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "信箱还是空的\n下班时分会有第一封信飞来"
+            case (.friendly, .en): return "Your inbox is empty\nThe first letter will arrive after 18:00"
+            case (.minimal, .zh):  return "暂无信件"
+            case (.minimal, .en):  return "No letters yet"
+            }
+        }
+        static func unreadBadge(_ lang: Language) -> String {
+            lang == .zh ? "未读" : "Unread"
+        }
+
+        // Reader letter content
+        static func letterHeader(_ lang: Language) -> String {
+            lang == .zh ? "今日工作总结" : "Today's Summary"
+        }
+        static func greeting(_ lang: Language) -> String {
+            lang == .zh ? "亲爱的 Emma，" : "Dear friend,"
+        }
+        static func openingLine(_ lang: Language) -> String {
+            lang == .zh ? "今天你完成了：" : "Today you finished:"
+        }
+        static func remoteLabel(remote: String, _ lang: Language) -> String {
+            lang == .zh ? "已寄出 \(remote)" : "sent to \(remote)"
+        }
+        static func notPushedLabel(_ lang: Language) -> String {
+            lang == .zh ? "桌上还没寄" : "still on the desk"
+        }
+        static func moreCommits(_ count: Int, _ lang: Language) -> String {
+            lang == .zh ? "……还有 \(count) 个" : "…and \(count) more"
+        }
+        static func draftsHeader(_ lang: Language) -> String {
+            lang == .zh ? "桌上还有：" : "Still on the desk:"
+        }
+        static func draftCount(_ count: Int, _ lang: Language) -> String {
+            lang == .zh ? "\(count) 个未提交" : "\(count) uncommitted"
+        }
+        static func totalLine(commits: Int, repos: Int, _ lang: Language) -> String {
+            if lang == .zh {
+                return "今日累计 \(commits) 个 commit · \(repos) 个仓库"
+            }
+            return "\(commits) commit\(commits == 1 ? "" : "s") · \(repos) repo\(repos == 1 ? "" : "s") today"
+        }
+        static func closingLine(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "明天见，"
+            case (.friendly, .en): return "See you tomorrow,"
+            case (.minimal, .zh):  return "—"
+            case (.minimal, .en):  return "—"
+            }
+        }
+        static func signature(_ lang: Language) -> String {
+            lang == .zh ? "Pilo" : "Pilo"
+        }
+        static func emptyLetterBody(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "今天好像没什么活动\n如果你正在休息，也很好"
+            case (.friendly, .en): return "Quiet day, nothing to report\nIf you're resting, that's also good"
+            case (.minimal, .zh):  return "今日无活动"
+            case (.minimal, .en):  return "No activity today"
+            }
+        }
+    }
+
     // MARK: - S1 AI Push Guard
 
     enum AIAudit {

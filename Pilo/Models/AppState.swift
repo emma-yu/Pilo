@@ -19,6 +19,7 @@ final class AppState {
     let commitGuard: CommitGuardScanner
     let visibilityClient: GitHubVisibilityClient
     let dailyDigestService: DailyDigestService
+    let letterComposer: LetterComposer
     private let fsMonitor: FSEventMonitor
 
     // MARK: - 仓库可见性缓存（24h TTL）
@@ -187,6 +188,15 @@ final class AppState {
     var dailyDigest: DailyDigest?
     private var dailyDigestTask: Task<Void, Never>?
 
+    // === 每日邮局信件 ===
+    /// 信件箱归档（持久化在 letters.json）
+    var letterArchive: LetterArchive = .empty
+    /// 当前正在阅读的信件（sheet binding）
+    var readingLetter: DailyLetter?
+    /// 信箱 sheet 是否打开
+    var isArchiveSheetOpen: Bool = false
+    private var composeTask: Task<Void, Never>?
+
     // MARK: - 启动
 
     init() {
@@ -198,6 +208,7 @@ final class AppState {
         self.commitGuard = CommitGuardScanner()
         self.visibilityClient = GitHubVisibilityClient()
         self.dailyDigestService = DailyDigestService(gitClient: git)
+        self.letterComposer = LetterComposer(gitClient: git)
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -225,6 +236,7 @@ final class AppState {
         }
         self.watchDirectories = WatchDirectoriesStorage.load()
         self.identityPool = IdentityPool.load()
+        self.letterArchive = LetterStore.load()
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
         // 在 MainActor 的下一个 tick 启动后端检测和首扫；
@@ -292,6 +304,8 @@ final class AppState {
         isInitialScanComplete = true
         // S2: 扫盘后刷新今日 digest（非阻塞）
         refreshDailyDigest()
+        // 每日邮局：今天 ≥ 18:00 且没今日信 → 立即 compose 并归档
+        composeTodayLetterIfNeeded()
     }
 
     /// S2: 刷新跨 repo 工作日报 —— 异步 detached，不阻塞 UI
@@ -303,6 +317,68 @@ final class AppState {
             let digest = await service.compute(repos: repos)
             await MainActor.run { self?.dailyDigest = digest }
         }
+    }
+
+    // MARK: - 每日邮局信件
+
+    /// 检查并按需 compose 今日信件：
+    ///   - 今天没生成过信
+    ///   - 当前时间 ≥ 18:00（投递时间）OR 用户手动触发
+    ///   - 有活动（commit / 草稿）
+    /// 写盘后追加到 archive 头部
+    func composeTodayLetterIfNeeded(forceNow: Bool = false) {
+        composeTask?.cancel()
+        let today = Calendar.current.startOfDay(for: Date())
+        // 已有今天的信 → skip
+        if letterArchive.letter(forDate: today) != nil { return }
+        // 不到 18:00 且不强制 → skip
+        if !forceNow && !DailyLetterScheduler.shouldDeliverImmediately(
+            now: Date(),
+            archive: letterArchive
+        ) {
+            return
+        }
+
+        let repos = self.repositories
+        let composer = self.letterComposer
+        composeTask = Task { [weak self] in
+            let letter = await composer.compose(repos: repos)
+            guard letter.isWorthSending else { return }
+            await MainActor.run {
+                guard let self else { return }
+                var archive = self.letterArchive
+                archive.letters.insert(letter, at: 0)
+                self.letterArchive = archive
+                LetterStore.save(archive)
+            }
+        }
+    }
+
+    /// 把指定信件标记为已读 + 持久化
+    func markLetterRead(_ letter: DailyLetter) {
+        guard let idx = letterArchive.letters.firstIndex(where: { $0.id == letter.id }) else { return }
+        guard letterArchive.letters[idx].readAt == nil else { return }
+        letterArchive.letters[idx].readAt = Date()
+        LetterStore.save(letterArchive)
+    }
+
+    /// 用户在 PanelHeader 点信箱
+    func openLetterArchive() {
+        isArchiveSheetOpen = true
+    }
+
+    /// 用户在 archive 点单封信
+    func openLetter(_ letter: DailyLetter) {
+        isArchiveSheetOpen = false
+        readingLetter = letter
+    }
+
+    /// 关闭阅读 view —— 标记已读 + 重新打开 archive
+    func closeReadingLetter() {
+        if let letter = readingLetter {
+            markLetterRead(letter)
+        }
+        readingLetter = nil
     }
 
     // MARK: - Tone
