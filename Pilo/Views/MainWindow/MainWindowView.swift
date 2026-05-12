@@ -17,18 +17,8 @@ struct MainWindowView: View {
                 MainPanel()
             }
         }
-        .sheet(item: Binding(
-            get: { appState.pushSession },
-            set: { appState.pushSession = $0 }
-        )) { _ in
-            PushConfirmDialog(
-                session: Binding(
-                    get: { appState.pushSession },
-                    set: { appState.pushSession = $0 }
-                ),
-                onDismiss: { appState.dismissPushSession() }
-            )
-        }
+        // PushConfirmDialog sheet 已移到 MainPanel 内部，跟 Markdown 预览 sheet 一起 attach。
+        // 这里只保留窗口级别的 navigationTitle + 默认选 repo。
         .navigationTitle(lang == .zh ? "Pilo · 我的小邮局" : "Pilo · My Post Office")
         .frame(minWidth: 880, minHeight: 580)
         .onAppear {

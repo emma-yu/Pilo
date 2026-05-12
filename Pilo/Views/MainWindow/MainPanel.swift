@@ -29,6 +29,21 @@ struct MainPanel: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.paperCard)
+        // PushConfirmDialog sheet：appState.pushSession 非 nil 时弹出
+        // 必须 attach 在 MainPanel 而不是 MainWindowView —— 跟下面的 Markdown sheet
+        // 在同一 view 上 SwiftUI 才能正确路由
+        .sheet(item: Binding(
+            get: { appState.pushSession },
+            set: { appState.pushSession = $0 }
+        )) { _ in
+            PushConfirmDialog(
+                session: Binding(
+                    get: { appState.pushSession },
+                    set: { appState.pushSession = $0 }
+                ),
+                onDismiss: { appState.dismissPushSession() }
+            )
+        }
         // Markdown 预览 sheet：appState.previewingDoc 非 nil 时弹出
         .sheet(item: Binding(
             get: { appState.previewingDoc },
