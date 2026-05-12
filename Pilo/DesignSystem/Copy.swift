@@ -943,34 +943,110 @@ enum Copy {
             }
         }
 
-        /// 副标题："上次见你 X 天前 · 在 branch Y"。
-        /// 时间用 RelativeDateTimeFormatter localized，branch 末尾追加（仅有 branch 才显示）。
-        static func subtitle(daysSinceViewed: Int?, branch: String?, _ lang: Language) -> String {
-            var parts: [String] = []
+        /// 副标题：智能 contextual。按 4 档优先级 fallback：
+        ///   P1 有 work → actionable："桌上还有 N 件没封口 · M 个等着寄出"
+        ///   P2 1-29 天没见 → 时间感："上次见你是 N 天前"
+        ///   P3 30+ 天没见 → 长别离 flavor："已经 N 天没见，欢迎回来"
+        ///   P4 都没有 → "在 main · 一切都好"
+        ///
+        /// 旧版总是输出 "今天见过 · 在 main" —— tautology + 重复上面 path 行
+        /// 现在永远 dynamic，每次回来副标题都讲一个新故事
+        static func subtitle(
+            uncommittedCount: Int,
+            pendingPushCount: Int,
+            daysSinceViewed: Int?,
+            branch: String?,
+            _ tone: Tone,
+            _ lang: Language
+        ) -> String {
+            // P1 actionable —— 用户最关心的：现在能做什么
+            if uncommittedCount > 0 || pendingPushCount > 0 {
+                return actionableSubtitle(
+                    uncommitted: uncommittedCount,
+                    pending: pendingPushCount,
+                    tone: tone,
+                    lang: lang
+                )
+            }
+
+            // P2 / P3 时间感（没 work，但有上次见过的时间）
             if let days = daysSinceViewed {
-                if lang == .zh {
-                    if days == 0 {
-                        // 之前是"今天刚见过"——"刚"暗示几分钟前，实际可能几小时前，所以去掉
-                        parts.append("今天见过")
-                    } else if days == 1 {
-                        parts.append("上次是昨天")
-                    } else {
-                        parts.append("上次见你是 \(days) 天前")
-                    }
-                } else {
-                    if days == 0 {
-                        parts.append("Seen earlier today")
-                    } else if days == 1 {
-                        parts.append("Last seen yesterday")
-                    } else {
-                        parts.append("Last seen \(days) days ago")
-                    }
+                if days >= 30 {
+                    return longAbsenceSubtitle(days: days, tone: tone, lang: lang)
                 }
+                if days >= 1 {
+                    return recentAbsenceSubtitle(days: days, lang: lang)
+                }
+                // days == 0 + no work → fall through to P4 (避免说"今天见过"的 tautology)
             }
-            if let b = branch {
-                parts.append(lang == .zh ? "在 \(b)" : "on \(b)")
+
+            // P4 fallback —— cleanup 完一切都好；branch 在这里有意义（其它档已不再重复 branch）
+            return cleanStateSubtitle(branch: branch, tone: tone, lang: lang)
+        }
+
+        /// P1 actionable
+        private static func actionableSubtitle(uncommitted: Int, pending: Int, tone: Tone, lang: Language) -> String {
+            switch (uncommitted > 0, pending > 0) {
+            case (true, true):
+                return lang == .zh
+                    ? "桌上 \(uncommitted) 件 · 待寄 \(pending) 个"
+                    : "\(uncommitted) draft\(uncommitted == 1 ? "" : "s") · \(pending) to send"
+            case (true, false):
+                if lang == .zh {
+                    return tone == .friendly
+                        ? "桌上还有 \(uncommitted) 件没封口"
+                        : "\(uncommitted) 个未提交"
+                }
+                return uncommitted == 1
+                    ? "1 draft on the desk"
+                    : "\(uncommitted) drafts on the desk"
+            case (false, true):
+                if lang == .zh {
+                    return tone == .friendly
+                        ? "\(pending) 个 commit 等着寄出"
+                        : "\(pending) 个待推送"
+                }
+                return pending == 1
+                    ? "1 commit to send"
+                    : "\(pending) commits to send"
+            case (false, false):
+                return ""   // 不会走到，前面已 guard
             }
-            return parts.joined(separator: " · ")
+        }
+
+        /// P2 1-29 天
+        private static func recentAbsenceSubtitle(days: Int, lang: Language) -> String {
+            if lang == .zh {
+                if days == 1 { return "昨天来过" }
+                return "上次见你是 \(days) 天前"
+            }
+            if days == 1 { return "Last seen yesterday" }
+            return "Last seen \(days) days ago"
+        }
+
+        /// P3 30+ 天
+        private static func longAbsenceSubtitle(days: Int, tone: Tone, lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "已经 \(days) 天没见，欢迎回来"
+            case (.friendly, .en): return "\(days) days since we last met — welcome back"
+            case (.minimal, .zh):  return "\(days) 天没见"
+            case (.minimal, .en):  return "Last seen \(days) days ago"
+            }
+        }
+
+        /// P4 cleanup 完一切都好
+        private static func cleanStateSubtitle(branch: String?, tone: Tone, lang: Language) -> String {
+            let b = branch ?? ""
+            switch (tone, lang) {
+            case (.friendly, .zh):
+                return b.isEmpty ? "一切都好" : "在 \(b) · 一切都好"
+            case (.friendly, .en):
+                return b.isEmpty ? "All clear" : "on \(b) · all clear"
+            case (.minimal, .zh):
+                return b.isEmpty ? "已同步" : "\(b) · 已同步"
+            case (.minimal, .en):
+                return b.isEmpty ? "In sync" : "\(b) · in sync"
+            }
         }
 
         // Section labels（卡片内部）
@@ -1168,6 +1244,29 @@ enum Copy {
             case (.minimal, .zh):  return "今日无活动"
             case (.minimal, .en):  return "No activity today"
             }
+        }
+    }
+
+    // MARK: - AI 工具配置（per-repo detection badge）
+
+    /// 仓库里检测到 AI 工具配置时显示。**诚实边界**：
+    /// 永远说"Configured for / 在这仓库里看到了"，永不说"由 X 维护"
+    /// —— 配置文件存在不代表当前活跃使用
+    enum AIRepo {
+        /// Detail view 里 chip 行的引导文案
+        static func configuredFor(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "在这仓库里看到了："
+            case (.friendly, .en): return "Configured for:"
+            case (.minimal, .zh):  return "配置："
+            case (.minimal, .en):  return "Setup:"
+            }
+        }
+        /// hover 单个 stamp 时的 tooltip
+        static func stampTooltip(tool: AITool, _ lang: Language) -> String {
+            lang == .zh
+                ? "在此仓库找到 \(tool.displayName) 的配置文件"
+                : "Found \(tool.displayName) configuration in this repo"
         }
     }
 

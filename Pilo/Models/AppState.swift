@@ -1170,6 +1170,8 @@ final class AppState {
                     lastViewedDate: prior.lastViewedDate,
                     // 文档隐藏：用户分拣，scan 不覆盖
                     hiddenDocPaths: prior.hiddenDocPaths,
+                    // AI 工具配置：派生信号，每次 scan 由 fresh 覆盖
+                    aiToolsDetected: fresh.aiToolsDetected,
                     // Commit 通知 baselines
                     latestCommitHash: newHead,
                     lastNotifiedCommitHash: nextBaseline

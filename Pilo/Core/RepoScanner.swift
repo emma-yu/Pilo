@@ -128,6 +128,9 @@ actor RepoScanner {
         // Phase B (Project Inventory)：扫盘时一并 detect 健康信号
         let health = RepoHealthDetector.detect(repoPath: url.path)
 
+        // AI 工具配置检测（per-repo "Configured for" 信号）
+        let aiTools = AIToolRepoDetector.detect(repoPath: url.path)
+
         return Repository(
             path: url.path,
             currentBranch: b,
@@ -139,6 +142,7 @@ actor RepoScanner {
             firstCommitHash: first,
             hasReadme: health.hasReadme,
             hasTests: health.hasTests,
+            aiToolsDetected: aiTools,
             latestCommitHash: latest
             // lastNotifiedCommitHash 故意不在 scan 时设：
             // AppState.applyScanResult 会做 diff —— 老仓库继承之前的值，

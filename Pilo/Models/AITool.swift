@@ -4,12 +4,14 @@ import SwiftUI
 
 /// 用户机器上已安装的 AI coding 工具。Pilo 启动时检测一次缓存到 AppState。
 /// 不依赖 PATH —— IDE 用 URL scheme（NSWorkspace），CLI 用 Terminal.app 走 AppleScript。
-enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
+enum AITool: String, CaseIterable, Codable, Sendable, Hashable, Identifiable {
     case cursor       // IDE — URL scheme
     case windsurf     // IDE — URL scheme
     case vscode       // IDE — URL scheme
     case claudeCode   // CLI — Terminal
     case codex        // CLI — Terminal
+    case aider        // CLI — Terminal（conversational; CONVENTIONS.md + .aider.* files）
+    case gemini       // CLI — Terminal（Google Gemini Code Assist; GEMINI.md / .gemini/）
 
     var id: String { rawValue }
 
@@ -21,6 +23,8 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
         case .vscode:     return "VS Code"
         case .claudeCode: return "Claude Code"
         case .codex:      return "Codex"
+        case .aider:      return "Aider"
+        case .gemini:     return "Gemini"
         }
     }
 
@@ -32,6 +36,8 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
         case .vscode:     return "chevron.left.forward.slash.chevron.right"
         case .claudeCode: return "terminal.fill"
         case .codex:      return "bolt.fill"
+        case .aider:      return "checkmark.bubble.fill"   // conversational CLI
+        case .gemini:     return "diamond.fill"            // Gemini logo 是钻石/双子形
         }
     }
 
@@ -43,6 +49,8 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
         case .vscode:     return .lavenderInfo
         case .claudeCode: return .stampRed
         case .codex:      return .piloGoldDark
+        case .aider:      return .amberWarn               // 暖琥珀（避开现有 5 色）
+        case .gemini:     return .piloAccent              // 心粉（独特，避开蓝/绿/灰）
         }
     }
 
@@ -50,8 +58,8 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
     enum Kind { case ide, cli }
     var kind: Kind {
         switch self {
-        case .cursor, .windsurf, .vscode: return .ide
-        case .claudeCode, .codex:         return .cli
+        case .cursor, .windsurf, .vscode:       return .ide
+        case .claudeCode, .codex, .aider, .gemini: return .cli
         }
     }
 
@@ -63,6 +71,8 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
         case .vscode:     return "code"
         case .claudeCode: return "claude"
         case .codex:      return "codex"
+        case .aider:      return "aider"
+        case .gemini:     return "gemini"
         }
     }
 

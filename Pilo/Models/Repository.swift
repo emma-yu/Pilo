@@ -52,6 +52,11 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
     /// 文件被删 / 重命名后，旧 path 自然失效（下次扫不到，filter 不会误显示）。
     var hiddenDocPaths: Set<String>
 
+    /// 检测到的 AI 工具配置（per-repo 派生信号，每次 scan 由 RepoScanner 重填）。
+    /// 这是"Configured for"的诚实答案 —— config 文件存在表示这工具被配置过，
+    /// 不代表当前活跃使用。空集 = 没看到任何 AI 工具的 config 文件。
+    var aiToolsDetected: Set<AITool>
+
     /// 当前 HEAD commit 的 short hash（每次 scan 填）。用于检测"有没有新 commit"。
     var latestCommitHash: String?
 
@@ -86,6 +91,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         hasTests: Bool = false,
         lastViewedDate: Date? = nil,
         hiddenDocPaths: Set<String> = [],
+        aiToolsDetected: Set<AITool> = [],
         latestCommitHash: String? = nil,
         lastNotifiedCommitHash: String? = nil
     ) {
@@ -114,6 +120,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.hasTests = hasTests
         self.lastViewedDate = lastViewedDate
         self.hiddenDocPaths = hiddenDocPaths
+        self.aiToolsDetected = aiToolsDetected
         self.latestCommitHash = latestCommitHash
         self.lastNotifiedCommitHash = lastNotifiedCommitHash
     }
@@ -125,6 +132,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
              remotes, defaultPushRemote, firstCommitHash, isHidden, customTags,
              lastScanDate, skipFetch, skipMainBranchWarning, falsePositiveMarks,
              category, hasReadme, hasTests, lastViewedDate, hiddenDocPaths,
+             aiToolsDetected,
              latestCommitHash, lastNotifiedCommitHash
     }
     init(from decoder: Decoder) throws {
@@ -157,6 +165,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.lastViewedDate = try c.decodeIfPresent(Date.self, forKey: .lastViewedDate)
         // 用户在小邮局里隐藏的文档：旧 state.json 没有 → 空集合
         self.hiddenDocPaths = try c.decodeIfPresent(Set<String>.self, forKey: .hiddenDocPaths) ?? []
+        // 检测到的 AI 工具配置：旧 state.json 没有 → 空集合（下次 scan 会重填）
+        self.aiToolsDetected = try c.decodeIfPresent(Set<AITool>.self, forKey: .aiToolsDetected) ?? []
         // Commit 通知：旧 state.json 没有这两个字段 → nil
         // nil → 首次扫盘后会被静默初始化为 latestCommitHash，不会发通知风暴
         self.latestCommitHash = try c.decodeIfPresent(String.self, forKey: .latestCommitHash)
