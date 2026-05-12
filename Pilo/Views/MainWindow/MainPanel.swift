@@ -245,6 +245,10 @@ private struct PanelDetail: View {
     @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
+    /// "贴邮戳"自定义 popover 开关。当前 selectedRepo 一次只有一个 popover，
+    /// 所以单 @State 即可。
+    @State private var isStampPickerOpen = false
+
     var body: some View {
         if let repo = currentRepo {
             ScrollView {
@@ -311,57 +315,129 @@ private struct PanelDetail: View {
 
     // MARK: - Phase B: Project Inventory pieces
 
-    /// 标题行右侧的 category chip（含 menu 选择器）。
+    /// 标题行右侧的"贴邮戳" trigger + 自定义 popover 选择器。
+    /// 视觉：圆形印章造型（unset → dashed 金色圈 + sparkle / 已选 → 实心圆 + 楷书白字 + -3° 旋转）
     @ViewBuilder
     private func categoryChip(for repo: Repository) -> some View {
-        Menu {
-            ForEach(RepoCategory.allCases.filter { $0 != .unset }, id: \.self) { cat in
-                Button {
-                    appState.setCategory(cat, repoId: repo.id)
-                } label: {
-                    HStack {
-                        Text(Copy.Inventory.categoryLabel(cat, lang))
-                        if repo.category == cat { Image(systemName: "checkmark") }
-                    }
-                }
-            }
-            if repo.category != .unset {
-                Divider()
-                Button(Copy.Inventory.categoryPickerUnset(lang)) {
-                    appState.setCategory(.unset, repoId: repo.id)
-                }
-            }
+        Button {
+            isStampPickerOpen.toggle()
         } label: {
-            HStack(spacing: 4) {
-                Image(systemName: "tag.fill")
-                    .font(.system(size: 9))
-                Text(repo.category == .unset
-                     ? Copy.Inventory.categoryPickerPrompt(lang)
-                     : Copy.Inventory.categoryLabel(repo.category, lang))
+            HStack(spacing: 6) {
+                StampBadge(category: repo.category, size: 20)
+                Text(stampTriggerLabel(for: repo.category))
                     .font(.piloSerifCaption)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 8))
+                    .italic()
+                    .foregroundStyle(stampLabelColor(repo.category))
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .foregroundStyle(categoryChipForeground(repo.category))
-            .background(
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .stroke(categoryChipForeground(repo.category).opacity(0.45), lineWidth: 0.6)
-            )
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .contentShape(Rectangle())
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
+        .buttonStyle(.plain)
+        .help(Copy.Inventory.categoryPickerPrompt(lang))
+        .popover(isPresented: $isStampPickerOpen, arrowEdge: .top) {
+            stampPickerPopover(for: repo)
+        }
     }
 
-    private func categoryChipForeground(_ cat: RepoCategory) -> Color {
+    private func stampTriggerLabel(for cat: RepoCategory) -> String {
+        cat == .unset
+            ? Copy.Inventory.categoryPickerPrompt(lang)      // "贴上一枚邮戳"
+            : Copy.Inventory.categoryLabel(cat, lang)         // "工作 / 个人 / 实验"
+    }
+
+    private func stampLabelColor(_ cat: RepoCategory) -> Color {
         switch cat {
         case .work:       return .piloBlueDark
         case .personal:   return .piloGoldDark
         case .experiment: return .lavenderInfo
-        case .unset:      return .inkTertiary
+        case .unset:      return .piloGoldDark
         }
+    }
+
+    /// 自定义 popover 内容：信纸 bg + 衬线标题 + OrnamentDivider + 3 枚印章 + 撕掉 link
+    private func stampPickerPopover(for repo: Repository) -> some View {
+        VStack(alignment: .center, spacing: 0) {
+            // 标题
+            Text(Copy.Inventory.categoryPickerPrompt(lang))
+                .font(.piloSerifSubtitle)
+                .italic()
+                .foregroundStyle(Color.inkPrimary)
+
+            OrnamentDivider(width: 140)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
+
+            // 3 个印章选项
+            HStack(spacing: 22) {
+                ForEach([RepoCategory.work, .personal, .experiment], id: \.self) { cat in
+                    stampPickerCard(cat: cat, currentCategory: repo.category, repoId: repo.id)
+                }
+            }
+
+            // 撕掉邮戳 link，仅在已贴时显示
+            if repo.category != .unset {
+                Rectangle()
+                    .fill(Color.cloudDivider.opacity(0.5))
+                    .frame(height: 0.5)
+                    .padding(.vertical, 14)
+
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        appState.setCategory(.unset, repoId: repo.id)
+                    }
+                    isStampPickerOpen = false
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "scissors")
+                            .font(.system(size: 9))
+                        Text(Copy.Inventory.categoryPickerUnset(lang))   // "撕掉邮戳"
+                            .font(.piloSerifCaption)
+                            .italic()
+                    }
+                    .foregroundStyle(Color.inkSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 22)
+        .padding(.top, 18)
+        .padding(.bottom, repo.category == .unset ? 18 : 14)
+        .frame(width: 300)
+        .background(Color.piloPaper)
+    }
+
+    /// 单张印章卡片：印章 + 标签，hover 抬起，selected 加金色光晕
+    private func stampPickerCard(cat: RepoCategory, currentCategory: RepoCategory, repoId: UUID) -> some View {
+        let isSelected = cat == currentCategory
+        return Button {
+            withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                appState.setCategory(cat, repoId: repoId)
+            }
+            isStampPickerOpen = false
+        } label: {
+            VStack(spacing: 8) {
+                ZStack {
+                    if isSelected {
+                        Circle()
+                            .stroke(Color.piloGold, lineWidth: 1.2)
+                            .frame(width: 50, height: 50)
+                    }
+                    StampBadge(category: cat, size: 38)
+                }
+                .frame(width: 50, height: 50)
+
+                Text(Copy.Inventory.categoryLabel(cat, lang))
+                    .font(.piloSerifCaption)
+                    .italic()
+                    .foregroundStyle(isSelected ? Color.inkPrimary : Color.inkSecondary)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 8)
     }
 
     /// 健康体检行：mood / README 缺失 / 无测试 三类 chip。
@@ -679,5 +755,68 @@ private struct MiniGhostButtonStyle: ButtonStyle {
                     )
             )
             .animation(.spring(response: 0.18, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
+
+// MARK: - 邮戳印章组件（可复用）
+
+/// 圆形邮戳。两种态：
+///   - unset：金色虚线圆 + sparkle 小光（暗示"还没贴"）
+///   - 已贴：实心彩圆 + 楷书白字 + -3° 轻微旋转 + 类别色阴影
+///
+/// 不持有 state，纯渲染。可放在 detail trigger / popover card / 未来其它地方复用。
+private struct StampBadge: View {
+    let category: RepoCategory
+    /// 圆直径，含 padding 后稍大
+    let size: CGFloat
+
+    var body: some View {
+        if category == .unset {
+            unsetBadge
+        } else {
+            filledBadge
+        }
+    }
+
+    private var unsetBadge: some View {
+        Image(systemName: "sparkle")
+            .font(.system(size: size * 0.42))
+            .foregroundStyle(Color.piloGold.opacity(0.8))
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .stroke(Color.piloGold.opacity(0.55),
+                            style: StrokeStyle(lineWidth: 0.9, dash: [2.5, 2]))
+            )
+    }
+
+    private var filledBadge: some View {
+        Text(stampGlyph)
+            .font(.custom("Songti SC", size: size * 0.55).weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(Circle().fill(stampColor))
+            .rotationEffect(.degrees(-3))
+            .shadow(color: stampColor.opacity(0.3), radius: 1.2, y: 0.8)
+    }
+
+    /// 单字楷书：邮戳上常见的简体字
+    private var stampGlyph: String {
+        switch category {
+        case .work:       return "工"
+        case .personal:   return "私"
+        case .experiment: return "试"
+        case .unset:      return ""
+        }
+    }
+
+    /// 类别色：跟 sidebar dot / detail health pill 保持一致
+    private var stampColor: Color {
+        switch category {
+        case .work:       return .piloBlue
+        case .personal:   return .piloGold
+        case .experiment: return .lavenderInfo
+        case .unset:      return .piloGold
+        }
     }
 }
