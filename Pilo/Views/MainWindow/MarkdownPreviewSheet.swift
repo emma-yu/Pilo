@@ -26,16 +26,87 @@ struct MarkdownPreviewSheet: View {
     /// TOC sidebar 全局展开偏好（per-app，跨文档生效）
     @AppStorage("docTocExpanded") private var tocExpanded: Bool = true
 
+    // === Phase 4: 文档内搜索 ===
+    @State private var searchActive = false
+    @State private var searchQuery = ""
+    @State private var searchHits: [MarkdownSearchEngine.Hit] = []
+    @State private var currentHitIndex = 0
+    @FocusState private var searchFieldFocused: Bool
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
             Rectangle()
                 .fill(Color.piloGold.opacity(0.4))
                 .frame(height: 0.5)
+            if searchActive {
+                MarkdownSearchBar(
+                    query: $searchQuery,
+                    currentHitIndex: $currentHitIndex,
+                    hitCount: searchHits.count,
+                    lang: lang,
+                    onClose: { closeSearch() },
+                    focusBinding: $searchFieldFocused
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
             content
         }
         .frame(width: 720, height: 820)
         .background(Color.piloPaper.opacity(0.95))
+        .onChange(of: searchQuery) { _, newQuery in
+            recomputeSearch(query: newQuery)
+        }
+        .onChange(of: currentHitIndex) { _, newIdx in
+            guard searchHits.indices.contains(newIdx) else { return }
+            withAnimation(.piloSpring) {
+                scrolledBlockID = searchHits[newIdx].blockIndex
+            }
+        }
+    }
+
+    private func openSearch() {
+        withAnimation(.piloSpring) { searchActive = true }
+        // 100ms 让 transition 完成再 focus —— 避免动画期间焦点位置抖
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            searchFieldFocused = true
+        }
+    }
+
+    private func closeSearch() {
+        withAnimation(.piloSpring) {
+            searchActive = false
+            searchQuery = ""
+        }
+        searchHits = []
+        currentHitIndex = 0
+        searchFieldFocused = false
+    }
+
+    /// 当前 hit 在指定 block 内是第几次出现（0-based）；nil = 当前 hit 不在本 block
+    private func currentOccurrenceFor(blockIndex: Int) -> Int? {
+        guard searchActive,
+              searchHits.indices.contains(currentHitIndex) else { return nil }
+        let cur = searchHits[currentHitIndex]
+        return cur.blockIndex == blockIndex ? cur.occurrenceInBlock : nil
+    }
+
+    private func recomputeSearch(query: String) {
+        guard let mdDoc = appState.previewDocument else {
+            searchHits = []
+            currentHitIndex = 0
+            return
+        }
+        let newHits = MarkdownSearchEngine.find(in: mdDoc, query: query)
+        searchHits = newHits
+        currentHitIndex = 0
+        // 立即跳到第一个命中
+        if let first = newHits.first {
+            withAnimation(.piloSpring) {
+                scrolledBlockID = first.blockIndex
+            }
+        }
     }
 
     // MARK: - Toolbar
@@ -74,6 +145,16 @@ struct MarkdownPreviewSheet: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
+            // ⌘F 搜索 —— 不显示文字，只 icon；toggleable
+            Button(action: { searchActive ? closeSearch() : openSearch() }) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(searchActive ? Color.piloGoldDark : Color.inkSecondary)
+            }
+            .buttonStyle(.plain)
+            .keyboardShortcut("f", modifiers: [.command])
+            .help(lang == .zh ? "搜全文 (⌘F)" : "Search in document (⌘F)")
+
             // 誊抄全文 —— ⌘C 通用快捷键被 textSelection 抢了；用专门按钮
             Button(action: copyFullText) {
                 HStack(spacing: 4) {
@@ -151,8 +232,12 @@ struct MarkdownPreviewSheet: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 ForEach(Array(mdDoc.blocks.enumerated()), id: \.offset) { i, block in
-                    BlockView(block: block)
-                        .id(i)   // .scrollPosition target —— blockIndex 作 ID
+                    BlockView(
+                        block: block,
+                        searchQuery: searchActive ? searchQuery : "",
+                        currentOccurrence: currentOccurrenceFor(blockIndex: i)
+                    )
+                    .id(i)   // .scrollPosition target —— blockIndex 作 ID
                 }
                 Spacer(minLength: 40)
             }
@@ -274,29 +359,36 @@ struct MarkdownPreviewSheet: View {
 
 private struct BlockView: View {
     let block: MarkdownDocument.Block
+    /// 搜索 query —— 空字符串 = 不搜索（也不上色）
+    var searchQuery: String = ""
+    /// 当前 hit 在这个 block 内是第几次出现（0-based）；nil = 当前 hit 不在本 block
+    var currentOccurrence: Int? = nil
 
     var body: some View {
         switch block {
         case .heading(let level, let content, _):
-            heading(level: level, content: content)
+            heading(level: level, content: highlighted(content, occurrenceOffset: 0))
         case .paragraph(let content):
-            Text(content)
+            Text(highlighted(content, occurrenceOffset: 0))
                 .font(.system(size: 14))
                 .foregroundStyle(Color.inkPrimary)
                 .lineSpacing(4)
                 .padding(.vertical, 4)
                 .fixedSize(horizontal: false, vertical: true)
         case .codeBlock(_, let code):
+            // 代码块不参与搜索（v1）—— 搜文本不搜代码
             codeBlock(code: code)
         case .bulletList(let items):
+            // 列表 item 跨 item 的 occurrence 计数：累加前面 item 的命中数
             VStack(alignment: .leading, spacing: 4) {
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                let itemHits = perItemOccurrenceCounts(items)
+                ForEach(Array(items.enumerated()), id: \.offset) { idx, item in
                     HStack(alignment: .top, spacing: 8) {
                         Text("·")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(Color.piloGoldDark)
                             .frame(width: 12, alignment: .leading)
-                        Text(item)
+                        Text(highlighted(item, occurrenceOffset: itemHits[idx]))
                             .font(.system(size: 14))
                             .foregroundStyle(Color.inkPrimary)
                             .lineSpacing(3)
@@ -308,13 +400,14 @@ private struct BlockView: View {
             .padding(.leading, 8)
         case .orderedList(let items):
             VStack(alignment: .leading, spacing: 4) {
+                let itemHits = perItemOccurrenceCounts(items)
                 ForEach(Array(items.enumerated()), id: \.offset) { idx, item in
                     HStack(alignment: .top, spacing: 8) {
                         Text("\(idx + 1).")
                             .font(.system(size: 13, design: .serif))
                             .foregroundStyle(Color.piloGoldDark)
                             .frame(width: 22, alignment: .trailing)
-                        Text(item)
+                        Text(highlighted(item, occurrenceOffset: itemHits[idx]))
                             .font(.system(size: 14))
                             .foregroundStyle(Color.inkPrimary)
                             .lineSpacing(3)
@@ -329,7 +422,7 @@ private struct BlockView: View {
                 Rectangle()
                     .fill(Color.piloGold)
                     .frame(width: 2)
-                Text(content)
+                Text(highlighted(content, occurrenceOffset: 0))
                     .font(.custom("Songti SC", size: 14).italic())
                     .foregroundStyle(Color.inkSecondary)
                     .lineSpacing(4)
@@ -345,6 +438,50 @@ private struct BlockView: View {
         case .spacer:
             Spacer().frame(height: 8)
         }
+    }
+
+    /// 给 AttributedString 加搜索高亮。
+    /// `occurrenceOffset` 是这个 attr 在 block 内的"起始 occurrence 数"
+    /// （列表 block 跨 item 共用一个 occurrence 计数，所以第 N 个 item 的 offset
+    /// 是前 N-1 个 item 命中数之和）
+    private func highlighted(_ attr: AttributedString, occurrenceOffset: Int) -> AttributedString {
+        let q = searchQuery.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return attr }
+
+        var result = attr
+        var cursor = result.startIndex
+        var localOccurrence = 0
+        let faint = Color.amberWarn.opacity(0.45)
+        let bright = Color.amberWarn.opacity(0.85)
+
+        while cursor < result.endIndex {
+            let sub = result[cursor..<result.endIndex]
+            guard let r = sub.range(of: q, options: .caseInsensitive) else { break }
+            let globalOcc = occurrenceOffset + localOccurrence
+            result[r].backgroundColor = (globalOcc == currentOccurrence) ? bright : faint
+            cursor = r.upperBound
+            localOccurrence += 1
+        }
+        return result
+    }
+
+    /// 列表 block 的每个 item 起始 occurrence 偏移
+    /// e.g. items = ["foo bar foo", "bar foo"] query="foo" → counts = [2, 1] → offsets = [0, 2]
+    private func perItemOccurrenceCounts(_ items: [AttributedString]) -> [Int] {
+        let q = searchQuery.trimmingCharacters(in: .whitespaces)
+        guard !q.isEmpty else { return Array(repeating: 0, count: items.count) }
+        var offsets: [Int] = []
+        var running = 0
+        for item in items {
+            offsets.append(running)
+            let plain = String(item.characters).lowercased()
+            var cursor = plain.startIndex
+            while let r = plain.range(of: q.lowercased(), range: cursor..<plain.endIndex) {
+                running += 1
+                cursor = r.upperBound
+            }
+        }
+        return offsets
     }
 
     @ViewBuilder

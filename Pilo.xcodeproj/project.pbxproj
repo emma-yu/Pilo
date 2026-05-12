@@ -12,6 +12,7 @@
 		060D4D1015A236E0AB5E49B2 /* OnboardingPrivacyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39C01E4EB0C5B4977E1CA127 /* OnboardingPrivacyView.swift */; };
 		074F87BEC963C83A10C56E6F /* DailyDigestServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21E585BC45736BD031CCC12B /* DailyDigestServiceTests.swift */; };
 		076492815CE25BC44F350A1B /* LetterArchiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */; };
+		08AB0C827EC255001673DEF0 /* MarkdownSearchEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01D50B159A13CA0ED746E83 /* MarkdownSearchEngineTests.swift */; };
 		0AFCF84CEDE16D222E15DBE7 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */; };
 		0B68B65404F0FFA13B8456D4 /* RepoListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E9C40F45449667A059ED60 /* RepoListView.swift */; };
 		0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */; };
@@ -93,10 +94,12 @@
 		9DEEC0DADF8BD727564A530D /* secret-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = 930E45B5488623F43A9DDDCC /* secret-rules.json */; };
 		9E2C3E821D491F5E3C537632 /* RepoHealthDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6B1408663BB77B4BC4675B /* RepoHealthDetectorTests.swift */; };
 		9F08118739013091ECBAD2D7 /* RepoCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4B3E0E07D922AC3657E20B /* RepoCategory.swift */; };
+		A4A47958200A15953FB1A5AD /* MarkdownSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EEADB6C294B5BFE7FAA2E63 /* MarkdownSearchBar.swift */; };
 		A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EC3C4B71E63346D274F034 /* SettingsView.swift */; };
 		A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */; };
 		AA0D9C0590E28AEC610A6060 /* HoverableRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 782C2150F5F1D48CA9DD8774 /* HoverableRow.swift */; };
 		AC7E07777AC1338AB98AC1E6 /* PushSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D256A3FEACF71EA243019F /* PushSession.swift */; };
+		AC991AA3BF8BF998421E1CAF /* MarkdownSearchEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED602865C8E6B7BC5AEB009F /* MarkdownSearchEngine.swift */; };
 		AD6148766FCC484A7765B2A4 /* DailyDigestService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2816BB1B08D909A526BF8266 /* DailyDigestService.swift */; };
 		AE611EE75DD1E085EF076959 /* PaperDecorations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25864D3DBBF54FA644A553A1 /* PaperDecorations.swift */; };
 		AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071C8F4E44898A6B17DA6ABE /* AppState.swift */; };
@@ -209,6 +212,7 @@
 		796133FADA4A3765E8AE6859 /* SectionHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionHeader.swift; sourceTree = "<group>"; };
 		7AF98D24AA2AC6D89E2FE38D /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
 		7C4A05BE9BCECF2861C6A82F /* ProjectDocsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDocsPanel.swift; sourceTree = "<group>"; };
+		7EEADB6C294B5BFE7FAA2E63 /* MarkdownSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchBar.swift; sourceTree = "<group>"; };
 		85B45D7DAE82FA3EBF2D16D0 /* CommitNotifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotifierTests.swift; sourceTree = "<group>"; };
 		899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererTests.swift; sourceTree = "<group>"; };
 		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
@@ -236,6 +240,7 @@
 		C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDirectoriesView.swift; sourceTree = "<group>"; };
 		CCE88C8A171ED935AA6B683B /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterComposer.swift; sourceTree = "<group>"; };
+		D01D50B159A13CA0ED746E83 /* MarkdownSearchEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchEngineTests.swift; sourceTree = "<group>"; };
 		D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterStore.swift; sourceTree = "<group>"; };
 		D5496247C53277353150F011 /* AIToolStamp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIToolStamp.swift; sourceTree = "<group>"; };
 		D607F291980A6E4B49E06DBC /* DocReadingMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocReadingMemory.swift; sourceTree = "<group>"; };
@@ -249,6 +254,7 @@
 		E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubVisibility.swift; sourceTree = "<group>"; };
 		E9066B30C3BA6E45C984CF14 /* RepoDocsIndexerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDocsIndexerTests.swift; sourceTree = "<group>"; };
 		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
+		ED602865C8E6B7BC5AEB009F /* MarkdownSearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchEngine.swift; sourceTree = "<group>"; };
 		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
 		F67DC1463A93D6A38D78CB24 /* ResumeWorkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeWorkCard.swift; sourceTree = "<group>"; };
 		F77583C577EC8611ED28B83C /* CommitNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotifier.swift; sourceTree = "<group>"; };
@@ -290,6 +296,7 @@
 				49EB184843D10170900A08BA /* MainPanel.swift */,
 				8B511655D28B12989BAB8A01 /* MainWindowView.swift */,
 				5C0963CE1804A146CAABE56E /* MarkdownPreviewSheet.swift */,
+				7EEADB6C294B5BFE7FAA2E63 /* MarkdownSearchBar.swift */,
 				4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */,
 				7C4A05BE9BCECF2861C6A82F /* ProjectDocsPanel.swift */,
 				DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */,
@@ -321,6 +328,7 @@
 				CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */,
 				D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */,
 				904EB76716C0484B1818DB33 /* MarkdownRenderer.swift */,
+				ED602865C8E6B7BC5AEB009F /* MarkdownSearchEngine.swift */,
 				75A704D753347DA0624F8EE5 /* PushExecutor.swift */,
 				231AF0568E988D86699B2EE4 /* RepoDocsIndexer.swift */,
 				70096C69DB23DA00D2156EFB /* RepoHealthDetector.swift */,
@@ -439,6 +447,7 @@
 				7747DA50B33BDF3487EA9375 /* HiddenDocsTests.swift */,
 				18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */,
 				899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */,
+				D01D50B159A13CA0ED746E83 /* MarkdownSearchEngineTests.swift */,
 				650FCDB2CE5AC6307E508E7E /* MarkdownTOCTests.swift */,
 				63E19D8E16EFADA143E2C091 /* PushOutcomeTests.swift */,
 				E9066B30C3BA6E45C984CF14 /* RepoDocsIndexerTests.swift */,
@@ -605,6 +614,7 @@
 				E3AE6AB6585ED6584584379A /* HiddenDocsTests.swift in Sources */,
 				4D4EEDC70D697AFB0294C959 /* IdentityValidatorTests.swift in Sources */,
 				9393DA5C1346CD914EB98299 /* MarkdownRendererTests.swift in Sources */,
+				08AB0C827EC255001673DEF0 /* MarkdownSearchEngineTests.swift in Sources */,
 				72637E3353D3E4C398090A37 /* MarkdownTOCTests.swift in Sources */,
 				831BE57054EC9C10B0B4A3D2 /* PushOutcomeTests.swift in Sources */,
 				C91282FCBF371925561AE8AB /* RepoDocsIndexerTests.swift in Sources */,
@@ -669,6 +679,8 @@
 				026FA4FE51C74681C1D1CA0A /* MarkdownDocument.swift in Sources */,
 				9C0B1ADFF2857765911A42D7 /* MarkdownPreviewSheet.swift in Sources */,
 				86FEBAEA96BF374816E8B9B4 /* MarkdownRenderer.swift in Sources */,
+				A4A47958200A15953FB1A5AD /* MarkdownSearchBar.swift in Sources */,
+				AC991AA3BF8BF998421E1CAF /* MarkdownSearchEngine.swift in Sources */,
 				1764315DB68D498D0AA3C0B1 /* MarkdownTOCSidebar.swift in Sources */,
 				E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */,
 				A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */,
