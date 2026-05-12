@@ -4,7 +4,11 @@ import Foundation
 enum PushOutcome: Sendable, Hashable {
     case success(pushedCount: Int)
     case authenticationFailed(stderr: String)
-    case nonFastForward(stderr: String)
+    /// non-fast-forward 失败。`historyDiverged` 区分两种 sub-case：
+    ///   - false: 远程有别人 push 的新 commit，正常 pull --rebase 即可
+    ///   - true:  本地 history 重写过（filter-repo / rebase / amend），跟远程**无共同祖先**。
+    ///            **pull 会污染本地** —— 应该用 force-with-lease 覆盖远程。
+    case nonFastForward(stderr: String, historyDiverged: Bool)
     case hookRejected(stderr: String)
     case networkError(stderr: String)
     case noUpstreamConfigured(stderr: String)
@@ -15,11 +19,17 @@ enum PushOutcome: Sendable, Hashable {
         return false
     }
 
+    /// 是否是"历史脱钩"情况 —— UI 据此显示「覆盖远程历史」按钮而非 pull 提示。
+    var isHistoryDiverged: Bool {
+        if case .nonFastForward(_, let diverged) = self { return diverged }
+        return false
+    }
+
     var stderrTrimmed: String {
         switch self {
         case .success: ""
         case .authenticationFailed(let s),
-             .nonFastForward(let s),
+             .nonFastForward(let s, _),
              .hookRejected(let s),
              .networkError(let s),
              .noUpstreamConfigured(let s):

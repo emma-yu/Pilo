@@ -537,6 +537,40 @@ final class AppState {
         }
     }
 
+    /// History 脱钩时的"覆盖远程历史"按钮调用 —— 用 --force-with-lease 强推。
+    /// 仅在 PushConfirmDialog 失败态 + historyDiverged 二次确认后允许。
+    func forcePushCurrentSession() async {
+        guard let session = pushSession,
+              case .completed(let prevReport) = session.state,
+              prevReport.outcome.isHistoryDiverged else { return }
+
+        // 切到 running
+        var s = session
+        s.state = .running(.init(remote: prevReport.remote))
+        pushSession = s
+
+        let report = await pushExecutor.forcePush(
+            repoURL: URL(fileURLWithPath: repositories.first(where: { $0.id == prevReport.repoId })?.path ?? ""),
+            repoId: prevReport.repoId,
+            repoName: prevReport.repoName,
+            remote: prevReport.remote,
+            branch: prevReport.branch,
+            commitCount: prevReport.commitCount
+        )
+
+        // 成功 → 乐观更新 aheadCount = 0
+        if report.outcome.isSuccess {
+            if let idx = repositories.firstIndex(where: { $0.id == prevReport.repoId }) {
+                repositories[idx].aheadCount = 0
+                saveRepositoriesToDisk()
+            }
+        }
+
+        var s2 = session
+        s2.state = .completed(report)
+        pushSession = s2
+    }
+
     /// PushConfirmDialog 的"推送"按钮调用。从 preflight → running → completed。
     func executePush() async {
         guard let session = pushSession,

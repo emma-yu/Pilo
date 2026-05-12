@@ -15,6 +15,8 @@ struct PushConfirmDialog: View {
     let onDismiss: () -> Void
 
     @State private var showBypassDialog = false
+    /// History 脱钩时点"覆盖远程历史"会弹出二次确认 popover
+    @State private var showForcePushConfirm = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -693,12 +695,62 @@ struct PushConfirmDialog: View {
                 }
                 .buttonStyle(.piloSecondary)
                 Spacer()
+
+                // History 脱钩时显示 force push 按钮（金棕色警示，跟普通按钮区分）
+                if report.outcome.isHistoryDiverged {
+                    Button(Copy.Push.forcePushButton(lang)) {
+                        showForcePushConfirm = true
+                    }
+                    .buttonStyle(.piloSecondary)
+                    .foregroundStyle(Color.piloGoldDark)
+                    .popover(isPresented: $showForcePushConfirm, arrowEdge: .top) {
+                        forcePushConfirmPopover()
+                    }
+                }
+
                 Button(Copy.Push.closeButton, action: onDismiss)
                     .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
             }
         }
         .padding(24)
+    }
+
+    /// "覆盖远程历史"按钮的二次确认 popover —— 强制用户停一下、读完风险再点确认。
+    private func forcePushConfirmPopover() -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.amberWarn)
+                Text(Copy.Push.forcePushConfirmTitle(lang))
+                    .font(.piloTitle)
+                    .foregroundStyle(Color.inkPrimary)
+            }
+            Text(Copy.Push.forcePushConfirmBody(lang))
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 320, alignment: .leading)
+            HStack(spacing: 10) {
+                Spacer()
+                Button(Copy.Push.forcePushConfirmNo(lang)) {
+                    showForcePushConfirm = false
+                }
+                .buttonStyle(.piloSecondary)
+                .keyboardShortcut(.cancelAction)
+
+                Button(Copy.Push.forcePushConfirmYes(lang)) {
+                    showForcePushConfirm = false
+                    Task { await appState.forcePushCurrentSession() }
+                }
+                .buttonStyle(.piloPrimary)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(18)
+        .frame(width: 380)
+        .background(Color.piloPaper)
     }
 
     private func openTerminal(at path: String?) {

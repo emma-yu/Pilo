@@ -429,6 +429,25 @@ enum Copy {
         static let copyStderrButton  = "复制错误信息"
         static let openTerminalButton = "在终端打开"
         static let closeButton        = "关闭"
+
+        // History 脱钩 / force-with-lease 覆盖
+        static func forcePushButton(_ lang: Language) -> String {
+            lang == .zh ? "覆盖远程历史" : "Force push (overwrite remote)"
+        }
+        static func forcePushConfirmTitle(_ lang: Language) -> String {
+            lang == .zh ? "确认覆盖远程？" : "Overwrite remote?"
+        }
+        static func forcePushConfirmBody(_ lang: Language) -> String {
+            lang == .zh
+                ? "Pilo 会用 --force-with-lease：如果远程被别人 push 过会安全失败，不会盲覆盖。\n这一步不可撤销，确认吗？"
+                : "Pilo will use --force-with-lease: if someone else has pushed to the remote, it'll safely fail rather than blindly overwrite.\nThis cannot be undone — confirm?"
+        }
+        static func forcePushConfirmYes(_ lang: Language) -> String {
+            lang == .zh ? "确认覆盖" : "Yes, overwrite"
+        }
+        static func forcePushConfirmNo(_ lang: Language) -> String {
+            lang == .zh ? "再想想" : "Cancel"
+        }
         static let doneButton         = "好啦"
 
         // failure title / explanation 暂保中文
@@ -436,8 +455,10 @@ enum Copy {
             switch (outcome, tone) {
             case (.authenticationFailed, .friendly):  "🥲 没认证通过"
             case (.authenticationFailed, .minimal):   "认证失败"
-            case (.nonFastForward, .friendly):        "😯 远端有新内容"
-            case (.nonFastForward, .minimal):         "Non-fast-forward"
+            case (.nonFastForward(_, true), .friendly): "🪶 本地历史跟远程脱钩了"
+            case (.nonFastForward(_, true), .minimal):  "History 脱钩"
+            case (.nonFastForward(_, false), .friendly): "😯 远端有新内容"
+            case (.nonFastForward(_, false), .minimal):  "Non-fast-forward"
             case (.hookRejected, .friendly):          "🛑 pre-push hook 拦下了"
             case (.hookRejected, .minimal):           "Pre-push hook 拒绝"
             case (.networkError, .friendly):          "🌧️ 网络好像不通"
@@ -458,7 +479,16 @@ enum Copy {
                 • 如果用 HTTPS：在终端运行一次 `git push`，让 macOS Keychain 缓存你的 GitHub Personal Access Token
                 • 如果用 SSH：确认你的 SSH key 已经在 ssh-agent 里（`ssh-add -l`），并且公钥已加到 GitHub 设置
                 """
-            case .nonFastForward:
+            case .nonFastForward(_, true):
+                """
+                你重写过本地 history（filter-repo / rebase / commit --amend），现在跟远程没有共同祖先了。
+
+                ⚠️ 不能 pull —— 那会把远程的旧 commits 拉回来，污染你刚理干净的本地 history。
+
+                正确做法：用 force push 覆盖远程。Pilo 用的是 --force-with-lease，
+                如果远程被别人 push 过会安全失败而不会覆盖。
+                """
+            case .nonFastForward(_, false):
                 """
                 远端比本地新，需要先把远端的改动拉下来：
 

@@ -28,7 +28,54 @@ actor PushExecutor {
         setUpstream: Bool
     ) async -> PushReport {
         let result = await gitClient.push(repo: repoURL, remote: remote, branch: branch, setUpstream: setUpstream)
-        let outcome = Self.classify(result: result, commitCount: commitCount)
+        // Non-fast-forward 时进一步判断 history 是否脱钩
+        var historyDiverged = false
+        if let r = result, !r.ok {
+            let lower = r.stderr.lowercased()
+            if Self.matchesAny(lower, of: [
+                "non-fast-forward",
+                "tip of your current branch is behind",
+                "updates were rejected",
+                "fetch first",
+            ]) {
+                historyDiverged = !(await gitClient.hasCommonAncestor(
+                    repo: repoURL,
+                    ref: "\(remote)/\(branch)"
+                ))
+            }
+        }
+        let outcome = Self.classify(
+            result: result,
+            commitCount: commitCount,
+            historyDiverged: historyDiverged
+        )
+        return PushReport(
+            repoId: repoId,
+            repoName: repoName,
+            remote: remote,
+            branch: branch,
+            commitCount: commitCount,
+            outcome: outcome
+        )
+    }
+
+    /// Force push (`--force-with-lease`)。仅在 UI 二次确认后调用。
+    /// 用于解决 history 脱钩场景（filter-repo / rebase 后远程跟本地无共同祖先）。
+    func forcePush(
+        repoURL: URL,
+        repoId: UUID,
+        repoName: String,
+        remote: String,
+        branch: String,
+        commitCount: Int
+    ) async -> PushReport {
+        let result = await gitClient.forcePush(repo: repoURL, remote: remote, branch: branch)
+        // Force push 成功 = success，不再检查 historyDiverged（已经主动覆盖了远程）
+        let outcome = Self.classify(
+            result: result,
+            commitCount: commitCount,
+            historyDiverged: false
+        )
         return PushReport(
             repoId: repoId,
             repoName: repoName,
@@ -41,7 +88,13 @@ actor PushExecutor {
 
     // MARK: - stderr → PushOutcome 分类
 
-    static func classify(result: GitClient.ProcessResult?, commitCount: Int) -> PushOutcome {
+    /// historyDiverged 由 caller 通过 GitClient.hasCommonAncestor 预先判断后传入。
+    /// 仅在 non-fast-forward 分支才会被消费。
+    static func classify(
+        result: GitClient.ProcessResult?,
+        commitCount: Int,
+        historyDiverged: Bool = false
+    ) -> PushOutcome {
         guard let result else {
             return .unknown(stderr: "git command unavailable", exitCode: -1)
         }
@@ -83,14 +136,23 @@ actor PushExecutor {
             return .hookRejected(stderr: stderr)
         }
 
-        // Non-fast-forward
+        // Non-fast-forward —— 带 historyDiverged 信号
         if Self.matchesAny(lower, of: [
             "non-fast-forward",
             "tip of your current branch is behind",
             "updates were rejected",
             "fetch first",
         ]) {
-            return .nonFastForward(stderr: stderr)
+            return .nonFastForward(stderr: stderr, historyDiverged: historyDiverged)
+        }
+
+        // Force-with-lease 的 stale 拒绝 = 远程有别人 push 过；归为 nonFastForward（不脱钩）
+        if Self.matchesAny(lower, of: [
+            "stale info",
+            "remote ref is at",
+            "but expected",
+        ]) {
+            return .nonFastForward(stderr: stderr, historyDiverged: false)
         }
 
         // Authentication
@@ -109,7 +171,7 @@ actor PushExecutor {
         return .unknown(stderr: stderr, exitCode: result.exitCode)
     }
 
-    private static func matchesAny(_ haystack: String, of needles: [String]) -> Bool {
+    static func matchesAny(_ haystack: String, of needles: [String]) -> Bool {
         for n in needles where haystack.contains(n) {
             return true
         }

@@ -57,7 +57,38 @@ final class PushOutcomeTests: XCTestCase {
         hint: 'git pull ...') before pushing again.
         """
         let o = PushExecutor.classify(result: result(stderr), commitCount: 1)
-        if case .nonFastForward = o { /* ok */ } else { XCTFail("期望 nonFastForward，实际 \(o)") }
+        if case .nonFastForward(_, let diverged) = o {
+            XCTAssertFalse(diverged, "默认 historyDiverged 应为 false")
+        } else {
+            XCTFail("期望 nonFastForward，实际 \(o)")
+        }
+    }
+
+    func testNonFastForwardWithHistoryDivergedFlag() {
+        // 模拟 PushExecutor 在 caller 端检测出 historyDiverged 后传给 classify
+        let stderr = "! [rejected] main -> main (non-fast-forward)"
+        let o = PushExecutor.classify(result: result(stderr), commitCount: 1, historyDiverged: true)
+        if case .nonFastForward(_, let diverged) = o {
+            XCTAssertTrue(diverged, "传入 true 应正确传递到 outcome")
+        } else {
+            XCTFail("期望 nonFastForward(diverged: true)，实际 \(o)")
+        }
+        XCTAssertTrue(o.isHistoryDiverged, "isHistoryDiverged convenience 应返回 true")
+    }
+
+    func testForceWithLeaseStaleIsNotDiverged() {
+        // --force-with-lease 失败（远程被别人 push 过）= 普通 non-fast-forward，不脱钩
+        let stderr = """
+        ! [rejected]        main -> main (stale info)
+        error: failed to push some refs
+        hint: remote ref is at 'abc123' but expected 'def456'
+        """
+        let o = PushExecutor.classify(result: result(stderr), commitCount: 1)
+        if case .nonFastForward(_, let diverged) = o {
+            XCTAssertFalse(diverged, "stale lease 是普通 non-FF，不是 history 脱钩")
+        } else {
+            XCTFail("期望 nonFastForward，实际 \(o)")
+        }
     }
 
     // MARK: - Hook

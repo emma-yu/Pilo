@@ -302,6 +302,22 @@ actor GitClient {
         return await runGitWithTimeout(args, in: repo, timeout: 120)
     }
 
+    /// 执行 force push，默认用 `--force-with-lease`（**安全 force**：远程被别人 push 过会失败而非覆盖）。
+    /// 仅在 PushConfirmDialog 检测到 `historyDiverged` 后由用户显式确认才能调用。
+    func forcePush(repo: URL, remote: String, branch: String) async -> ProcessResult? {
+        let args = ["push", "--force-with-lease", "--porcelain", remote, branch]
+        return await runGitWithTimeout(args, in: repo, timeout: 120)
+    }
+
+    /// 检查本地 HEAD 跟远程 ref 是否有共同祖先。
+    /// 没有共同祖先 = history 被重写过（filter-repo / rebase / amend），pull 会污染本地。
+    /// `git merge-base ref1 ref2` exit 0 = 有共同祖先；exit != 0 = 无共同祖先 / 引用不存在。
+    func hasCommonAncestor(repo: URL, ref: String) async -> Bool {
+        guard let r = await runGit(["merge-base", ref, "HEAD"], in: repo) else { return false }
+        // exit 0 + stdout 非空 = 有共同祖先
+        return r.ok && !r.stdout.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     // MARK: - 内部进程执行
 
     private func runGit(_ args: [String], in repo: URL) async -> ProcessResult? {
