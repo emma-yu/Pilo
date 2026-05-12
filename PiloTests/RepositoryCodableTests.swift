@@ -104,4 +104,50 @@ final class RepositoryCodableTests: XCTestCase {
         XCTAssertFalse(decoded.url.contains("ghp_"), "decode 后必须也脱敏")
         XCTAssertFalse(decoded.url.contains("x:"), "decode 后必须也脱敏")
     }
+
+    // MARK: - Commit 通知字段向后兼容
+
+    func testCommitNotificationFieldsRoundTrip() throws {
+        let original = Repository(
+            path: "/Users/test/Code/example",
+            latestCommitHash: "abc1234",
+            lastNotifiedCommitHash: "def5678"
+        )
+        let data = try JSONEncoder.pilo.encode(original)
+        let decoded = try JSONDecoder.pilo.decode(Repository.self, from: data)
+        XCTAssertEqual(decoded.latestCommitHash, "abc1234")
+        XCTAssertEqual(decoded.lastNotifiedCommitHash, "def5678")
+    }
+
+    func testLegacyStateJSONWithoutNotificationFields() throws {
+        // 模拟旧版 state.json：完全没有 latestCommitHash / lastNotifiedCommitHash
+        // —— decode 必须不抛错，两个字段 fallback 为 nil
+        let legacyJSON = """
+        {
+          "id": "00000000-0000-0000-0000-000000000001",
+          "pathHash": "abc",
+          "path": "/x",
+          "name": "x",
+          "aheadCount": 0,
+          "behindCount": 0,
+          "uncommittedCount": 0,
+          "lastFetchSuccess": false,
+          "remotes": [],
+          "defaultPushRemote": "origin",
+          "isHidden": false,
+          "customTags": [],
+          "lastScanDate": "2026-01-01T00:00:00Z",
+          "skipFetch": false,
+          "skipMainBranchWarning": false,
+          "falsePositiveMarks": [],
+          "category": "unset",
+          "hasReadme": false,
+          "hasTests": false,
+          "hiddenDocPaths": []
+        }
+        """.data(using: .utf8)!
+        let decoded = try JSONDecoder.pilo.decode(Repository.self, from: legacyJSON)
+        XCTAssertNil(decoded.latestCommitHash, "旧 state.json fallback → nil")
+        XCTAssertNil(decoded.lastNotifiedCommitHash, "旧 state.json fallback → nil")
+    }
 }

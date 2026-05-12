@@ -27,6 +27,9 @@ enum SettingsKey: String {
 
     /// 用户在信件里被称呼的名字。空则 fallback 到 git config user.name，再 fallback 到 "朋友"
     case userDisplayName
+
+    /// Commit 通知（macOS 推送）。默认 OFF，opt-in only —— 避免用户首次使用就被通知轰炸
+    case enableCommitNotifications
 }
 
 enum AppSettingsDefaults {

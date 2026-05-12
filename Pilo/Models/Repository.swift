@@ -52,6 +52,15 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
     /// 文件被删 / 重命名后，旧 path 自然失效（下次扫不到，filter 不会误显示）。
     var hiddenDocPaths: Set<String>
 
+    /// 当前 HEAD commit 的 short hash（每次 scan 填）。用于检测"有没有新 commit"。
+    var latestCommitHash: String?
+
+    /// 上次通过通知"投递过"的 commit hash。用来：
+    ///   - 首次扫盘静默：scan 时 lastNotifiedCommitHash = latestCommitHash，不发通知
+    ///   - 后续 diff：latestCommitHash != lastNotifiedCommitHash → 拉新 commits + 发通知
+    /// 持久化到 state.json，跨重启保留
+    var lastNotifiedCommitHash: String?
+
     init(
         id: UUID = UUID(),
         path: String,
@@ -76,7 +85,9 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         hasReadme: Bool = false,
         hasTests: Bool = false,
         lastViewedDate: Date? = nil,
-        hiddenDocPaths: Set<String> = []
+        hiddenDocPaths: Set<String> = [],
+        latestCommitHash: String? = nil,
+        lastNotifiedCommitHash: String? = nil
     ) {
         self.id = id
         self.pathHash = Self.hash(path: path)
@@ -103,6 +114,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.hasTests = hasTests
         self.lastViewedDate = lastViewedDate
         self.hiddenDocPaths = hiddenDocPaths
+        self.latestCommitHash = latestCommitHash
+        self.lastNotifiedCommitHash = lastNotifiedCommitHash
     }
 
     // Codable 向后兼容：旧 state.json 没有新字段时使用默认值。
@@ -111,7 +124,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
              uncommittedCount, lastCommitDate, lastFetchDate, lastFetchSuccess,
              remotes, defaultPushRemote, firstCommitHash, isHidden, customTags,
              lastScanDate, skipFetch, skipMainBranchWarning, falsePositiveMarks,
-             category, hasReadme, hasTests, lastViewedDate, hiddenDocPaths
+             category, hasReadme, hasTests, lastViewedDate, hiddenDocPaths,
+             latestCommitHash, lastNotifiedCommitHash
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -143,6 +157,10 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.lastViewedDate = try c.decodeIfPresent(Date.self, forKey: .lastViewedDate)
         // 用户在小邮局里隐藏的文档：旧 state.json 没有 → 空集合
         self.hiddenDocPaths = try c.decodeIfPresent(Set<String>.self, forKey: .hiddenDocPaths) ?? []
+        // Commit 通知：旧 state.json 没有这两个字段 → nil
+        // nil → 首次扫盘后会被静默初始化为 latestCommitHash，不会发通知风暴
+        self.latestCommitHash = try c.decodeIfPresent(String.self, forKey: .latestCommitHash)
+        self.lastNotifiedCommitHash = try c.decodeIfPresent(String.self, forKey: .lastNotifiedCommitHash)
     }
 
     static func hash(path: String) -> String {

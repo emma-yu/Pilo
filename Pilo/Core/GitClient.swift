@@ -124,6 +124,50 @@ actor GitClient {
         return trimmed.isEmpty ? nil : trimmed
     }
 
+    /// Commit 通知：当前 HEAD 的 short hash。每次 scan 拉一次。
+    /// 仓库没 commit / 不是 git 仓库 / detached + 空 → nil。
+    func latestCommitHash(repo: URL) async -> String? {
+        guard let r = await runGit(["rev-parse", "--short", "HEAD"], in: repo), r.ok else { return nil }
+        let trimmed = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// Commit 通知：从 `from`（不含）到 `to`（含）之间的 commits，按时间倒序。
+    /// from 失效 / 不在 history（rebase 重写过）→ 返回空数组，调用方应静默 reset baseline。
+    func commitsBetween(repo: URL, from: String, to: String) async -> [CommitSummary] {
+        // 先确认 from 仍存在（rebase / squash 后 from 可能消失）
+        guard let exists = await runGit(["rev-parse", "--verify", "--quiet", from], in: repo),
+              exists.ok else { return [] }
+
+        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
+        guard let r = await runGit(
+            ["log", "\(from)..\(to)", "--format=\(format)"],
+            in: repo
+        ), r.ok else { return [] }
+
+        var out: [CommitSummary] = []
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
+            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+            guard cols.count >= 4 else { continue }
+            guard let ts = TimeInterval(cols[2]) else { continue }
+            let author = cols[3]
+            let email = cols.count >= 5 ? cols[4] : nil
+            let likelihood = AICommitDetector.detect(
+                author: author, authorEmail: email,
+                subject: cols[1], changedFileCount: 0
+            )
+            out.append(CommitSummary(
+                hash: cols[0],
+                subject: cols[1],
+                date: Date(timeIntervalSince1970: ts),
+                author: author,
+                authorEmail: email,
+                aiLikelihood: likelihood
+            ))
+        }
+        return out
+    }
+
     // MARK: - Push 相关查询
 
     /// 当前分支的 upstream，例如 `origin/main`。无配置返回 nil。

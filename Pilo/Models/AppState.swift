@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Observation
+@preconcurrency import UserNotifications
 
 /// 跨 Scene 共享的应用状态。使用 Observation 框架而非 ObservableObject（macOS 14+）。
 ///
@@ -20,6 +21,7 @@ final class AppState {
     let visibilityClient: GitHubVisibilityClient
     let dailyDigestService: DailyDigestService
     let letterComposer: LetterComposer
+    let commitNotifier: CommitNotifier
     private let fsMonitor: FSEventMonitor
 
     // MARK: - 仓库可见性缓存（24h TTL）
@@ -187,6 +189,13 @@ final class AppState {
     /// 信件称呼用的用户名字。空 = fallback 到 git config user.name，再 fallback 到 "朋友"
     var userDisplayName: String = ""
 
+    /// Commit 通知开关（镜像 UserDefaults + UN center 权限实际状态合取）
+    /// 启动时：UserDefaults 说 true 但系统权限被撤 → 此处也是 false（不会偷偷发通知）
+    var enableCommitNotifications: Bool = false
+
+    /// 通知点击 delegate（强引用 —— UN center.delegate 是 weak）
+    private var notificationDelegate: CommitNotificationDelegate?
+
     /// S2 跨 Repo 工作日报 —— 当前刚算出的 daily digest（每次 rescan / 5min 刷一次）
     var dailyDigest: DailyDigest?
     private var dailyDigestTask: Task<Void, Never>?
@@ -212,6 +221,7 @@ final class AppState {
         self.visibilityClient = GitHubVisibilityClient()
         self.dailyDigestService = DailyDigestService(gitClient: git)
         self.letterComposer = LetterComposer(gitClient: git)
+        self.commitNotifier = CommitNotifier()
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -270,6 +280,14 @@ final class AppState {
             }
         }
 
+        // 安装通知点击 delegate —— 无论用户当前开没开通知都装：
+        // 防御场景：用户在系统设置里把权限重开后，老通知（如果存在）也能正确路由
+        installNotificationDelegate()
+
+        // 恢复 Commit 通知偏好。注意：opt-in only —— 用户没在 Settings 主动打开过 → 永远 false
+        // 即使 UserDefaults 是 true，也要再 check 系统权限是否被撤销（在 macOS 系统设置里手动关）
+        await restoreCommitNotificationState()
+
         // 即使没有 watch dirs 也标记完成；空状态由 view 决定显示什么
         if watchDirectories.isEmpty {
             isInitialScanComplete = true
@@ -277,6 +295,57 @@ final class AppState {
         }
         await rescan()
         restartFSMonitor()
+    }
+
+    /// 安装通知 delegate —— 通知被点 → 跳到对应 repo 并打开主窗
+    private func installNotificationDelegate() {
+        let weakSelf = self
+        let delegate = CommitNotificationDelegate { [weak weakSelf] repoId in
+            guard let self = weakSelf else { return }
+            // 通知 → 打开主窗 + 选中 repo（如果还在仓库列表里）
+            if self.repositories.contains(where: { $0.id == repoId }) {
+                self.selectRepo(repoId)
+            }
+        }
+        self.notificationDelegate = delegate
+        UNUserNotificationCenter.current().delegate = delegate
+    }
+
+    /// 启动时调用：UserDefaults 持久化的开关 ∧ 系统当前授权状态。
+    /// 任一为 false → enabled 为 false（避免偷偷发通知）
+    private func restoreCommitNotificationState() async {
+        let userPref = UserDefaults.standard.bool(forKey: SettingsKey.enableCommitNotifications.rawValue)
+        guard userPref else {
+            self.enableCommitNotifications = false
+            return
+        }
+        // 用户之前开过 —— check 系统权限是否还在
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        let granted = settings.authorizationStatus == .authorized
+                   || settings.authorizationStatus == .provisional
+        if granted {
+            _ = await commitNotifier.enable()
+            self.enableCommitNotifications = true
+        } else {
+            // 用户在系统设置里关了 —— 静默降级，下次他打开 Settings 看到 toggle off 自然
+            self.enableCommitNotifications = false
+            UserDefaults.standard.set(false, forKey: SettingsKey.enableCommitNotifications.rawValue)
+        }
+    }
+
+    /// 用户在 Settings 切 Commit 通知 toggle 时调用。
+    /// 打开 → 请求权限；权限被拒 → 同步把 state 改回 false
+    /// 关闭 → 立即停 actor + 清掉 pending
+    func setCommitNotifications(_ on: Bool) async {
+        if on {
+            let granted = await commitNotifier.enable()
+            self.enableCommitNotifications = granted
+            UserDefaults.standard.set(granted, forKey: SettingsKey.enableCommitNotifications.rawValue)
+        } else {
+            await commitNotifier.disable()
+            self.enableCommitNotifications = false
+            UserDefaults.standard.set(false, forKey: SettingsKey.enableCommitNotifications.rawValue)
+        }
     }
 
     /// 用当前 watchDirectories 重启 FSEvent 监听，并消费事件做 500ms 防抖后触发 rescan。
@@ -1036,10 +1105,42 @@ final class AppState {
 
     func applyScanResult(_ scanned: [Repository]) {
         // 按 pathHash 合并：保留旧条目的用户手设字段（category / customTags / isHidden / skipFetch 等）。
-        // fresh 提供的字段：git 状态、health 检测、remotes。
+        // fresh 提供的字段：git 状态、health 检测、remotes、latestCommitHash。
         var byHash = Dictionary(uniqueKeysWithValues: repositories.map { ($0.pathHash, $0) })
+
+        // 收集 commit diff：[(repoId, repoName, repoPath, prevHash, newHash)]
+        // 在循环里 build；循环外 dispatch async fetch + notify（一次性，避免 N task）
+        var diffs: [CommitDiff] = []
+
         for var fresh in scanned {
             if let prior = byHash[fresh.pathHash] {
+                // === Commit 通知：决定 baseline ===
+                // prior.lastNotifiedCommitHash 没有 → 这是第一次见 latestHash（旧 state.json 升级 / 用户首次开通知）
+                //   → 静默 baseline 到 fresh.latestCommitHash，不发通知
+                // prior.lastNotifiedCommitHash 有 && 等于 fresh.latestCommitHash → 没新 commit，原样
+                // prior.lastNotifiedCommitHash 有 && 不等于 fresh.latestCommitHash → 有新 commit，
+                //   发通知 + baseline 推进
+                let priorBaseline = prior.lastNotifiedCommitHash
+                let newHead = fresh.latestCommitHash
+                var nextBaseline: String? = priorBaseline ?? newHead
+
+                if let prev = priorBaseline,
+                   let head = newHead,
+                   prev != head,
+                   enableCommitNotifications {
+                    diffs.append(CommitDiff(
+                        repoId: prior.id,
+                        repoName: prior.name,
+                        repoPath: fresh.path,
+                        prevHash: prev,
+                        newHash: head
+                    ))
+                    nextBaseline = head
+                } else if priorBaseline == nil {
+                    // 首次 baseline —— 不发通知
+                    nextBaseline = newHead
+                }
+
                 fresh = Repository(
                     id: prior.id,
                     path: fresh.path,
@@ -1067,8 +1168,14 @@ final class AppState {
                     // Resume Work：lastViewedDate 用户行为产物，scan 不覆盖
                     lastViewedDate: prior.lastViewedDate,
                     // 文档隐藏：用户分拣，scan 不覆盖
-                    hiddenDocPaths: prior.hiddenDocPaths
+                    hiddenDocPaths: prior.hiddenDocPaths,
+                    // Commit 通知 baselines
+                    latestCommitHash: newHead,
+                    lastNotifiedCommitHash: nextBaseline
                 )
+            } else {
+                // 全新发现的仓库 —— 静默 baseline；下次 scan 才开始算 diff
+                fresh.lastNotifiedCommitHash = fresh.latestCommitHash
             }
             byHash[fresh.pathHash] = fresh
         }
@@ -1077,6 +1184,44 @@ final class AppState {
         let merged = byHash.values.filter { freshHashes.contains($0.pathHash) }
         self.repositories = Array(merged)
         saveRepositoriesToDisk()
+
+        // 通知 dispatch —— 异步拉 commits + enqueue
+        // 必须在 saveRepositoriesToDisk 之后跑：baseline 已落盘，即便此处崩溃
+        // 下次启动也不会重发通知风暴
+        if !diffs.isEmpty && enableCommitNotifications {
+            dispatchCommitNotifications(diffs)
+        }
+    }
+
+    private struct CommitDiff: Sendable {
+        let repoId: UUID
+        let repoName: String
+        let repoPath: String
+        let prevHash: String
+        let newHash: String
+    }
+
+    /// 异步：对每个 diff 拉新 commits + enqueue notifier
+    /// 不阻塞 UI；失败静默（commitsBetween 可能因 rebase 失效返回空，notifier 自然 no-op）
+    private func dispatchCommitNotifications(_ diffs: [CommitDiff]) {
+        let gc = gitClient
+        let notifier = commitNotifier
+        Task.detached {
+            for diff in diffs {
+                let commits = await gc.commitsBetween(
+                    repo: URL(fileURLWithPath: diff.repoPath),
+                    from: diff.prevHash,
+                    to: diff.newHash
+                )
+                guard !commits.isEmpty else { continue }
+                await notifier.enqueue(
+                    repoId: diff.repoId,
+                    repoName: diff.repoName,
+                    latestHash: diff.newHash,
+                    commits: commits
+                )
+            }
+        }
     }
 }
 

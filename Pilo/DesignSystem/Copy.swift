@@ -1171,6 +1171,31 @@ enum Copy {
         }
     }
 
+    // MARK: - Commit 通知（opt-in 本地新邮件提醒）
+
+    enum Notification {
+        /// Settings section 标题
+        static func sectionHeader(_ lang: Language) -> String {
+            lang == .zh ? "通知 / Notifications" : "Notifications / 通知"
+        }
+        /// Toggle 主标题
+        static func toggleTitle(_ lang: Language) -> String {
+            lang == .zh ? "新邮件提醒" : "New mail alerts"
+        }
+        /// Toggle hint —— 解释做什么 + 隐私不打扰
+        static func toggleHint(_ lang: Language) -> String {
+            lang == .zh
+                ? "扫到新 commit 时给你一封系统通知（默认关，需 macOS 通知权限）"
+                : "Banner when a new commit is detected (off by default; needs macOS permission)"
+        }
+        /// 解释 throttle 行为
+        static func coalesceFooter(_ lang: Language) -> String {
+            lang == .zh
+                ? "Pilo 会等你停下手 60 秒后再投递 —— 不会一直叮叮咚咚"
+                : "Pilo waits 60s of quiet before delivery — no constant pings"
+        }
+    }
+
     // MARK: - S1 AI Push Guard
 
     enum AIAudit {

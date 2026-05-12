@@ -79,6 +79,9 @@ struct SettingsView: View {
                     // 信件称呼 —— 信件里 Pilo 怎么叫你
                     addresseeSection
 
+                    // Commit 通知 —— opt-in，本地新邮件提醒
+                    commitNotificationSection
+
                     // S3 Identity Sentinel —— 身份分拣
                     identityPoolSection
                 }
@@ -120,6 +123,65 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5)
             )
+        }
+    }
+
+    // MARK: - Commit 通知 · opt-in 本地新邮件提醒
+
+    @ViewBuilder
+    private var commitNotificationSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.s) {
+            sectionLabel(Copy.Notification.sectionHeader(lang))
+
+            HStack(alignment: .center, spacing: 12) {
+                // 邮戳风小图标，跟卡片视觉一致；不放系统 bell 那种 OS 通知图，避免抢戏
+                Image(systemName: "envelope.badge")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.piloGoldDark)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle()
+                            .fill(Color.piloGold.opacity(0.12))
+                    )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(Copy.Notification.toggleTitle(lang))
+                        .font(.piloSection)
+                        .foregroundStyle(Color.inkPrimary)
+                    Text(Copy.Notification.toggleHint(lang))
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: Binding(
+                    get: { appState.enableCommitNotifications },
+                    set: { newValue in
+                        Task { await appState.setCommitNotifications(newValue) }
+                    }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .tint(Color.piloGoldDark)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
+            )
+
+            Text(Copy.Notification.coalesceFooter(lang))
+                .font(.piloSerifCaption)
+                .italic()
+                .foregroundStyle(Color.inkTertiary)
+                .padding(.top, 2)
         }
     }
 

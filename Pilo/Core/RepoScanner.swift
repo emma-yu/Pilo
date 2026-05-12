@@ -108,12 +108,14 @@ actor RepoScanner {
         async let remotes = gitClient.remotes(repo: url)
         async let lastCommit = gitClient.lastCommitDate(repo: url)
         async let firstCommit = gitClient.firstCommitHash(repo: url)
+        async let latestHash = gitClient.latestCommitHash(repo: url)
 
         let b = await branch
         let unc = await uncommitted
         let rem = await remotes
         let last = await lastCommit
         let first = await firstCommit
+        let latest = await latestHash
 
         var ahead = 0
         var behind = 0
@@ -136,7 +138,11 @@ actor RepoScanner {
             remotes: rem,
             firstCommitHash: first,
             hasReadme: health.hasReadme,
-            hasTests: health.hasTests
+            hasTests: health.hasTests,
+            latestCommitHash: latest
+            // lastNotifiedCommitHash 故意不在 scan 时设：
+            // AppState.applyScanResult 会做 diff —— 老仓库继承之前的值，
+            // 首次见到的仓库由 AppState 静默初始化为 latestHash（不发通知）
         )
     }
 }
