@@ -1047,6 +1047,17 @@ enum Copy {
         }
     }
 
+    // MARK: - 关于页面
+
+    enum About {
+        static func reopenOnboarding(_ lang: Language) -> String {
+            lang == .zh ? "再看一次新手引导" : "Replay onboarding"
+        }
+        static func reopenOnboardingHint(_ lang: Language) -> String {
+            lang == .zh ? "重置引导状态并打开 4 屏" : "Reset onboarding state and reopen the 4-screen flow"
+        }
+    }
+
     // MARK: - Markdown 预览 sheet
 
     enum Preview {

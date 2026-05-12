@@ -62,12 +62,9 @@ struct ProjectDocsPanel: View {
 
     private var header: some View {
         HStack(spacing: 8) {
-            // 邮票 icon —— "项目文档 = 项目的集邮册" 装饰
-            Image("PostalStamp")
-                .resizable()
-                .interpolation(.high)
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 22, height: 22)
+            Image(systemName: "envelope.open")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.piloGoldDark)
             Text(Copy.Docs.sectionTitle(count: docs.count, lang))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkPrimary)

@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
 
     @Environment(AppState.self) private var appState
+    @Environment(\.openWindow) private var openWindow
     @State private var pasteText: String = ""
     @State private var pasteError: String? = nil
 
@@ -478,6 +479,24 @@ struct SettingsView: View {
                             .textSelection(.enabled)
                     }
                 }
+
+                // 「再看一次新手引导」入口 —— 用户可以随时重看 4 屏引导
+                Button {
+                    UserDefaults.standard.set(false, forKey: SettingsKey.hasCompletedOnboarding.rawValue)
+                    UserDefaults.standard.synchronize()
+                    openWindow(id: "onboarding")
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "arrow.counterclockwise.circle")
+                            .font(.system(size: 11))
+                        Text(Copy.About.reopenOnboarding(lang))
+                            .font(.piloSerifCaption)
+                    }
+                    .foregroundStyle(Color.piloGoldDark)
+                }
+                .buttonStyle(.plain)
+                .help(Copy.About.reopenOnboardingHint(lang))
+
                 Spacer(minLength: 0)
             }
             .padding(PiloSpacing.xl)
