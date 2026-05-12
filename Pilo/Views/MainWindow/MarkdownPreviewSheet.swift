@@ -17,6 +17,12 @@ struct MarkdownPreviewSheet: View {
     /// 复制全文后短暂显示 ✓ 反馈
     @State private var justCopied = false
 
+    /// 当前可见的 top block index —— `.scrollPosition(id:)` 双向绑定
+    /// onAppear 恢复 → 滚动到 saved；用户滚动 → 实时跟随 → onDisappear 存盘
+    @State private var scrolledBlockID: Int?
+    /// 防止 onAppear 多次触发恢复（保险，理论上 onAppear 只触发一次）
+    @State private var hasRestoredScroll = false
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -95,9 +101,10 @@ struct MarkdownPreviewSheet: View {
             errorState(err)
         } else if let mdDoc = appState.previewDocument {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(mdDoc.blocks.enumerated()), id: \.offset) { _, block in
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(mdDoc.blocks.enumerated()), id: \.offset) { i, block in
                         BlockView(block: block)
+                            .id(i)   // .scrollPosition target —— blockIndex 作 ID
                     }
                     Spacer(minLength: 40)
                 }
@@ -105,6 +112,29 @@ struct MarkdownPreviewSheet: View {
                 .padding(.vertical, 28)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .textSelection(.enabled)
+                .scrollTargetLayout()
+            }
+            .scrollPosition(id: $scrolledBlockID)
+            .onAppear {
+                // 恢复上次滚动位置
+                guard !hasRestoredScroll, !mdDoc.blocks.isEmpty else { return }
+                hasRestoredScroll = true
+                if let saved = DocReadingMemory.savedBlockIndex(
+                    repoPath: repoPath,
+                    docRelativePath: doc.relativePath
+                ), saved > 0, saved < mdDoc.blocks.count {
+                    scrolledBlockID = saved
+                }
+            }
+            .onDisappear {
+                // 保存当前位置 —— 即便是 0（用户主动滚回顶就该记住）
+                if let id = scrolledBlockID, id >= 0 {
+                    DocReadingMemory.save(
+                        blockIndex: id,
+                        repoPath: repoPath,
+                        docRelativePath: doc.relativePath
+                    )
+                }
             }
         } else {
             loadingState
