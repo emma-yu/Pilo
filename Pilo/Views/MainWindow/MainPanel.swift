@@ -85,8 +85,10 @@ private struct PanelHeader: View {
 
     private var healthPill: some View {
         let healthy = appState.gitExecutablePath != nil
+        // 注意：Pilo 只检测了 git 二进制是否存在，没真的验证 SSH key / GitHub PAT
+        // / 网络。所以这里只能诚实说"Git 就绪"，不能假装 SSH/Token 都验证过。
         let text = healthy
-            ? (lang == .zh ? "SSH · Token · 一切都好" : "SSH · Token · All good")
+            ? (lang == .zh ? "Git 就绪" : "Git ready")
             : (lang == .zh ? "未找到 git" : "git missing")
         let tint: Color = healthy ? .stampMint : .roseDanger
 

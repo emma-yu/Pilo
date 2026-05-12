@@ -942,7 +942,8 @@ enum Copy {
             if let days = daysSinceViewed {
                 if lang == .zh {
                     if days == 0 {
-                        parts.append("今天刚见过")
+                        // 之前是"今天刚见过"——"刚"暗示几分钟前，实际可能几小时前，所以去掉
+                        parts.append("今天见过")
                     } else if days == 1 {
                         parts.append("上次是昨天")
                     } else {
@@ -950,7 +951,7 @@ enum Copy {
                     }
                 } else {
                     if days == 0 {
-                        parts.append("Saw you earlier today")
+                        parts.append("Seen earlier today")
                     } else if days == 1 {
                         parts.append("Last seen yesterday")
                     } else {
