@@ -323,8 +323,9 @@ private struct PanelDetail: View {
             isStampPickerOpen.toggle()
         } label: {
             HStack(spacing: 6) {
-                // 24pt 缩略邮戳——足够让用户看清主图（家/齿轮/烧瓶），又不抢标题
-                StampBadge(category: repo.category, size: 24)
+                // Trigger 处用简笔字戳——20pt 圆 + Songti 楷书单字，跟标题衬线和谐
+                // 完整插画留在 popover 里独享视觉冲击
+                StampBadge(category: repo.category, size: 20, style: .glyph)
                 Text(stampTriggerLabel(for: repo.category))
                     .font(.piloSerifCaption)
                     .italic()
@@ -761,21 +762,33 @@ private struct MiniGhostButtonStyle: ButtonStyle {
 
 // MARK: - 邮戳印章组件（可复用）
 
-/// 圆形邮戳。两种态：
-///   - unset：金色虚线圆 + sparkle 小光（暗示"还没贴"）
-///   - 已贴：用户提供的插画邮戳 asset（圆形封边 + 弧形英文 + 中央插画）+ -3° 轻微旋转 + 软阴影
+/// 圆形邮戳。三种渲染风格：
+///   - unset：金色虚线圆 + sparkle 小光（暗示"还没贴"），无 style 区分
+///   - .illustrated：完整插画 asset（用于 popover 64pt"挑邮戳"时刻）
+///   - .glyph：Songti 楷书单字 + 实色圆（用于 trigger 20pt"已贴轻量标记"）
 ///
-/// 不持有 state，纯渲染。可在 detail trigger（24pt）/ popover card（64pt）等位置复用。
+/// 分层逻辑：完整插画是"挑选的高光"，简笔字戳是"贴好的确认"，两者并存避免
+/// 在小尺寸上糊掉细节又能在 trigger 处跟 Songti 标题视觉和谐。
 private struct StampBadge: View {
+    enum Style {
+        case illustrated   // 完整插画 asset，适合 ≥48pt
+        case glyph         // Songti 楷书 + 实色圆，适合 ≤24pt
+    }
+
     let category: RepoCategory
-    /// 圆直径
     let size: CGFloat
+    var style: Style = .illustrated
 
     var body: some View {
-        if category == .unset {
-            unsetBadge
-        } else {
-            filledBadge
+        Group {
+            if category == .unset {
+                unsetBadge
+            } else {
+                switch style {
+                case .illustrated: illustratedBadge
+                case .glyph:       glyphBadge
+                }
+            }
         }
     }
 
@@ -791,8 +804,8 @@ private struct StampBadge: View {
             )
     }
 
-    /// 已贴：直接使用插画邮戳 asset，保留 -3° 旋转 + 软阴影增强"盖戳"的物理感
-    private var filledBadge: some View {
+    /// 完整插画邮戳（popover 大尺寸专用）：保留 -3° 旋转 + 软阴影加"盖在纸上"质感
+    private var illustratedBadge: some View {
         Image(assetName)
             .resizable()
             .interpolation(.high)
@@ -802,13 +815,45 @@ private struct StampBadge: View {
             .shadow(color: Color.black.opacity(0.10), radius: 1.5, y: 0.8)
     }
 
-    /// Asset 名（对应 Pilo/Resources/Assets.xcassets/ 里的 imageset）
+    /// 简笔字戳（trigger 小尺寸专用）：实色圆 + 楷书白字 + 极轻微 -3° 旋转
+    /// 跟 Songti 标题视觉和谐：小、单色、留白多，但仍带邮戳的歪度
+    private var glyphBadge: some View {
+        Text(stampGlyph)
+            .font(.custom("Songti SC", size: size * 0.58).weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: size, height: size)
+            .background(Circle().fill(stampColor))
+            .rotationEffect(.degrees(-3))
+            .shadow(color: stampColor.opacity(0.25), radius: 0.8, y: 0.5)
+    }
+
+    /// 完整插画 asset 名
     private var assetName: String {
         switch category {
         case .work:       return "CategoryStampWork"
         case .personal:   return "CategoryStampPersonal"
         case .experiment: return "CategoryStampExperiment"
         case .unset:      return ""
+        }
+    }
+
+    /// 简笔字戳：楷书单字
+    private var stampGlyph: String {
+        switch category {
+        case .work:       return "工"
+        case .personal:   return "私"
+        case .experiment: return "试"
+        case .unset:      return ""
+        }
+    }
+
+    /// 简笔字戳的背景色（跟 sidebar dot / health pill 类别色一致）
+    private var stampColor: Color {
+        switch category {
+        case .work:       return .piloBlue
+        case .personal:   return .piloGold
+        case .experiment: return .lavenderInfo
+        case .unset:      return .piloGold
         }
     }
 }
