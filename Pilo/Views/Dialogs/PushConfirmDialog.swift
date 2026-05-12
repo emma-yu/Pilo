@@ -683,10 +683,10 @@ struct PushConfirmDialog: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: 360)
-            ProgressView()
-                .controlSize(.small)
-                .tint(Color.piloGoldDark)
-                .padding(.top, 4)
+            // 邮局风波浪 dots —— 替代系统 ProgressView 菊花
+            // 跟 sidebar 扫盘 indicator 同一动画原语，整个 app 一套 loading 语言
+            PostalWaveDots(size: 6)
+                .padding(.top, 8)
             Spacer()
         }
         .padding(24)

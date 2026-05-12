@@ -52,8 +52,18 @@ struct MarkdownPreviewSheet: View {
             }
             content
         }
-        .frame(width: 720, height: 820)
+        // 可拖拽：默认 960×880，最小 720×600（再小布局崩），最大不限
+        .frame(
+            minWidth: 720,
+            idealWidth: 960,
+            maxWidth: .infinity,
+            minHeight: 600,
+            idealHeight: 880,
+            maxHeight: .infinity
+        )
         .background(Color.piloPaper.opacity(0.95))
+        // macOS sheet 默认 NSWindow styleMask 不含 .resizable —— 手动开启让用户拖动
+        .background(WindowResizableEnabler())
         .onChange(of: searchQuery) { _, newQuery in
             recomputeSearch(query: newQuery)
         }
@@ -272,11 +282,9 @@ struct MarkdownPreviewSheet: View {
     }
 
     private var loadingState: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Spacer()
-            ProgressView()
-                .controlSize(.small)
-                .tint(Color.piloGoldDark)
+            PostalWaveDots()
             Text(Copy.Preview.loading(lang))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkSecondary)
@@ -553,5 +561,35 @@ private struct MarkdownErrorButtonStyle: ButtonStyle {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .stroke(Color.piloBlue.opacity(0.4), lineWidth: 0.5)
             )
+    }
+}
+
+// MARK: - NSWindow 可拖拽桥接
+
+/// SwiftUI `.sheet` 默认 NSWindow 不含 `.resizable` —— 这个 NSViewRepresentable
+/// 在 view 挂载后取到底层 NSWindow，给它加上 `.resizable` style mask，让用户
+/// 能从右下角拖动 sheet 改尺寸。
+///
+/// 用法：作为 `.background(...)` 挂在 root view 即可（无 UI）。
+private struct WindowResizableEnabler: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        // 等 view 挂上 window 后再改 styleMask
+        DispatchQueue.main.async {
+            applyResizable(to: view.window)
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        // sheet 重新呈现时也跑一次（保险）
+        DispatchQueue.main.async {
+            applyResizable(to: nsView.window)
+        }
+    }
+
+    private func applyResizable(to window: NSWindow?) {
+        guard let window else { return }
+        window.styleMask.insert(.resizable)
     }
 }
