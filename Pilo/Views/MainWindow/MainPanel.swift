@@ -253,15 +253,22 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // 标题行：repo 名 + category chip + 右上 PrivacyPill
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    // 标题行：repo 名 + 大邮戳 overlay（部分压在标题字上）+ PrivacyPill
+                    // 邮戳不在 HStack 里 —— 它作为 Title 的 overlay，可"超出"文字行
+                    HStack(alignment: .top, spacing: 12) {
                         Text(repo.name)
                             .font(.piloSerifHero)
                             .tracking(0.5)
                             .foregroundStyle(Color.inkPrimary)
-                        categoryChip(for: repo)
-                        Spacer(minLength: 12)
+                            .padding(.trailing, 44)   // 留位给 stamp 部分超出
+                            .padding(.top, 8)          // 让 stamp 顶部有空间往上"歪"
+                            .overlay(alignment: .topTrailing) {
+                                stampOverlay(for: repo)
+                                    .offset(x: 28, y: -14)   // 部分压在标题字 / 部分超出
+                            }
+                        Spacer(minLength: 8)
                         PrivacyPill(repoId: repo.id)
+                            .padding(.top, 4)
                     }
 
                     // mono 路径 + 分支
@@ -315,46 +322,22 @@ private struct PanelDetail: View {
 
     // MARK: - Phase B: Project Inventory pieces
 
-    /// 标题行右侧的"贴邮戳" trigger + 自定义 popover 选择器。
-    /// 视觉：圆形印章造型（unset → dashed 金色圈 + sparkle / 已选 → 实心圆 + 楷书白字 + -3° 旋转）
-    @ViewBuilder
-    private func categoryChip(for repo: Repository) -> some View {
+    /// 标题右上方的大邮戳 overlay —— 60pt + 倾斜 + 部分压在标题字上。
+    /// unset 时是 dashed 金圈 + sparkle（"待盖印的圆位置"），点击触发 popover；
+    /// 已贴时是双线圆环 + 楷书字戳（油墨痕迹），点击重选。
+    private func stampOverlay(for repo: Repository) -> some View {
         Button {
             isStampPickerOpen.toggle()
         } label: {
-            HStack(spacing: 6) {
-                // Trigger 处用简笔字戳——双线圆环 + 楷书单字 + -5° 倾斜
-                // 模拟"盖在纸上的油墨邮戳"，跟 Songti 标题衬线和谐
-                // 完整插画留在 popover 里独享视觉冲击
-                StampBadge(category: repo.category, size: 22, style: .glyph)
-                Text(stampTriggerLabel(for: repo.category))
-                    .font(.piloSerifCaption)
-                    .italic()
-                    .foregroundStyle(stampLabelColor(repo.category))
-            }
-            .padding(.horizontal, 4)
-            .padding(.vertical, 2)
-            .contentShape(Rectangle())
+            StampBadge(category: repo.category, size: 60, style: .glyph)
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .help(Copy.Inventory.categoryPickerPrompt(lang))
+        .help(repo.category == .unset
+              ? Copy.Inventory.categoryPickerPrompt(lang)
+              : Copy.Inventory.categoryLabel(repo.category, lang))
         .popover(isPresented: $isStampPickerOpen, arrowEdge: .top) {
             stampPickerPopover(for: repo)
-        }
-    }
-
-    private func stampTriggerLabel(for cat: RepoCategory) -> String {
-        cat == .unset
-            ? Copy.Inventory.categoryPickerPrompt(lang)      // "贴上一枚邮戳"
-            : Copy.Inventory.categoryLabel(cat, lang)         // "工作 / 个人 / 实验"
-    }
-
-    private func stampLabelColor(_ cat: RepoCategory) -> Color {
-        switch cat {
-        case .work:       return .piloBlueDark
-        case .personal:   return .piloGoldDark
-        case .experiment: return .lavenderInfo
-        case .unset:      return .piloGoldDark
         }
     }
 
@@ -783,26 +766,32 @@ private struct StampBadge: View {
     var body: some View {
         Group {
             if category == .unset {
-                unsetBadge
+                unsetBadge()
             } else {
                 switch style {
                 case .illustrated: illustratedBadge
-                case .glyph:       glyphBadge
+                case .glyph:       glyphBadge()
                 }
             }
         }
     }
 
-    private var unsetBadge: some View {
-        Image(systemName: "sparkle")
+    private func unsetBadge() -> some View {
+        let dashStroke = max(0.9, size * 0.04)
+        let dashLength = max(2.5, size * 0.10)
+        let dashGap    = max(2.0, size * 0.08)
+        return Image(systemName: "sparkle")
             .font(.system(size: size * 0.42))
             .foregroundStyle(Color.piloGold.opacity(0.8))
             .frame(width: size, height: size)
             .overlay(
                 Circle()
                     .stroke(Color.piloGold.opacity(0.55),
-                            style: StrokeStyle(lineWidth: 0.9, dash: [2.5, 2]))
+                            style: StrokeStyle(lineWidth: dashStroke,
+                                               dash: [dashLength, dashGap]))
             )
+            .rotationEffect(.degrees(-8))
+            .opacity(0.82)
     }
 
     /// 完整插画邮戳（popover 大尺寸专用）：保留 -3° 旋转 + 软阴影加"盖在纸上"质感
@@ -816,29 +805,34 @@ private struct StampBadge: View {
             .shadow(color: Color.black.opacity(0.10), radius: 1.5, y: 0.8)
     }
 
-    /// 简笔字戳（trigger 小尺寸专用）：双线圆环 + 单色透明字戳，模拟"盖在纸上的油墨痕迹"。
+    /// 双线圆环 + 单色透明字戳，模拟"盖在纸上的油墨痕迹"。
     /// 视觉原则：
     ///   1. 轮廓是线条不是填充 —— paper 底色从中央透出来
     ///   2. 双线圆环（外粗内细），邮戳的标志结构
     ///   3. 字跟描边同色（单色油墨）
-    ///   4. -5° 倾斜 + 88% opacity，"盖印"的物理不完美感
-    private var glyphBadge: some View {
-        ZStack {
+    ///   4. -8° 倾斜 + 85% opacity，盖印的物理不完美感
+    /// 参数按 size 比例缩放，22pt 当 trigger / 60pt 当 overlay 都视觉一致。
+    private func glyphBadge() -> some View {
+        let outerStroke  = max(1.2, size * 0.045)
+        let innerStroke  = max(0.5, size * 0.018)
+        let innerPadding = max(2.5, size * 0.085)
+        return ZStack {
             // 外圈实线
             Circle()
-                .strokeBorder(stampColor.opacity(0.85), lineWidth: 1.2)
-            // 内圈细线（间距 2.5pt）
+                .strokeBorder(stampColor.opacity(0.85), lineWidth: outerStroke)
+            // 内圈细线
             Circle()
-                .strokeBorder(stampColor.opacity(0.55), lineWidth: 0.5)
-                .padding(2.5)
-            // 中央楷书字 —— 类别色，不是白色
+                .strokeBorder(stampColor.opacity(0.55), lineWidth: innerStroke)
+                .padding(innerPadding)
+            // 中央楷书字 —— 类别色单色油墨
             Text(stampGlyph)
                 .font(.custom("Songti SC", size: size * 0.5).weight(.semibold))
                 .foregroundStyle(stampColor.opacity(0.9))
         }
         .frame(width: size, height: size)
-        .rotationEffect(.degrees(-5))
-        .opacity(0.88)
+        .rotationEffect(.degrees(-8))
+        .opacity(0.85)
+        .shadow(color: stampColor.opacity(0.18), radius: 1.2, y: 0.6)
     }
 
     /// 完整插画 asset 名
