@@ -974,7 +974,9 @@ enum Copy {
             lang == .zh ? "收进抽屉" : "Set aside"
         }
         static func unhideAction(_ lang: Language) -> String {
-            lang == .zh ? "重新投递" : "Bring back"
+            // 对仗"收进抽屉" — 邮局柜员把信从抽屉里取回到桌面上。
+            // 英文保持 "Bring back"（短 + idiomatic）。
+            lang == .zh ? "放回桌面" : "Bring back"
         }
         static func showInFinder(_ lang: Language) -> String {
             lang == .zh ? "在 Finder 显示" : "Show in Finder"
