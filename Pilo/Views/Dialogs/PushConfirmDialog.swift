@@ -601,11 +601,20 @@ struct PushConfirmDialog: View {
         VStack(spacing: PiloSpacing.l) {
             Spacer(minLength: PiloSpacing.s)
 
-            // Happy 鸽子 + 蜡封
-            ZStack(alignment: .topTrailing) {
-                PiloMascot(mood: .happy, size: 110, breathing: true)
-                WaxSeal(size: 48, label: "SENT")
-                    .offset(x: 14, y: -6)
+            // P 蜡封作主视觉（Pilo 官方封缄）+ Happy 鸽子作辅助
+            // "已寄出 = 信件已盖章封好"的语义；P 蜡封跟品牌 brand 直接连接
+            ZStack(alignment: .bottomTrailing) {
+                Image("WaxSealPilo")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 110, height: 110)
+                    .rotationEffect(.degrees(-6))
+                    .shadow(color: Color.stampRed.opacity(0.2), radius: 3, y: 2)
+
+                // Mascot 缩小到右下角作"完成"情感辅助
+                PiloMascot(mood: .happy, size: 44, breathing: true)
+                    .offset(x: 18, y: 6)
             }
 
             // 衬线大标题 + 斜体副标题
@@ -792,15 +801,27 @@ struct PushConfirmDialog: View {
 // MARK: - 飞行动画
 
 /// 简化版的"小信鸽飞出去"，遵守 Reduce Motion 时由父视图改用静态图标。
+/// Push running 状态动画：PAR AVION 航空邮件飞机 + 飞行轨迹。
+/// 取代了原来的 FlyingPiloAnimation（鸽子飞翔）—— 飞机更直接对应"信件正在投递路径"
+/// 的视觉传统，PAR AVION 旗帜本身就是国际邮件标识。Mascot 鸽子保留给品牌情感时刻。
 private struct FlyingPiloAnimation: View {
     @State private var phase: CGFloat = 0
 
     var body: some View {
-        PiloMascot(mood: .flying, size: 80)
-            .offset(y: -10 * sin(phase * .pi * 2))
-            .rotationEffect(.degrees(Double(sin(phase * .pi * 4) * 6)))
+        Image("PostalPlane")
+            .resizable()
+            .interpolation(.high)
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 100, height: 100)
+            // 飞机往右前方"前进"的视觉：水平 + 垂直微微抖动
+            .offset(
+                x: 6 * sin(phase * .pi * 2),
+                y: -8 * sin(phase * .pi * 2 + .pi / 3)
+            )
+            // 飞机略微歪向飞行方向（-3° 到 +3° 来回）
+            .rotationEffect(.degrees(Double(sin(phase * .pi * 4) * 3)))
+            .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 4, y: 4)
             .task {
-                // 简单的正弦上下浮动；不依赖 SwiftUI 内置 spring，避免和外层 sheet 动画打架
                 while !Task.isCancelled {
                     try? await Task.sleep(nanoseconds: 16_000_000)
                     phase += 0.012
