@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import SwiftUI
 
 /// 用户机器上已安装的 AI coding 工具。Pilo 启动时检测一次缓存到 AppState。
 /// 不依赖 PATH —— IDE 用 URL scheme（NSWorkspace），CLI 用 Terminal.app 走 AppleScript。
@@ -26,10 +27,22 @@ enum AITool: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// SF Symbol 给 menu 用（每个工具都有 icon 视觉提示）
     var symbol: String {
         switch self {
-        case .cursor, .windsurf:  return "sparkles"
-        case .vscode:             return "chevron.left.forward.slash.chevron.right"
-        case .claudeCode:         return "terminal.fill"
-        case .codex:              return "bolt.fill"
+        case .cursor:     return "sparkles"
+        case .windsurf:   return "wind"
+        case .vscode:     return "chevron.left.forward.slash.chevron.right"
+        case .claudeCode: return "terminal.fill"
+        case .codex:      return "bolt.fill"
+        }
+    }
+
+    /// Pilo 设计系统色调，跟 sidebar dot / health pill / category stamp 一致
+    var tintColor: Color {
+        switch self {
+        case .cursor:     return .piloBlue
+        case .windsurf:   return .mintSafe
+        case .vscode:     return .lavenderInfo
+        case .claudeCode: return .stampRed
+        case .codex:      return .piloGoldDark
         }
     }
 

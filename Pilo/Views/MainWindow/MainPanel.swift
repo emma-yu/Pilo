@@ -266,6 +266,9 @@ private struct PanelDetail: View {
     /// 所以单 @State 即可。
     @State private var isStampPickerOpen = false
 
+    /// "在 AI 中打开" 自定义 popover 开关
+    @State private var isAIToolPickerOpen = false
+
     var body: some View {
         if let repo = currentRepo {
             ScrollView {
@@ -700,11 +703,9 @@ private struct PanelDetail: View {
     @ViewBuilder
     private func aiLauncherButton(for repo: Repository) -> some View {
         if appState.detectedAITools.isEmpty {
-            // 没检测到任何工具 → 显示禁用 button + hover 提示
+            // 没检测到任何工具 → 禁用 button + hover 提示装哪些
             Button(action: {}) {
                 HStack(spacing: 5) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 12))
                     Text(Copy.AILauncher.openInButton(lang))
                 }
             }
@@ -712,28 +713,76 @@ private struct PanelDetail: View {
             .disabled(true)
             .help(Copy.AILauncher.noToolsDetected(lang))
         } else {
-            Menu {
-                ForEach(appState.detectedAITools) { tool in
-                    Button {
-                        tool.launch(repoPath: repo.path)
-                    } label: {
-                        Label(tool.displayName, systemImage: tool.symbol)
-                    }
-                }
+            // 跟旁边"在终端打开"风格一致的 ghost button + 自定义 popover
+            // 不用 macOS Menu —— 系统 menu 白底蓝高亮跟邮局美学冲突
+            Button {
+                isAIToolPickerOpen.toggle()
             } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 12))
+                HStack(spacing: 4) {
                     Text(Copy.AILauncher.openInButton(lang))
                     Image(systemName: "chevron.down")
                         .font(.system(size: 9))
+                        .foregroundStyle(Color.inkSecondary)
                 }
             }
-            .menuStyle(.button)
             .buttonStyle(MiniGhostButtonStyle())
-            .help(Copy.AILauncher.menuTitle(lang))
-            .fixedSize()
+            .help(Copy.AILauncher.popoverTitle(lang))
+            .popover(isPresented: $isAIToolPickerOpen, arrowEdge: .top) {
+                aiToolPickerPopover(for: repo)
+            }
         }
+    }
+
+    /// 自定义 popover：cream paper bg + 衬线标题 + OrnamentDivider + tool 卡片列表
+    /// 视觉风格跟 stampPickerPopover 一致
+    private func aiToolPickerPopover(for repo: Repository) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // 标题
+            Text(Copy.AILauncher.popoverTitle(lang))
+                .font(.piloSerifSubtitle)
+                .italic()
+                .foregroundStyle(Color.inkPrimary)
+                .frame(maxWidth: .infinity)
+
+            OrnamentDivider(width: 120)
+                .padding(.top, 6)
+                .padding(.bottom, 12)
+
+            // 工具卡片列表
+            VStack(spacing: 2) {
+                ForEach(appState.detectedAITools) { tool in
+                    aiToolCard(tool, repoPath: repo.path)
+                }
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .frame(width: 280)
+        .background(Color.piloPaper)
+    }
+
+    /// 单张工具卡片：染色 icon + italic Songti 名字 + hover 金色高亮
+    private func aiToolCard(_ tool: AITool, repoPath: String) -> some View {
+        Button {
+            tool.launch(repoPath: repoPath)
+            isAIToolPickerOpen = false
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: tool.symbol)
+                    .font(.system(size: 13))
+                    .foregroundStyle(tool.tintColor)
+                    .frame(width: 18, alignment: .center)
+                Text(tool.displayName)
+                    .font(.piloSerifSubtitle)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 6)
     }
 
     private func openTerminal(at path: String) {
