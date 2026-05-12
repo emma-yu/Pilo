@@ -105,8 +105,8 @@ struct PushConfirmDialog: View {
                 .foregroundStyle(Color.inkSecondary)
 
             HStack(spacing: 8) {
-                Image(systemName: "shippingbox.fill")
-                    .foregroundStyle(Color.piloBlue)
+                // SF 立方体 icon 已删 —— 右上的 PostalParcel illustration 已经
+                // 在邮包语义层 deliver 完整意象，repo 行不再加工程感的小立方体
                 Text(pre.repoName)
                     .font(.piloSection)
                 Text("·")
@@ -143,7 +143,7 @@ struct PushConfirmDialog: View {
                 .frame(width: 72, height: 72)
                 .rotationEffect(.degrees(-4))
                 .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 2, y: 1.5)
-                .offset(x: -4, y: -8)
+                .offset(x: -4, y: 14)   // 下移：跟 repo row 平齐而不是跟 title 平齐
         }
     }
 
@@ -153,7 +153,16 @@ struct PushConfirmDialog: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(commits) { c in
-                        HStack(alignment: .top, spacing: 8) {
+                        HStack(alignment: .center, spacing: 8) {
+                            // 迷你邮戳印章 —— "已盖戳准备寄出"的装饰
+                            // 0.65 opacity 让它退到 hash 后面，不抢阅读焦点
+                            Image("PostalDial")
+                                .resizable()
+                                .interpolation(.high)
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 18, height: 18)
+                                .opacity(0.65)
+                                .rotationEffect(.degrees(-6))
                             Text(c.hash)
                                 .font(.piloMono)
                                 .foregroundStyle(Color.piloBlue)
