@@ -327,8 +327,8 @@ private struct PanelDetail: View {
     /// 所以单 @State 即可。
     @State private var isStampPickerOpen = false
 
-    /// "在 AI 中打开" 自定义 popover 开关
-    @State private var isAIToolPickerOpen = false
+    // "在 AI 中打开" 的 popover state 已迁到 AILauncherButton 子 view —— 隔离 re-render
+    // 防止 popover toggle 让整个 PanelDetail body（560+ 行）重新求值
 
     var body: some View {
         if let repo = currentRepo {
@@ -771,87 +771,13 @@ private struct PanelDetail: View {
 
     @ViewBuilder
     private func aiLauncherButton(for repo: Repository) -> some View {
-        if appState.detectedAITools.isEmpty {
-            // 没检测到任何工具 → 禁用 button + hover 提示装哪些
-            Button(action: {}) {
-                HStack(spacing: 5) {
-                    Text(Copy.AILauncher.openInButton(lang))
-                }
-            }
-            .buttonStyle(MiniGhostButtonStyle())
-            .disabled(true)
-            .help(Copy.AILauncher.noToolsDetected(lang))
-        } else {
-            // 跟旁边"在终端打开"风格一致的 ghost button + 自定义 popover
-            // 不用 macOS Menu —— 系统 menu 白底蓝高亮跟邮局美学冲突
-            Button {
-                isAIToolPickerOpen.toggle()
-            } label: {
-                HStack(spacing: 4) {
-                    Text(Copy.AILauncher.openInButton(lang))
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 9))
-                        .foregroundStyle(Color.inkSecondary)
-                }
-            }
-            .buttonStyle(MiniGhostButtonStyle())
-            .help(Copy.AILauncher.popoverTitle(lang))
-            .popover(isPresented: $isAIToolPickerOpen, arrowEdge: .top) {
-                aiToolPickerPopover(for: repo)
-            }
-        }
-    }
-
-    /// 自定义 popover：精致紧凑型 menu —— 跟 stamp picker（仪式型）的字号 system
-    /// 不同。这里目标是"一瞥就点"的快速操作，参考 macOS menu / Raycast / command
-    /// palette 的高密度紧凑风，同时保留 Pilo 邮局美学（cream paper + Songti 标题 +
-    /// 金线装饰 + 类别色 icon）。
-    private func aiToolPickerPopover(for repo: Repository) -> some View {
-        VStack(alignment: .center, spacing: 0) {
-            // 标题：15pt italic Songti —— 比列表项稍大留 hierarchy，不喧宾夺主
-            Text(Copy.AILauncher.popoverTitle(lang))
-                .font(.custom("Songti SC", size: 15).italic())
-                .foregroundStyle(Color.inkPrimary)
-
-            OrnamentDivider(width: 100)
-                .padding(.top, 6)
-                .padding(.bottom, 8)
-
-            VStack(spacing: 1) {
-                ForEach(appState.detectedAITools) { tool in
-                    aiToolCard(tool, repoPath: repo.path)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .frame(width: 260)
-        .background(Color.piloPaper)
-    }
-
-    /// 单张工具行：精致紧凑 —— 类别色 SF icon + 14pt SF Pro Rounded medium 工具名
-    /// 不加 colored 圆 badge 不加 shadow，让一瞥扫描更快
-    private func aiToolCard(_ tool: AITool, repoPath: String) -> some View {
-        Button {
-            tool.launch(repoPath: repoPath)
-            isAIToolPickerOpen = false
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: tool.symbol)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(tool.tintColor)
-                    .frame(width: 20, alignment: .center)
-                Text(tool.displayName)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.inkPrimary)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 6)
+        // 整个 button + popover state 都封装在 AILauncherButton 里
+        // 点击 toggle 不会让 PanelDetail body 重新求值，popover 二次打开瞬开
+        AILauncherButton(
+            tools: appState.detectedAITools,
+            repoPath: repo.path,
+            lang: lang
+        )
     }
 
     private func openTerminal(at path: String) {
@@ -1035,5 +961,99 @@ private struct StampBadge: View {
         case .experiment: return .lavenderInfo
         case .unset:      return .piloGold
         }
+    }
+}
+
+// MARK: - AI Launcher Button（独立子 view 避免 PanelDetail 整体 re-render）
+
+/// "在 AI 中打开 ▾" button + 自定义 popover。
+///
+/// **为什么独立成子 view**：popover state 之前住在 PanelDetail（560+ 行 body），
+/// 每次 toggle 都触发整棵 detail body 重新求值（ResumeWorkCard / commit list /
+/// ProjectDocsPanel 等），人感觉点了之后 100-200ms 才弹。
+/// 隔离到子 view 后，state 改变只重新求值这个小 view，popover 第二次起瞬开。
+///
+/// **macOS `.popover()` 首次冷启动**仍有 ~300ms NSPopover 底层初始化延迟 —— 这是
+/// 平台限制，无法消除；但后续打开会很快。
+private struct AILauncherButton: View {
+    let tools: [AITool]
+    let repoPath: String
+    let lang: Language
+
+    @State private var isOpen = false
+
+    var body: some View {
+        if tools.isEmpty {
+            // 没检测到任何工具 → 禁用 button + hover 提示装哪些
+            Button(action: {}) {
+                HStack(spacing: 5) {
+                    Text(Copy.AILauncher.openInButton(lang))
+                }
+            }
+            .buttonStyle(MiniGhostButtonStyle())
+            .disabled(true)
+            .help(Copy.AILauncher.noToolsDetected(lang))
+        } else {
+            Button { isOpen.toggle() } label: {
+                HStack(spacing: 4) {
+                    Text(Copy.AILauncher.openInButton(lang))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9))
+                        .foregroundStyle(Color.inkSecondary)
+                }
+            }
+            .buttonStyle(MiniGhostButtonStyle())
+            .help(Copy.AILauncher.popoverTitle(lang))
+            .popover(isPresented: $isOpen, arrowEdge: .top) {
+                popoverContent
+            }
+        }
+    }
+
+    /// popover 内容 —— 精致紧凑型 menu。Songti 标题 + 金线 + 类别色 icon row
+    private var popoverContent: some View {
+        VStack(alignment: .center, spacing: 0) {
+            Text(Copy.AILauncher.popoverTitle(lang))
+                .font(.custom("Songti SC", size: 15).italic())
+                .foregroundStyle(Color.inkPrimary)
+
+            OrnamentDivider(width: 100)
+                .padding(.top, 6)
+                .padding(.bottom, 8)
+
+            VStack(spacing: 1) {
+                ForEach(tools) { tool in
+                    toolRow(tool)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(width: 260)
+        .background(Color.piloPaper)
+    }
+
+    /// 单张工具行：类别色 icon + 14pt SF Pro Rounded 工具名
+    private func toolRow(_ tool: AITool) -> some View {
+        Button {
+            tool.launch(repoPath: repoPath)
+            isOpen = false
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: tool.symbol)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(tool.tintColor)
+                    .frame(width: 20, alignment: .center)
+                Text(tool.displayName)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 6)
     }
 }
