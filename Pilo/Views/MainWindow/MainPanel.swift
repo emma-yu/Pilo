@@ -332,16 +332,18 @@ private struct PanelDetail: View {
 
     // MARK: - Phase B: Project Inventory pieces
 
-    /// 标题右上方的大邮戳 overlay —— 60pt + 倾斜 + 部分压在标题字上。
-    /// **用完整 illustrated asset**（不是简笔抽象）—— 你已经做了精美的三张邮戳插画，
-    /// 这个位置就是让它们 deliver 视觉冲击的地方。
+    /// 标题右上方的邮戳 trigger —— **水印效果**：嵌入信纸的"已分类印记"感觉，
+    /// 不抢标题视觉焦点，跟 cream paper 调融合。
     /// unset 时是 dashed 金圈 + sparkle，点击触发 popover；
-    /// 已贴时是完整 illustrated 邮戳，点击重选。
+    /// 已贴时是完整 illustrated 邮戳 + 0.62 opacity + multiply blend（水印感）。
+    /// popover 内的 illustrated 仍保持 sharp（挑选时刻独享完整视觉冲击）。
     private func stampOverlay(for repo: Repository) -> some View {
         Button {
             isStampPickerOpen.toggle()
         } label: {
             StampBadge(category: repo.category, size: 60, style: .illustrated)
+                .opacity(repo.category == .unset ? 1.0 : 0.62)      // 水印淡透
+                .blendMode(repo.category == .unset ? .normal : .multiply)  // 跟纸融合
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
@@ -807,8 +809,8 @@ private struct StampBadge: View {
     }
 
     /// 完整插画邮戳：用户提供的 illustrated 邮戳 asset。
-    /// 在 popover (64pt) 和 detail trigger overlay (60pt) 两处用同一渲染。
-    /// -8° 旋转 + 较重阴影模拟"刚被盖在纸上"的物理感。
+    /// **本体保持 sharp**（popover 挑选时刻用）—— 不带 opacity / blend / shadow。
+    /// trigger 处的"水印感"由 stampOverlay 外层 wrap 实现（保留分层灵活性）。
     private var illustratedBadge: some View {
         Image(assetName)
             .resizable()
@@ -816,7 +818,6 @@ private struct StampBadge: View {
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
             .rotationEffect(.degrees(-8))
-            .shadow(color: Color.black.opacity(0.18), radius: 2, y: 1.2)
     }
 
     /// 双线圆环 + 单色透明字戳，模拟"盖在纸上的油墨痕迹"。
