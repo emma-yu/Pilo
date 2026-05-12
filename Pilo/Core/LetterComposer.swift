@@ -49,17 +49,15 @@ actor LetterComposer {
         // 分桶：有 commit 的 → RepoSummary；没 commit 但有未提交的 → DraftSummary
         var summaries: [DailyLetter.RepoSummary] = []
         var drafts: [DailyLetter.DraftSummary] = []
-        // 收集所有 commit 时间用于 workSpan
-        var allCommitDates: [Date] = []
 
         for a in activities {
             if a.todayCommits.isEmpty {
                 if a.uncommittedCount > 0 {
+                    // 草稿简化：只 repo 名 + count，不再列文件
                     drafts.append(.init(
                         repoName: a.repoName,
                         repoPath: a.repoPath,
-                        uncommittedCount: a.uncommittedCount,
-                        topFiles: a.topUncommittedFiles
+                        uncommittedCount: a.uncommittedCount
                     ))
                 }
                 continue
@@ -67,7 +65,6 @@ actor LetterComposer {
             let topCommits = a.todayCommits.prefix(5).map {
                 DailyLetter.LetterCommit(hash: $0.hash, subject: $0.subject)
             }
-            allCommitDates.append(contentsOf: a.todayCommits.map(\.date))
             summaries.append(.init(
                 repoName: a.repoName,
                 repoPath: a.repoPath,
@@ -86,12 +83,6 @@ actor LetterComposer {
         let totalCommits = summaries.reduce(0) { $0 + $1.commitCount }
         let activeCount = summaries.count + drafts.count
 
-        // 工作时段：所有 commit 时间的 first → last
-        let workSpan: DailyLetter.WorkSpan? = {
-            guard let first = allCommitDates.min(), let last = allCommitDates.max() else { return nil }
-            return DailyLetter.WorkSpan(firstCommit: first, lastCommit: last)
-        }()
-
         return DailyLetter(
             id: UUID(),
             date: startOfDay,
@@ -101,7 +92,7 @@ actor LetterComposer {
             draftRepos: drafts,
             totalCommits: totalCommits,
             activeRepoCount: activeCount,
-            workSpan: workSpan,
+            workSpan: nil,    // 工作时段已删 —— 避免焦虑数据
             addressee: addressee
         )
     }
@@ -117,7 +108,6 @@ actor LetterComposer {
         let linesRemoved: Int
         let pushedToday: Bool
         let uncommittedCount: Int
-        let topUncommittedFiles: [String]
         let defaultRemote: String?
     }
 
@@ -138,13 +128,6 @@ actor LetterComposer {
         // pushedToday 启发：commits > 0 && aheadCount == 0
         let pushedToday = !todayCommits.isEmpty && repo.aheadCount == 0
 
-        // 草稿文件（前 3 个）
-        var topFiles: [String] = []
-        if repo.uncommittedCount > 0 {
-            let files = await gitClient.uncommittedFiles(repo: url, limit: 3)
-            topFiles = files.map(\.path)
-        }
-
         return RepoActivity(
             repoId: repo.id,
             repoName: repo.name,
@@ -154,7 +137,6 @@ actor LetterComposer {
             linesRemoved: totalRemoved,
             pushedToday: pushedToday,
             uncommittedCount: repo.uncommittedCount,
-            topUncommittedFiles: topFiles,
             defaultRemote: repo.defaultPushRemote
         )
     }

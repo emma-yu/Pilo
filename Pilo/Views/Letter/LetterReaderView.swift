@@ -108,10 +108,7 @@ struct LetterReaderView: View {
                 draftSection
             }
 
-            // 工作时段（仅 totalCommits > 0 时显示）
-            if let span = letter.workSpan {
-                workSpanLine(span)
-            }
+            // 工作时段已删 —— 容易引发焦虑且非用户关心的信息
 
             // 总结线
             if letter.totalCommits > 0 || letter.activeRepoCount > 0 {
@@ -145,17 +142,26 @@ struct LetterReaderView: View {
                     .italic()
                     .foregroundStyle(Color.piloGoldDark)
             }
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 ForEach(summary.commits, id: \.hash) { c in
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(c.hash)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(Color.piloGoldDark.opacity(0.7))
-                            .frame(width: 56, alignment: .leading)
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        // bullet —— 表示"做了一件事"
+                        Text("·")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color.piloGoldDark.opacity(0.6))
+                            .frame(width: 8)
+                        // subject 主显，占 80% 视觉
                         Text(c.subject)
-                            .font(.system(size: 13))
+                            .font(.system(size: 14))
                             .foregroundStyle(Color.inkPrimary)
                             .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        // hash 右后置，灰色小字 mono —— 给技术用户的 reference
+                        Text(c.hash)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(Color.inkTertiary)
                     }
                 }
                 if summary.moreCount > 0 {
@@ -163,7 +169,7 @@ struct LetterReaderView: View {
                         .font(.piloSerifCaption)
                         .italic()
                         .foregroundStyle(Color.inkTertiary)
-                        .padding(.leading, 64)
+                        .padding(.leading, 18)
                 }
             }
             .padding(.leading, 20)
@@ -207,54 +213,17 @@ struct LetterReaderView: View {
     }
 
     private func draftRepoBlock(_ d: DailyLetter.DraftSummary) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                Text("·").foregroundStyle(Color.inkTertiary)
-                Text(d.repoName)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.inkPrimary)
-                Text(Copy.Letter.draftCount(d.uncommittedCount, lang))
-                    .font(.piloSerifCaption)
-                    .italic()
-                    .foregroundStyle(Color.inkSecondary)
-            }
-            if !d.topFiles.isEmpty {
-                VStack(alignment: .leading, spacing: 1) {
-                    ForEach(d.topFiles, id: \.self) { path in
-                        Text(path)
-                            .font(.system(size: 11, design: .monospaced))
-                            .foregroundStyle(Color.inkSecondary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                    let more = d.uncommittedCount - d.topFiles.count
-                    if more > 0 {
-                        Text(Copy.Letter.draftFilesMore(count: more, lang))
-                            .font(.piloSerifCaption)
-                            .italic()
-                            .foregroundStyle(Color.inkTertiary)
-                    }
-                }
-                .padding(.leading, 14)
-            }
+        // 简化：只 repo 名 + N 个未提交，不展开文件路径（用户说太啰嗦）
+        HStack(spacing: 6) {
+            Text("·").foregroundStyle(Color.inkTertiary)
+            Text(d.repoName)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(Color.inkPrimary)
+            Text(Copy.Letter.draftCount(d.uncommittedCount, lang))
+                .font(.piloSerifCaption)
+                .italic()
+                .foregroundStyle(Color.inkSecondary)
         }
-    }
-
-    private func workSpanLine(_ span: DailyLetter.WorkSpan) -> some View {
-        HStack {
-            Spacer()
-            Text(Copy.Letter.workSpanLine(
-                first: span.firstCommit,
-                last: span.lastCommit,
-                hours: span.hours,
-                lang
-            ))
-            .font(.piloSerifCaption)
-            .italic()
-            .foregroundStyle(Color.inkSecondary)
-            Spacer()
-        }
-        .padding(.top, 6)
     }
 
     private var totalLine: some View {
