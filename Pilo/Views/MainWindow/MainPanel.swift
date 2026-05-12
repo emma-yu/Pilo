@@ -297,6 +297,36 @@ private struct PanelSidebar: View {
         }
         .buttonStyle(.plain)
         .hoverable(highlight: isActive ? .clear : Color.piloBlue.opacity(0.06))
+        // 右键菜单 —— 在 Bear-vibe sidebar 重写时丢了，现在补回来
+        .contextMenu {
+            Button {
+                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
+            } label: {
+                Label(lang == .zh ? "在 Finder 中显示" : "Show in Finder", systemImage: "folder")
+            }
+            Button {
+                NSWorkspace.shared.open(
+                    [URL(fileURLWithPath: repo.path)],
+                    withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+                    configuration: NSWorkspace.OpenConfiguration(),
+                    completionHandler: nil
+                )
+            } label: {
+                Label(lang == .zh ? "在终端打开" : "Open in Terminal", systemImage: "terminal")
+            }
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(repo.path, forType: .string)
+            } label: {
+                Label(lang == .zh ? "复制路径" : "Copy path", systemImage: "doc.on.doc")
+            }
+            Divider()
+            Button(role: .destructive) {
+                appState.setHidden(true, repoId: repo.id)
+            } label: {
+                Label(lang == .zh ? "隐藏此仓库" : "Hide this repo", systemImage: "eye.slash")
+            }
+        }
     }
 
     /// 按 mood 区分 synced 状态下的颜色（Phase B：让"沉寂"项目视觉上更暗）。
