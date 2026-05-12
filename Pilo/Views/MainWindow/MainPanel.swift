@@ -323,7 +323,8 @@ private struct PanelDetail: View {
             isStampPickerOpen.toggle()
         } label: {
             HStack(spacing: 6) {
-                StampBadge(category: repo.category, size: 20)
+                // 24pt 缩略邮戳——足够让用户看清主图（家/齿轮/烧瓶），又不抢标题
+                StampBadge(category: repo.category, size: 24)
                 Text(stampTriggerLabel(for: repo.category))
                     .font(.piloSerifCaption)
                     .italic()
@@ -400,14 +401,14 @@ private struct PanelDetail: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 22)
-        .padding(.top, 18)
-        .padding(.bottom, repo.category == .unset ? 18 : 14)
-        .frame(width: 300)
+        .padding(.horizontal, 26)
+        .padding(.top, 20)
+        .padding(.bottom, repo.category == .unset ? 22 : 16)
+        .frame(width: 360)
         .background(Color.piloPaper)
     }
 
-    /// 单张印章卡片：印章 + 标签，hover 抬起，selected 加金色光晕
+    /// 单张印章卡片：印章 + 标签，hover 抬起，selected 加金色光晕环
     private func stampPickerCard(cat: RepoCategory, currentCategory: RepoCategory, repoId: UUID) -> some View {
         let isSelected = cat == currentCategory
         return Button {
@@ -416,16 +417,16 @@ private struct PanelDetail: View {
             }
             isStampPickerOpen = false
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: 10) {
                 ZStack {
                     if isSelected {
                         Circle()
-                            .stroke(Color.piloGold, lineWidth: 1.2)
-                            .frame(width: 50, height: 50)
+                            .stroke(Color.piloGold, lineWidth: 1.5)
+                            .frame(width: 72, height: 72)
                     }
-                    StampBadge(category: cat, size: 38)
+                    StampBadge(category: cat, size: 64)
                 }
-                .frame(width: 50, height: 50)
+                .frame(width: 72, height: 72)
 
                 Text(Copy.Inventory.categoryLabel(cat, lang))
                     .font(.piloSerifCaption)
@@ -433,11 +434,11 @@ private struct PanelDetail: View {
                     .foregroundStyle(isSelected ? Color.inkPrimary : Color.inkSecondary)
             }
             .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.vertical, 8)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 8)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 10)
     }
 
     /// 健康体检行：mood / README 缺失 / 无测试 三类 chip。
@@ -762,12 +763,12 @@ private struct MiniGhostButtonStyle: ButtonStyle {
 
 /// 圆形邮戳。两种态：
 ///   - unset：金色虚线圆 + sparkle 小光（暗示"还没贴"）
-///   - 已贴：实心彩圆 + 楷书白字 + -3° 轻微旋转 + 类别色阴影
+///   - 已贴：用户提供的插画邮戳 asset（圆形封边 + 弧形英文 + 中央插画）+ -3° 轻微旋转 + 软阴影
 ///
-/// 不持有 state，纯渲染。可放在 detail trigger / popover card / 未来其它地方复用。
+/// 不持有 state，纯渲染。可在 detail trigger（24pt）/ popover card（64pt）等位置复用。
 private struct StampBadge: View {
     let category: RepoCategory
-    /// 圆直径，含 padding 后稍大
+    /// 圆直径
     let size: CGFloat
 
     var body: some View {
@@ -790,33 +791,24 @@ private struct StampBadge: View {
             )
     }
 
+    /// 已贴：直接使用插画邮戳 asset，保留 -3° 旋转 + 软阴影增强"盖戳"的物理感
     private var filledBadge: some View {
-        Text(stampGlyph)
-            .font(.custom("Songti SC", size: size * 0.55).weight(.semibold))
-            .foregroundStyle(.white)
+        Image(assetName)
+            .resizable()
+            .interpolation(.high)
+            .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .background(Circle().fill(stampColor))
             .rotationEffect(.degrees(-3))
-            .shadow(color: stampColor.opacity(0.3), radius: 1.2, y: 0.8)
+            .shadow(color: Color.black.opacity(0.10), radius: 1.5, y: 0.8)
     }
 
-    /// 单字楷书：邮戳上常见的简体字
-    private var stampGlyph: String {
+    /// Asset 名（对应 Pilo/Resources/Assets.xcassets/ 里的 imageset）
+    private var assetName: String {
         switch category {
-        case .work:       return "工"
-        case .personal:   return "私"
-        case .experiment: return "试"
+        case .work:       return "CategoryStampWork"
+        case .personal:   return "CategoryStampPersonal"
+        case .experiment: return "CategoryStampExperiment"
         case .unset:      return ""
-        }
-    }
-
-    /// 类别色：跟 sidebar dot / detail health pill 保持一致
-    private var stampColor: Color {
-        switch category {
-        case .work:       return .piloBlue
-        case .personal:   return .piloGold
-        case .experiment: return .lavenderInfo
-        case .unset:      return .piloGold
         }
     }
 }
