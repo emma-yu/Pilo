@@ -65,7 +65,15 @@ struct PushSession: Identifiable, Sendable {
         let remote: String
     }
 
+    /// `.loading` 是为了让 sheet 在 beginPushSession 拉数据期间就先弹出来，
+    /// 显示 "正在准备推送..." 的 placeholder。否则点按钮到 dialog 出现之间
+    /// 用户会看到几秒空白（git diff + secret scan + 每文件 git cat-file 串行）。
+    struct Loading: Sendable, Hashable {
+        let repoName: String
+    }
+
     enum State: Sendable {
+        case loading(Loading)
         case preflight(Preflight)
         case running(Running)
         case completed(PushReport)
@@ -74,5 +82,10 @@ struct PushSession: Identifiable, Sendable {
     init(preflight: Preflight) {
         self.id = UUID()
         self.state = .preflight(preflight)
+    }
+
+    init(loading: Loading) {
+        self.id = UUID()
+        self.state = .loading(loading)
     }
 }

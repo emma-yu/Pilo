@@ -352,8 +352,18 @@ final class AppState {
 
     /// 由 RepoDetailView 的 Push 按钮触发：拉取 commit 列表 + 解析 upstream + 跑安全扫描，
     /// 然后把 sheet 切到 preflight 状态。
+    ///
+    /// **关键 UX 设计**：先立刻 set `.loading` 让 sheet 立即弹出 placeholder dialog，
+    /// 然后 async 跑各种 heavy 操作（diff / secret scan / blob size 等可能耗时几秒），
+    /// 全部跑完再 transition 到 `.preflight`。
+    /// 避免用户点了推送按钮后看到几秒空白窗口。
     func beginPushSession(for repo: Repository) async {
         guard let branch = repo.currentBranch else { return }
+        // 1) 立刻弹 loading sheet —— UI 立即响应
+        let loading = PushSession(loading: .init(repoName: repo.name))
+        let sessionId = loading.id
+        self.pushSession = loading
+
         let repoURL = URL(fileURLWithPath: repo.path)
         let defaultRemote = repo.defaultPushRemote
         let upstream = await gitClient.branchUpstream(repo: repoURL, branch: branch)
@@ -411,7 +421,14 @@ final class AppState {
             bypassConfirmed: false,
             ignoredIds: []
         )
-        self.pushSession = PushSession(preflight: preflight)
+        // 用户可能在 loading 期间手动关 sheet（点 sheet 外）—— 这种情况 pushSession 已 nil
+        // 或者重新点了别的 repo 的 push（pushSession.id 变了）。
+        // 都不应该再 reopen，所以加 guard：只有 sessionId 仍是这次 loading 的才 transition。
+        guard var existing = self.pushSession, existing.id == sessionId else { return }
+        // **保持 id 不变**：直接 mutate state；否则 SwiftUI sheet(item:) 看到 id 变化
+        // 会 dismiss + re-present，造成闪烁
+        existing.state = .preflight(preflight)
+        self.pushSession = existing
     }
 
     // MARK: - Session-scoped 忽略

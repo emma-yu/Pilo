@@ -21,6 +21,8 @@ struct PushConfirmDialog: View {
     var body: some View {
         VStack(spacing: 0) {
             switch session?.state {
+            case .loading(let l):
+                loadingView(repoName: l.repoName)
             case .preflight(let pre):
                 preflightView(pre)
             case .running(let r):
@@ -555,6 +557,30 @@ struct PushConfirmDialog: View {
             Text(Copy.Push.runningTitle(tone, lang, remote: remote))
                 .font(.piloTitle)
                 .foregroundStyle(Color.inkPrimary)
+            Spacer()
+        }
+        .padding(24)
+    }
+
+    /// Loading 态：beginPushSession 跑 diff / secret scan / blob size 等 heavy 操作期间立刻弹出，
+    /// 让 sheet 不再等几秒空白。
+    private func loadingView(repoName: String) -> some View {
+        VStack(spacing: 18) {
+            Spacer()
+            PiloMascot(mood: .alert, size: 80, breathing: !reduceMotion)
+            Text(Copy.Push.loadingTitle(tone, lang))
+                .font(.piloTitle)
+                .foregroundStyle(Color.inkPrimary)
+            Text(Copy.Push.loadingSubtitle(lang, repoName: repoName))
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: 360)
+            ProgressView()
+                .controlSize(.small)
+                .tint(Color.piloGoldDark)
+                .padding(.top, 4)
             Spacer()
         }
         .padding(24)

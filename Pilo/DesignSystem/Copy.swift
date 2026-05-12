@@ -369,6 +369,21 @@ enum Copy {
             }
         }
 
+        // Loading 态（拉 diff / 安全扫描中）
+        static func loadingTitle(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "正在准备推送..."
+            case (.friendly, .en): return "Getting things ready..."
+            case (.minimal, .zh):  return "准备中"
+            case (.minimal, .en):  return "Preparing"
+            }
+        }
+        static func loadingSubtitle(_ lang: Language, repoName: String) -> String {
+            lang == .zh
+                ? "Pilo 在帮你检查 \(repoName) 这次要寄出的内容\n（拉 commit 列表 · 扫敏感信息 · 看大文件）"
+                : "Pilo is checking what \(repoName) is about to send\n(commit list · secret scan · large files)"
+        }
+
         // Completed - success
         static func successTitle(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
