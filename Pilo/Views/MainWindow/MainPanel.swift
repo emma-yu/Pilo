@@ -733,62 +733,56 @@ private struct PanelDetail: View {
         }
     }
 
-    /// 自定义 popover：cream paper bg + 衬线大标题 + OrnamentDivider + tool 卡片列表
-    /// 字号视觉权重跟 stampPickerPopover 看齐
+    /// 自定义 popover：精致紧凑型 menu —— 跟 stamp picker（仪式型）的字号 system
+    /// 不同。这里目标是"一瞥就点"的快速操作，参考 macOS menu / Raycast / command
+    /// palette 的高密度紧凑风，同时保留 Pilo 邮局美学（cream paper + Songti 标题 +
+    /// 金线装饰 + 类别色 icon）。
     private func aiToolPickerPopover(for repo: Repository) -> some View {
         VStack(alignment: .center, spacing: 0) {
-            // 标题：22pt Songti 衬线 italic
+            // 标题：15pt italic Songti —— 比列表项稍大留 hierarchy，不喧宾夺主
             Text(Copy.AILauncher.popoverTitle(lang))
-                .font(.piloSerifTitle)
-                .italic()
+                .font(.custom("Songti SC", size: 15).italic())
                 .foregroundStyle(Color.inkPrimary)
 
-            OrnamentDivider(width: 160)
-                .padding(.top, 8)
-                .padding(.bottom, 14)
+            OrnamentDivider(width: 100)
+                .padding(.top, 6)
+                .padding(.bottom, 8)
 
-            // 工具卡片列表
-            VStack(spacing: 4) {
+            VStack(spacing: 1) {
                 ForEach(appState.detectedAITools) { tool in
                     aiToolCard(tool, repoPath: repo.path)
                 }
             }
         }
-        .padding(.horizontal, 22)
-        .padding(.vertical, 20)
-        .frame(width: 320)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(width: 260)
         .background(Color.piloPaper)
     }
 
-    /// 单张工具卡片："邮票徽章"风：colored 实心圆 + 白 icon + 17pt 工具名
-    /// 行 padding 12pt 让视觉舒展，hover 金色 8% 高亮跟 stamp picker 一致
+    /// 单张工具行：精致紧凑 —— 类别色 SF icon + 14pt SF Pro Rounded medium 工具名
+    /// 不加 colored 圆 badge 不加 shadow，让一瞥扫描更快
     private func aiToolCard(_ tool: AITool, repoPath: String) -> some View {
         Button {
             tool.launch(repoPath: repoPath)
             isAIToolPickerOpen = false
         } label: {
-            HStack(spacing: 14) {
-                // 颜色徽章：实心圆 + 白 SF symbol，像一枚迷你邮票
-                ZStack {
-                    Circle()
-                        .fill(tool.tintColor)
-                        .frame(width: 28, height: 28)
-                        .shadow(color: tool.tintColor.opacity(0.25), radius: 1.5, y: 1)
-                    Image(systemName: tool.symbol)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+            HStack(spacing: 10) {
+                Image(systemName: tool.symbol)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(tool.tintColor)
+                    .frame(width: 20, alignment: .center)
                 Text(tool.displayName)
-                    .font(.piloSection)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.inkPrimary)
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 8)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 6)
     }
 
     private func openTerminal(at path: String) {
