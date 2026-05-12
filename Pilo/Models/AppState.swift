@@ -93,8 +93,10 @@ final class AppState {
     var currentUncommittedFiles: [UncommittedFile] = []
     /// 当前选中 repo 的最近 commit（"最近寄出过"）
     var currentRecentCommits: [CommitSummary] = []
-    /// 当前选中 repo 的项目文档列表
+    /// 当前选中 repo 的项目文档列表（仅 visible）
     var currentDocs: [RepoDoc] = []
+    /// 当前选中 repo 的"已藏起"文档列表（hiddenDocPaths 命中）
+    var currentHiddenDocs: [RepoDoc] = []
     private var resumeFetchTask: Task<Void, Never>?
     private var docsFetchTask: Task<Void, Never>?
 
@@ -581,6 +583,7 @@ final class AppState {
         currentUncommittedFiles = []
         currentRecentCommits = []
         currentDocs = []
+        currentHiddenDocs = []
         commitsFetchTask?.cancel()
         resumeFetchTask?.cancel()
         docsFetchTask?.cancel()
@@ -621,14 +624,19 @@ final class AppState {
         }
 
         // 3) 项目文档（按需扫，不阻塞 UI）
+        let hiddenPaths = repo.hiddenDocPaths
         docsFetchTask = Task { [weak self] in
             // 文档扫盘是纯 FileManager，但仍放到后台 Task 避免占用 MainActor
             let docs = await Task.detached(priority: .userInitiated) {
                 RepoDocsIndexer.index(repoPath: repo.path)
             }.value
+            // 按用户的"已藏起"清单分两堆
+            let visible = docs.filter { !hiddenPaths.contains($0.relativePath) }
+            let hidden = docs.filter { hiddenPaths.contains($0.relativePath) }
             await MainActor.run {
                 guard let self, self.selectedRepoId == id else { return }
-                self.currentDocs = docs
+                self.currentDocs = visible
+                self.currentHiddenDocs = hidden
             }
         }
 
@@ -667,6 +675,60 @@ final class AppState {
     var hiddenRepos: [Repository] {
         repositories.filter { $0.isHidden }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // MARK: - 文档隐藏（在小邮局内分拣）
+
+    /// 把一份文档"藏起来"——不删文件，仅在 doc panel 默认隐藏。立即持久化。
+    func hideDoc(_ doc: RepoDoc, repoId: UUID) {
+        guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }
+        repositories[idx].hiddenDocPaths.insert(doc.relativePath)
+        saveRepositoriesToDisk()
+        // 立即从 currentDocs 移到 currentHiddenDocs（避免要等下次 selectRepo 才反映）
+        if selectedRepoId == repoId,
+           let removed = currentDocs.first(where: { $0.relativePath == doc.relativePath }) {
+            currentDocs.removeAll { $0.relativePath == doc.relativePath }
+            if !currentHiddenDocs.contains(where: { $0.relativePath == doc.relativePath }) {
+                currentHiddenDocs.append(removed)
+            }
+        }
+    }
+
+    /// 把文档"翻出来"——从隐藏列表中移除。
+    func unhideDoc(_ doc: RepoDoc, repoId: UUID) {
+        guard let idx = repositories.firstIndex(where: { $0.id == repoId }) else { return }
+        repositories[idx].hiddenDocPaths.remove(doc.relativePath)
+        saveRepositoriesToDisk()
+        if selectedRepoId == repoId,
+           let removed = currentHiddenDocs.first(where: { $0.relativePath == doc.relativePath }) {
+            currentHiddenDocs.removeAll { $0.relativePath == doc.relativePath }
+            if !currentDocs.contains(where: { $0.relativePath == doc.relativePath }) {
+                currentDocs.append(removed)
+                // 重新按 indexer 排序规则排（kind priority + mtime）
+                currentDocs.sort { lhs, rhs in
+                    let lp = Self.docSortPriority(lhs.kind)
+                    let rp = Self.docSortPriority(rhs.kind)
+                    if lp != rp { return lp < rp }
+                    return lhs.modifiedAt > rhs.modifiedAt
+                }
+            }
+        }
+    }
+
+    /// 镜像 RepoDocsIndexer.sortPriority（同样规则保持 unhide 后顺序一致）。
+    private static func docSortPriority(_ kind: RepoDoc.Kind) -> Int {
+        switch kind {
+        case .readme:          return 0
+        case .aiInstructions:  return 1
+        case .architecture:    return 2
+        case .prd:             return 3
+        case .todo:            return 4
+        case .changelog:       return 5
+        case .contributing:    return 6
+        case .license:         return 7
+        case .notes:           return 8
+        case .generic:         return 99
+        }
     }
 
     // MARK: - Markdown 预览
@@ -770,7 +832,9 @@ final class AppState {
                     hasReadme: fresh.hasReadme,
                     hasTests: fresh.hasTests,
                     // Resume Work：lastViewedDate 用户行为产物，scan 不覆盖
-                    lastViewedDate: prior.lastViewedDate
+                    lastViewedDate: prior.lastViewedDate,
+                    // 文档隐藏：用户分拣，scan 不覆盖
+                    hiddenDocPaths: prior.hiddenDocPaths
                 )
             }
             byHash[fresh.pathHash] = fresh

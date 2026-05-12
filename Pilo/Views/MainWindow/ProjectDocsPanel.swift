@@ -26,13 +26,23 @@ struct ProjectDocsPanel: View {
     }
 
     var body: some View {
-        if !docs.isEmpty {
+        if !docs.isEmpty || !appState.currentHiddenDocs.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                header
-                rows
-                if docs.count > Self.collapsedTop {
-                    expandToggle
-                        .padding(.top, 6)
+                if !docs.isEmpty {
+                    header
+                    rows
+                    if docs.count > Self.collapsedTop {
+                        expandToggle
+                            .padding(.top, 6)
+                    }
+                }
+                if !appState.currentHiddenDocs.isEmpty {
+                    HiddenDocsFooter(
+                        hiddenDocs: appState.currentHiddenDocs,
+                        repoPath: repoPath,
+                        lang: lang,
+                        hasVisibleAbove: !docs.isEmpty
+                    )
                 }
             }
             .padding(16)
@@ -112,7 +122,7 @@ private struct DocRow: View {
     @State private var isHovered = false
 
     var body: some View {
-        // 主行 = 预览 sheet；hover 时右侧出现 ↗ 副按钮 = 外部编辑器
+        // 主行 = 预览 sheet；hover 时右侧出现 ↗ + ⋯ 副按钮
         Button(action: presentPreview) {
             HStack(spacing: 10) {
                 Image(systemName: iconName(for: doc.kind))
@@ -137,7 +147,7 @@ private struct DocRow: View {
                     .foregroundStyle(Color.inkTertiary)
                     .frame(minWidth: 70, alignment: .trailing)
 
-                // hover 时副按钮：用外部编辑器打开
+                // hover 时副按钮组：↗ 外部编辑器 + ⋯ menu
                 if isHovered {
                     Button(action: openInDefaultApp) {
                         Image(systemName: "arrow.up.right.square")
@@ -147,11 +157,29 @@ private struct DocRow: View {
                     .buttonStyle(.plain)
                     .help(lang == .zh ? "用编辑器打开" : "Open in editor")
                     .transition(.opacity)
+
+                    Menu {
+                        rowMenuContent
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .frame(width: 16)
+                    .help(Copy.Docs.moreActions(lang))
+                    .transition(.opacity)
                 } else {
                     // 占位让 row 宽度不跳
                     Image(systemName: "arrow.up.right.square")
                         .font(.system(size: 11))
                         .foregroundStyle(Color.clear)
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.clear)
+                        .frame(width: 16)
                 }
             }
             .padding(.horizontal, 10)
@@ -167,6 +195,34 @@ private struct DocRow: View {
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovered }
         }
         .help(Copy.Docs.rowHint(lang))
+        .contextMenu { rowMenuContent }
+    }
+
+    /// 右键 menu 内容（也用在 ⋯ button 上，避免重复）
+    @ViewBuilder
+    private var rowMenuContent: some View {
+        Button {
+            presentPreview()
+        } label: {
+            Label(lang == .zh ? "在 Pilo 里预览" : "Preview in Pilo",
+                  systemImage: "envelope.open")
+        }
+        Button {
+            openInDefaultApp()
+        } label: {
+            Label(Copy.Preview.openInEditor(lang), systemImage: "arrow.up.right.square")
+        }
+        Button {
+            showInFinder()
+        } label: {
+            Label(Copy.Docs.showInFinder(lang), systemImage: "folder")
+        }
+        Divider()
+        Button {
+            hideThis()
+        } label: {
+            Label(Copy.Docs.hideAction(lang), systemImage: "eye.slash")
+        }
     }
 
     private func presentPreview() {
@@ -176,6 +232,18 @@ private struct DocRow: View {
     private func openInDefaultApp() {
         let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
         NSWorkspace.shared.open(fullPath)
+    }
+
+    private func showInFinder() {
+        let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
+        NSWorkspace.shared.activateFileViewerSelecting([fullPath])
+    }
+
+    private func hideThis() {
+        guard let repoId = appState.repositories.first(where: { $0.path == repoPath })?.id else { return }
+        withAnimation(.easeInOut(duration: 0.25)) {
+            appState.hideDoc(doc, repoId: repoId)
+        }
     }
 
     private func iconName(for kind: RepoDoc.Kind) -> String {
@@ -205,6 +273,116 @@ private struct DocRow: View {
         case .notes:          return .inkSecondary
         case .aiInstructions: return .piloAccent
         case .generic:        return .inkTertiary
+        }
+    }
+}
+
+// MARK: - 已藏起的文档 footer
+
+private struct HiddenDocsFooter: View {
+    let hiddenDocs: [RepoDoc]
+    let repoPath: String
+    let lang: Language
+    let hasVisibleAbove: Bool
+
+    @Environment(AppState.self) private var appState
+    @State private var isOpen = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if hasVisibleAbove {
+                Rectangle()
+                    .fill(Color.cloudDivider.opacity(0.5))
+                    .frame(height: 0.5)
+                    .padding(.vertical, 10)
+            }
+
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isOpen.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "eye.slash")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.inkTertiary)
+                    Text(Copy.Docs.hiddenSectionHeader(count: hiddenDocs.count, lang))
+                        .font(.piloSerifCaption)
+                        .foregroundStyle(Color.inkSecondary)
+                    Spacer()
+                    HStack(spacing: 3) {
+                        Image(systemName: isOpen ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9))
+                        Text(isOpen ? Copy.Docs.hiddenSectionToggleHide(lang)
+                                    : Copy.Docs.hiddenSectionToggleShow(lang))
+                            .font(.piloSerifCaption)
+                    }
+                    .foregroundStyle(Color.piloGoldDark)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isOpen {
+                VStack(spacing: 2) {
+                    ForEach(hiddenDocs) { doc in
+                        HiddenDocRow(doc: doc, repoPath: repoPath, lang: lang)
+                    }
+                }
+                .padding(.top, 4)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+}
+
+/// 隐藏列表里的单行——半透明 + "翻出来"按钮
+private struct HiddenDocRow: View {
+    let doc: RepoDoc
+    let repoPath: String
+    let lang: Language
+
+    @Environment(AppState.self) private var appState
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "envelope")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.inkTertiary)
+                .frame(width: 16)
+            Text(doc.relativePath)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(Color.inkSecondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 8)
+            Text(Copy.Docs.relativeModified(doc.modifiedAt, lang))
+                .font(.piloSerifCaption)
+                .foregroundStyle(Color.inkTertiary)
+
+            Button {
+                guard let repoId = appState.repositories.first(where: { $0.path == repoPath })?.id else { return }
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    appState.unhideDoc(doc, repoId: repoId)
+                }
+            } label: {
+                Text(Copy.Docs.unhideAction(lang))
+                    .font(.piloSerifCaption)
+                    .foregroundStyle(Color.piloBlue)
+            }
+            .buttonStyle(.plain)
+            .opacity(isHovered ? 1 : 0.6)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .opacity(0.75)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isHovered ? Color.piloPaper.opacity(0.4) : Color.clear)
+        )
+        .onHover { hovered in
+            withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovered }
         }
     }
 }

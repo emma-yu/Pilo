@@ -968,6 +968,30 @@ enum Copy {
         static func collapseToTop(_ top: Int, _ lang: Language) -> String {
             lang == .zh ? "收起，只看前 \(top) 份" : "Collapse to top \(top)"
         }
+
+        // 隐藏 / 取消隐藏（右键 menu + footer）
+        static func hideAction(_ lang: Language) -> String {
+            lang == .zh ? "藏起来不再显示" : "Hide from this list"
+        }
+        static func unhideAction(_ lang: Language) -> String {
+            lang == .zh ? "翻出来" : "Bring back"
+        }
+        static func showInFinder(_ lang: Language) -> String {
+            lang == .zh ? "在 Finder 显示" : "Show in Finder"
+        }
+        static func hiddenSectionHeader(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "已藏起 \(count) 份" }
+            return count == 1 ? "1 hidden" : "\(count) hidden"
+        }
+        static func hiddenSectionToggleShow(_ lang: Language) -> String {
+            lang == .zh ? "翻出来看看" : "Peek inside"
+        }
+        static func hiddenSectionToggleHide(_ lang: Language) -> String {
+            lang == .zh ? "收起" : "Tuck away"
+        }
+        static func moreActions(_ lang: Language) -> String {
+            lang == .zh ? "更多操作" : "More actions"
+        }
     }
 
     // MARK: - Markdown 预览 sheet

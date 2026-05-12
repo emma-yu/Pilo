@@ -48,6 +48,10 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
     /// 跟 lastScanDate / lastCommitDate 都不一样 —— 这是"上次打开看过"的时间。
     var lastViewedDate: Date?
 
+    /// 用户主动在小邮局里"藏起来"的文档相对路径集合。**不删文件**，只是不在文档面板默认显示。
+    /// 文件被删 / 重命名后，旧 path 自然失效（下次扫不到，filter 不会误显示）。
+    var hiddenDocPaths: Set<String>
+
     init(
         id: UUID = UUID(),
         path: String,
@@ -71,7 +75,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         category: RepoCategory = .unset,
         hasReadme: Bool = false,
         hasTests: Bool = false,
-        lastViewedDate: Date? = nil
+        lastViewedDate: Date? = nil,
+        hiddenDocPaths: Set<String> = []
     ) {
         self.id = id
         self.pathHash = Self.hash(path: path)
@@ -97,6 +102,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.hasReadme = hasReadme
         self.hasTests = hasTests
         self.lastViewedDate = lastViewedDate
+        self.hiddenDocPaths = hiddenDocPaths
     }
 
     // Codable 向后兼容：旧 state.json 没有新字段时使用默认值。
@@ -105,7 +111,7 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
              uncommittedCount, lastCommitDate, lastFetchDate, lastFetchSuccess,
              remotes, defaultPushRemote, firstCommitHash, isHidden, customTags,
              lastScanDate, skipFetch, skipMainBranchWarning, falsePositiveMarks,
-             category, hasReadme, hasTests, lastViewedDate
+             category, hasReadme, hasTests, lastViewedDate, hiddenDocPaths
     }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -135,6 +141,8 @@ struct Repository: Codable, Identifiable, Hashable, Sendable {
         self.hasTests = try c.decodeIfPresent(Bool.self, forKey: .hasTests) ?? false
         // Resume Work：旧 state.json 没有 lastViewedDate → nil（首次见面）
         self.lastViewedDate = try c.decodeIfPresent(Date.self, forKey: .lastViewedDate)
+        // 用户在小邮局里隐藏的文档：旧 state.json 没有 → 空集合
+        self.hiddenDocPaths = try c.decodeIfPresent(Set<String>.self, forKey: .hiddenDocPaths) ?? []
     }
 
     static func hash(path: String) -> String {
