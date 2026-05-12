@@ -238,12 +238,41 @@ final class RepoDocsIndexerTests: XCTestCase {
 
     // MARK: - 排序 + limit
 
-    func testSortedByMtimeDescending() throws {
+    func testKindPriorityOverridesMtime() throws {
+        // 新行为：README / TODO / CHANGELOG 各有 kind 权重，
+        // README (priority 0) 永远在 TODO (priority 4) / CHANGELOG (priority 5) 前
         try write("README.md", modifiedDaysAgo: 5)
-        try write("TODO.md", modifiedDaysAgo: 1)     // 最新
+        try write("TODO.md", modifiedDaysAgo: 1)        // 最新但 priority 低
         try write("CHANGELOG.md", modifiedDaysAgo: 10)
         let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
-        XCTAssertEqual(docs.map(\.name), ["TODO.md", "README.md", "CHANGELOG.md"])
+        XCTAssertEqual(docs.map(\.name), ["README.md", "TODO.md", "CHANGELOG.md"])
+    }
+
+    func testMtimeSortWithinSameKind() throws {
+        // 同 kind (.generic) 内，按 mtime 倒序
+        try write("scratch-old.md", modifiedDaysAgo: 10)
+        try write("scratch-new.md", modifiedDaysAgo: 1)
+        try write("scratch-mid.md", modifiedDaysAgo: 5)
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.map(\.name), ["scratch-new.md", "scratch-mid.md", "scratch-old.md"])
+    }
+
+    func testReadmeNotShovedOutByManyGenericMds() throws {
+        // 重型项目场景：很多杂 .md + 1 个 README → README 仍在前
+        try write("README.md", modifiedDaysAgo: 30)  // 陈旧 README
+        for i in 0..<10 {
+            try write("scratch-\(i).md", modifiedDaysAgo: Double(i))  // 都很新
+        }
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.name, "README.md", "README 不应被海量 generic 挤出 top")
+    }
+
+    func testFindsCursorRulesMdc() throws {
+        // .cursorrules.mdc 是 Cursor 0.42+ 的新格式
+        try write(".cursorrules.mdc")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.count, 1)
+        XCTAssertEqual(docs[0].kind, .aiInstructions)
     }
 
     // MARK: - 极端

@@ -962,6 +962,12 @@ enum Copy {
         static func rowHint(_ lang: Language) -> String {
             lang == .zh ? "点开看看 · ↗ 用编辑器打开" : "Click to read · ↗ open in editor"
         }
+        static func expandAll(more: Int, _ lang: Language) -> String {
+            lang == .zh ? "展开全部 \(more) 份更多" : "Show all · \(more) more"
+        }
+        static func collapseToTop(_ top: Int, _ lang: Language) -> String {
+            lang == .zh ? "收起，只看前 \(top) 份" : "Collapse to top \(top)"
+        }
     }
 
     // MARK: - Markdown 预览 sheet

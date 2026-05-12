@@ -58,8 +58,9 @@ enum RepoDocsIndexer {
     ]
 
     /// 文档扩展名（不在此列表的不视为文档；裸文件走 bareFileWhitelist）。
+    /// `mdc` 是 Cursor 0.42+ 的 rules 文件新格式（如 .cursorrules.mdc / *.mdc）。
     private static let docExtensions: Set<String> = [
-        "md", "markdown", "mdx", "rst", "txt", "org",
+        "md", "markdown", "mdx", "mdc", "rst", "txt", "org",
     ]
 
     /// docs-like 子目录（一级深度全扫，二级有限递归）。
@@ -73,7 +74,8 @@ enum RepoDocsIndexer {
     private static let subdirMaxDepth = 3
 
     /// 限制最大返回数。
-    static let limit = 20
+    /// 重型项目（如 200+ 份文档）截到 100；UI 层用折叠/展开控制可见数。
+    static let limit = 100
 
     /// 扫文档。同步阻塞，但只做几次 FileManager call，~毫秒级。
     /// 失败 / 空目录 → 返回 [].
@@ -90,10 +92,17 @@ enum RepoDocsIndexer {
             options: [.skipsPackageDescendants]
         ) {
             for url in rootContents {
-                // 跳过隐藏文件，但 .cursorrules / .github 等已在 docDirNames / prefix 中显式处理
                 let name = url.lastPathComponent
-                if name.hasPrefix(".") && name != ".cursorrules" && !docDirNames.contains(name) {
-                    continue
+                if name.hasPrefix(".") {
+                    // 跳过 .env / .gitignore / .DS_Store 等隐藏文件；
+                    // 放行：(a) 显式的 .cursorrules；(b) docs-like 隐藏目录（.github）；
+                    //       (c) 任何"隐藏 + 文档扩展名"的文件（如 .cursorrules.mdc）
+                    let ext = url.pathExtension.lowercased()
+                    let isDocExt = !ext.isEmpty && docExtensions.contains(ext)
+                    let isAllowedDotName = (name == ".cursorrules") || docDirNames.contains(name)
+                    if !isDocExt && !isAllowedDotName {
+                        continue
+                    }
                 }
                 if let doc = makeDoc(url: url, repoRoot: root, atRootLevel: true) {
                     docs.append(doc)
@@ -109,8 +118,34 @@ enum RepoDocsIndexer {
             scanSubdirectory(subURL, repoRoot: root, depth: 1, into: &docs)
         }
 
-        // mtime 倒序排（最近改的在前），limit 截断
-        return Array(docs.sorted { $0.modifiedAt > $1.modifiedAt }.prefix(limit))
+        // 排序：kind 权重在前（README / AI rules / LICENSE 等永远不被 generic 挤出），
+        // 同权重内按 mtime 倒序。limit 截断保护重型项目。
+        return Array(
+            docs
+                .sorted { lhs, rhs in
+                    let lp = sortPriority(lhs.kind)
+                    let rp = sortPriority(rhs.kind)
+                    if lp != rp { return lp < rp }
+                    return lhs.modifiedAt > rhs.modifiedAt
+                }
+                .prefix(limit)
+        )
+    }
+
+    /// 排序优先级（数字越小越靠前）。重要 kind 永远进 top，避免被海量 .generic 挤掉。
+    private static func sortPriority(_ kind: RepoDoc.Kind) -> Int {
+        switch kind {
+        case .readme:          return 0   // 最重要：项目门面
+        case .aiInstructions:  return 1   // AI 时代专属：CLAUDE.md / .cursorrules
+        case .architecture:    return 2   // 架构 / 实现记录
+        case .prd:             return 3
+        case .todo:            return 4
+        case .changelog:       return 5
+        case .contributing:    return 6
+        case .license:         return 7
+        case .notes:           return 8
+        case .generic:         return 99  // 兜底
+        }
     }
 
     // MARK: - 子目录递归

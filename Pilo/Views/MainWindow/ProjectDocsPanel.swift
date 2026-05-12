@@ -11,13 +11,29 @@ struct ProjectDocsPanel: View {
     let docs: [RepoDoc]
 
     @Environment(AppState.self) private var appState
+    @State private var isExpanded: Bool = false
+
     private var lang: Language { appState.language }
+
+    /// 默认折叠的展示行数。
+    private static let collapsedTop = 12
+
+    private var visibleDocs: [RepoDoc] {
+        if isExpanded || docs.count <= Self.collapsedTop {
+            return docs
+        }
+        return Array(docs.prefix(Self.collapsedTop))
+    }
 
     var body: some View {
         if !docs.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 rows
+                if docs.count > Self.collapsedTop {
+                    expandToggle
+                        .padding(.top, 6)
+                }
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -29,6 +45,8 @@ struct ProjectDocsPanel: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(Color.cloudDivider.opacity(0.6), lineWidth: 0.5)
             )
+            // 切 repo 时重置展开态（避免一个 repo 展开了状态 leak 到另一个）
+            .onChange(of: repoPath) { _, _ in isExpanded = false }
         }
     }
 
@@ -47,10 +65,41 @@ struct ProjectDocsPanel: View {
 
     private var rows: some View {
         VStack(spacing: 2) {
-            ForEach(docs) { doc in
+            ForEach(visibleDocs) { doc in
                 DocRow(doc: doc, repoPath: repoPath, lang: lang)
             }
         }
+    }
+
+    @ViewBuilder
+    private var expandToggle: some View {
+        let more = docs.count - Self.collapsedTop
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 10))
+                Text(isExpanded
+                     ? Copy.Docs.collapseToTop(Self.collapsedTop, lang)
+                     : Copy.Docs.expandAll(more: more, lang))
+                    .font(.piloSerifCaption)
+            }
+            .foregroundStyle(Color.piloGoldDark)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.5))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.3),
+                            style: StrokeStyle(lineWidth: 0.6, dash: [3, 2]))
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
