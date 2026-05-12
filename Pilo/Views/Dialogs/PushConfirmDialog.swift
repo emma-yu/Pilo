@@ -601,8 +601,9 @@ struct PushConfirmDialog: View {
         VStack(spacing: PiloSpacing.l) {
             Spacer(minLength: PiloSpacing.s)
 
-            // P 蜡封作主视觉（Pilo 官方封缄）+ Happy 鸽子作辅助
-            // "已寄出 = 信件已盖章封好"的语义；P 蜡封跟品牌 brand 直接连接
+            // P 蜡封作主视觉（Pilo 官方封缄）+ 信封堆叠作辅助
+            // 完整邮局闭环："信件被 P 蜡封封好寄出"
+            // 蜡封 -6° 左倾 + 信件 +5° 右倾 = "封信瞬间" 的物理张力
             ZStack(alignment: .bottomTrailing) {
                 Image("WaxSealPilo")
                     .resizable()
@@ -612,9 +613,14 @@ struct PushConfirmDialog: View {
                     .rotationEffect(.degrees(-6))
                     .shadow(color: Color.stampRed.opacity(0.2), radius: 3, y: 2)
 
-                // Mascot 缩小到右下角作"完成"情感辅助
-                PiloMascot(mood: .happy, size: 44, breathing: true)
-                    .offset(x: 18, y: 6)
+                Image("LetterStack")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 54, height: 54)
+                    .rotationEffect(.degrees(5))
+                    .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 2, y: 1.5)
+                    .offset(x: 22, y: 10)
             }
 
             // 衬线大标题 + 斜体副标题
