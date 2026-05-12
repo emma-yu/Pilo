@@ -19,6 +19,11 @@ enum SettingsKey: String {
     case notifyOnStaleRepo
     case theme
     case reduceMotion             // .system / .on / .off
+
+    // S3 Identity Sentinel —— 每类 RepoCategory 绑一个 git user.email
+    case identityWork
+    case identityPersonal
+    case identityExperiment
 }
 
 enum AppSettingsDefaults {

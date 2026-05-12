@@ -144,8 +144,8 @@ actor GitClient {
         guard let exists = await runGit(["rev-parse", "--verify", "--quiet", ref], in: repo),
               exists.ok else { return [] }
 
-        // %x00 是 NUL 分隔符；%h short hash；%s subject；%ct epoch；%an author name
-        let format = "%h%x00%s%x00%ct%x00%an"
+        // %x00 是 NUL 分隔符；%h short hash；%s subject；%ct epoch；%an author name；%ae author email
+        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
             ["log", "\(ref)..HEAD", "--format=\(format)"],
             in: repo
@@ -154,13 +154,15 @@ actor GitClient {
         var out: [CommitSummary] = []
         for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
             let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            guard cols.count == 4 else { continue }
+            // 兼容老格式（4 列）和新格式（5 列含 author email）
+            guard cols.count >= 4 else { continue }
             guard let ts = TimeInterval(cols[2]) else { continue }
             out.append(CommitSummary(
                 hash: cols[0],
                 subject: cols[1],
                 date: Date(timeIntervalSince1970: ts),
-                author: cols[3]
+                author: cols[3],
+                authorEmail: cols.count >= 5 ? cols[4] : nil
             ))
         }
         return out
@@ -208,7 +210,7 @@ actor GitClient {
     /// Resume Work：最近 N 个 commit（HEAD 倒推），用作"最近寄出过"展示。
     /// 跟 pendingPushCommits 不同：那个是相对 remote 的待推；这个是历史。
     func recentCommits(repo: URL, limit: Int = 5) async -> [CommitSummary] {
-        let format = "%h%x00%s%x00%ct%x00%an"
+        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
             ["log", "-\(limit)", "--format=\(format)"],
             in: repo
@@ -217,16 +219,34 @@ actor GitClient {
         var out: [CommitSummary] = []
         for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
             let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            guard cols.count == 4 else { continue }
+            guard cols.count >= 4 else { continue }
             guard let ts = TimeInterval(cols[2]) else { continue }
             out.append(CommitSummary(
                 hash: cols[0],
                 subject: cols[1],
                 date: Date(timeIntervalSince1970: ts),
-                author: cols[3]
+                author: cols[3],
+                authorEmail: cols.count >= 5 ? cols[4] : nil
             ))
         }
         return out
+    }
+
+    /// S3 Identity Sentinel：读 repo 本地的 git config user.email
+    /// （local 优先 local config，没有再 fallback global）。
+    func localUserEmail(repo: URL) async -> String? {
+        guard let r = await runGit(["config", "user.email"], in: repo), r.ok else { return nil }
+        let trimmed = r.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// S3 Identity Sentinel：写 repo 本地的 git config user.email。
+    /// 用于「一键修正 author」修 future commits 的默认 identity。
+    /// 不动 git history（不 rebase），只改 default config。
+    @discardableResult
+    func setLocalUserEmail(repo: URL, email: String) async -> Bool {
+        guard let r = await runGit(["config", "user.email", email], in: repo), r.ok else { return false }
+        return true
     }
 
     /// 拉取即将 push 的 commit 范围内变更过的文件清单 + status。

@@ -1056,6 +1056,68 @@ enum Copy {
         }
     }
 
+    // MARK: - S3 Identity Sentinel
+
+    enum Identity {
+        // Settings 配置区
+        static func sectionHeader(_ lang: Language) -> String {
+            lang == .zh ? "身份分拣" : "Identity Pool"
+        }
+        static func sectionHint(_ lang: Language) -> String {
+            lang == .zh
+                ? "为每类仓库绑定一个 git 邮箱，push 前 Pilo 会自动核对"
+                : "Bind a git email per category — Pilo will cross-check on push"
+        }
+        static func emailFieldLabel(_ cat: RepoCategory, _ lang: Language) -> String {
+            switch (cat, lang) {
+            case (.work, .zh):       return "工作邮箱"
+            case (.work, .en):       return "Work email"
+            case (.personal, .zh):   return "个人邮箱"
+            case (.personal, .en):   return "Personal email"
+            case (.experiment, .zh): return "实验邮箱（留空跟个人）"
+            case (.experiment, .en): return "Experiment (defaults to Personal)"
+            default:                 return ""
+            }
+        }
+        static func emailFieldPlaceholder(_ cat: RepoCategory, _ lang: Language) -> String {
+            switch (cat, lang) {
+            case (.work, .zh):       return "例如 you@company.com"
+            case (.work, .en):       return "e.g. you@company.com"
+            case (.personal, .zh):   return "例如 12345+username@users.noreply.github.com"
+            case (.personal, .en):   return "e.g. 12345+username@users.noreply.github.com"
+            case (.experiment, .zh): return ""
+            case (.experiment, .en): return ""
+            default:                 return ""
+            }
+        }
+
+        // Push preflight warning banner
+        static func mismatchTitle(_ lang: Language) -> String {
+            lang == .zh ? "身份对不上号" : "Identity mismatch"
+        }
+        static func mismatchBody(category: RepoCategory, expected: String, actual: String,
+                                 count: Int, _ lang: Language) -> String {
+            let catName = Copy.Inventory.categoryLabel(category, lang)
+            if lang == .zh {
+                let s = count == 1 ? "" : "（共 \(count) 个）"
+                return "这是 \(catName) 仓库，但 commit author 是 \(actual)\(s)，期望的是 \(expected)。"
+            } else {
+                return "This is a \(catName) repo, but commit author is \(actual) (\(count) commits) — expected \(expected)."
+            }
+        }
+        static func fixAuthorButton(_ lang: Language) -> String {
+            lang == .zh ? "一键修正 author" : "Fix author config"
+        }
+        static func ignoreOnceButton(_ lang: Language) -> String {
+            lang == .zh ? "仅本次忽略" : "Ignore this time"
+        }
+        static func fixedHint(_ lang: Language) -> String {
+            lang == .zh
+                ? "已把 git config user.email 改成期望值（仅影响未来 commit，历史不动）"
+                : "Updated git config user.email (affects future commits only, history untouched)"
+        }
+    }
+
     // MARK: - AI 工具 menu
 
     enum AILauncher {

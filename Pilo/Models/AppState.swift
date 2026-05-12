@@ -179,6 +179,9 @@ final class AppState {
     var tone: Tone = AppSettingsDefaults.tone
     var language: Language = .systemDefault
 
+    /// S3 Identity Sentinel —— 用户配的"work/personal/experiment" 各自期望 email
+    var identityPool: IdentityPool = IdentityPool(work: nil, personal: nil, experiment: nil)
+
     // MARK: - 启动
 
     init() {
@@ -215,6 +218,7 @@ final class AppState {
             }
         }
         self.watchDirectories = WatchDirectoriesStorage.load()
+        self.identityPool = IdentityPool.load()
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
         // 在 MainActor 的下一个 tick 启动后端检测和首扫；
@@ -416,6 +420,19 @@ final class AppState {
             )
         }
 
+        // S3 Identity Sentinel：在 preflight 期间检查 commit author email
+        // 跟 repo category 期望身份是否匹配。Pool 空 / category=unset → skip
+        var identityMismatch: IdentityValidator.Mismatch? = nil
+        if !identityPool.isEmpty && repo.category != .unset {
+            let localEmail = await gitClient.localUserEmail(repo: repoURL)
+            identityMismatch = IdentityValidator.validate(
+                category: repo.category,
+                identityPool: identityPool,
+                commits: commits,
+                currentLocalEmail: localEmail
+            )
+        }
+
         let preflight = PushSession.Preflight(
             repoId: repo.id,
             repoPath: repo.path,
@@ -428,7 +445,8 @@ final class AppState {
             guardFindings: guardFindings,
             scanSkippedByKillSwitch: scanSkipped,
             bypassConfirmed: false,
-            ignoredIds: []
+            ignoredIds: [],
+            identityMismatch: identityMismatch
         )
         // 用户可能在 loading 期间手动关 sheet（点 sheet 外）—— 这种情况 pushSession 已 nil
         // 或者重新点了别的 repo 的 push（pushSession.id 变了）。
@@ -735,6 +753,42 @@ final class AppState {
     var hiddenRepos: [Repository] {
         repositories.filter { $0.isHidden }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    // MARK: - S3 Identity Sentinel
+
+    /// 用户在 Settings 里改了 identity pool 时调用 —— 持久化 + 更新 in-memory state
+    func updateIdentityPool(work: String?, personal: String?, experiment: String?) {
+        let pool = IdentityPool(work: work, personal: personal, experiment: experiment)
+        self.identityPool = pool
+        IdentityPool.save(pool)
+    }
+
+    /// 用户在 preflight 点「一键修正 author」时调用：
+    /// 把 repo 的 local git config user.email 改成 category 期望值。
+    /// 注意：只修 default config，不改已 commit 的 author（避免破坏 git history）
+    func fixLocalIdentity() async {
+        guard let session = pushSession,
+              case .preflight(let pre) = session.state,
+              let mismatch = pre.identityMismatch else { return }
+        let repoURL = URL(fileURLWithPath: pre.repoPath)
+        _ = await gitClient.setLocalUserEmail(repo: repoURL, email: mismatch.expectedEmail)
+        // 重新拉一次 identity check 让 banner 消失（用户下次 commit 起就用新 email）
+        if let session2 = pushSession, case .preflight(var pre2) = session2.state {
+            pre2.identityWarningIgnored = true
+            var s = session2
+            s.state = .preflight(pre2)
+            pushSession = s
+        }
+    }
+
+    /// "仅本次忽略" identity warning
+    func ignoreIdentityWarningOnce() {
+        guard let session = pushSession, case .preflight(var pre) = session.state else { return }
+        pre.identityWarningIgnored = true
+        var s = session
+        s.state = .preflight(pre)
+        pushSession = s
     }
 
     // MARK: - 文档隐藏（在小邮局内分拣）

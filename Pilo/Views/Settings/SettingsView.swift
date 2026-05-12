@@ -75,12 +75,116 @@ struct SettingsView: View {
                             .font(.piloSerifSubtitle)
                             .foregroundStyle(Color.inkSecondary)
                     }
+
+                    // S3 Identity Sentinel —— 身份分拣
+                    identityPoolSection
                 }
                 .padding(PiloSpacing.xl)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
         .background(Color.creamBg)
+    }
+
+    // MARK: - S3 Identity Sentinel · 身份分拣
+
+    @ViewBuilder
+    private var identityPoolSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.s) {
+            sectionLabel(Copy.Identity.sectionHeader(lang))
+            Text(Copy.Identity.sectionHint(lang))
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkSecondary)
+
+            VStack(spacing: PiloSpacing.s) {
+                identityRow(category: .work)
+                identityRow(category: .personal)
+                identityRow(category: .experiment)
+            }
+            .padding(.top, PiloSpacing.xs)
+        }
+    }
+
+    @ViewBuilder
+    private func identityRow(category: RepoCategory) -> some View {
+        HStack(spacing: PiloSpacing.m) {
+            // 类别 stamp glyph 14pt（跟 sidebar 视觉一致）
+            categoryStamp(for: category)
+                .frame(width: 36)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Copy.Identity.emailFieldLabel(category, lang))
+                    .font(.piloSerifSubtitle)
+                    .foregroundStyle(Color.inkPrimary)
+                identityEmailField(category: category)
+            }
+        }
+    }
+
+    private func categoryStamp(for cat: RepoCategory) -> some View {
+        let (text, color): (String, Color) = {
+            switch cat {
+            case .work:       return ("工", .piloBlue)
+            case .personal:   return ("私", .piloGold)
+            case .experiment: return ("试", .lavenderInfo)
+            case .unset:      return ("", .clear)
+            }
+        }()
+        return Text(text)
+            .font(.custom("Songti SC", size: 13).weight(.semibold))
+            .foregroundStyle(color.opacity(0.9))
+            .frame(width: 28, height: 28)
+            .overlay(
+                Circle()
+                    .strokeBorder(color.opacity(0.7), lineWidth: 1.2)
+            )
+            .rotationEffect(.degrees(-5))
+    }
+
+    @ViewBuilder
+    private func identityEmailField(category: RepoCategory) -> some View {
+        let binding = Binding<String>(
+            get: { currentEmail(for: category) ?? "" },
+            set: { newValue in
+                writeEmail(newValue, for: category)
+            }
+        )
+        TextField(Copy.Identity.emailFieldPlaceholder(category, lang), text: binding)
+            .textFieldStyle(.plain)
+            .font(.system(size: 12, design: .monospaced))
+            .foregroundStyle(Color.inkPrimary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.35), lineWidth: 0.5)
+            )
+    }
+
+    private func currentEmail(for category: RepoCategory) -> String? {
+        switch category {
+        case .work:       return appState.identityPool.work
+        case .personal:   return appState.identityPool.personal
+        case .experiment: return appState.identityPool.experiment
+        case .unset:      return nil
+        }
+    }
+
+    private func writeEmail(_ email: String, for category: RepoCategory) {
+        let pool = appState.identityPool
+        switch category {
+        case .work:
+            appState.updateIdentityPool(work: email, personal: pool.personal, experiment: pool.experiment)
+        case .personal:
+            appState.updateIdentityPool(work: pool.work, personal: email, experiment: pool.experiment)
+        case .experiment:
+            appState.updateIdentityPool(work: pool.work, personal: pool.personal, experiment: email)
+        case .unset:
+            break
+        }
     }
 
     // MARK: - 扫描

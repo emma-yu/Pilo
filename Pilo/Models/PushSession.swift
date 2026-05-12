@@ -24,6 +24,11 @@ struct PushSession: Identifiable, Sendable {
         var bypassConfirmed: Bool = false
         /// session-scoped 忽略集合（"仅本次忽略"按钮写入；不持久化）
         var ignoredIds: Set<UUID> = []
+        /// S3 Identity Sentinel —— commit author 跟 repo category 期望身份不匹配
+        /// nil = 无 mismatch / 没配 pool / category=unset。Push 仍可继续，只 warning
+        var identityMismatch: IdentityValidator.Mismatch? = nil
+        /// 用户本次"仅本次忽略"了 identity warning
+        var identityWarningIgnored: Bool = false
 
         // MARK: - 可见集合（过滤掉 ignoredIds）
 

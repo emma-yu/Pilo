@@ -84,12 +84,77 @@ struct PushConfirmDialog: View {
         VStack(alignment: .leading, spacing: 16) {
             preflightHeader(pre)
             Divider()
+            // S3 Identity Sentinel：身份对不上号 warning banner（仅出现时显示）
+            if let mismatch = pre.identityMismatch, !pre.identityWarningIgnored {
+                identityMismatchBanner(mismatch)
+            }
             commitsList(pre.commits)
             findingsSection(pre)
             Spacer(minLength: 0)
             preflightFooter(pre)
         }
         .padding(24)
+    }
+
+    /// S3 Identity 错位 warning banner
+    private func identityMismatchBanner(_ mismatch: IdentityValidator.Mismatch) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "person.crop.circle.badge.exclamationmark")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color.amberWarn)
+                Text(Copy.Identity.mismatchTitle(lang))
+                    .font(.piloSection)
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer()
+            }
+            Text(Copy.Identity.mismatchBody(
+                category: mismatch.category,
+                expected: mismatch.expectedEmail,
+                actual: mismatch.actualEmail,
+                count: mismatch.mismatchCount,
+                lang
+            ))
+            .font(.piloSerifSubtitle)
+            .foregroundStyle(Color.inkSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 10) {
+                Button {
+                    Task { await appState.fixLocalIdentity() }
+                } label: {
+                    HStack(spacing: 5) {
+                        Image(systemName: "checkmark.shield")
+                            .font(.system(size: 11))
+                        Text(Copy.Identity.fixAuthorButton(lang))
+                            .font(.piloSerifCaption)
+                    }
+                    .foregroundStyle(Color.piloGoldDark)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    appState.ignoreIdentityWarningOnce()
+                } label: {
+                    Text(Copy.Identity.ignoreOnceButton(lang))
+                        .font(.piloSerifCaption)
+                        .italic()
+                        .foregroundStyle(Color.inkSecondary)
+                }
+                .buttonStyle(.plain)
+                Spacer()
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(Color.amberWarn.opacity(0.08))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .stroke(Color.amberWarn.opacity(0.35), lineWidth: 0.5)
+        )
     }
 
     private func preflightHeader(_ pre: PushSession.Preflight) -> some View {
