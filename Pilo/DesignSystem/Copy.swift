@@ -1054,8 +1054,10 @@ enum Copy {
         static func openInButton(_ lang: Language) -> String {
             lang == .zh ? "在 AI 中打开" : "Open in AI"
         }
+        // "请位 AI 助手" / "Send for an editor" —— 邮局派遣的叙事
+        // ("send for the postman" 在英文里是邮政传统用法)
         static func popoverTitle(_ lang: Language) -> String {
-            lang == .zh ? "选个 AI 编辑器" : "Pick an AI editor"
+            lang == .zh ? "请位 AI 助手" : "Send for an editor"
         }
         static func noToolsDetected(_ lang: Language) -> String {
             lang == .zh
