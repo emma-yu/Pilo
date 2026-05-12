@@ -74,12 +74,27 @@ struct LetterReaderView: View {
     @ViewBuilder
     private var content: some View {
         VStack(alignment: .leading, spacing: 18) {
-            // Header
-            VStack(alignment: .leading, spacing: 6) {
-                Text(Copy.Letter.letterHeader(lang))
-                    .font(.custom("Songti SC", size: 28).weight(.medium))
-                    .foregroundStyle(Color.inkPrimary)
-                OrnamentDivider(width: 180)
+            // Header —— 标题在左，PostalDial 邮戳水印在右上角
+            // 跟真实邮件传统一致：邮戳盖在信件右上（邮票位置），表示"已被邮局处理"
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(Copy.Letter.letterHeader(lang))
+                        .font(.custom("Songti SC", size: 28).weight(.medium))
+                        .foregroundStyle(Color.inkPrimary)
+                    OrnamentDivider(width: 180)
+                }
+                Spacer()
+                // PostalDial 水印效果：opacity 0.72 + multiply 让它"嵌进信纸"，
+                // 不抢标题，-8° 倾斜模拟"盖印瞬间"的物理感
+                Image("PostalDial")
+                    .resizable()
+                    .interpolation(.high)
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 90, height: 90)
+                    .rotationEffect(.degrees(-8))
+                    .opacity(0.72)
+                    .blendMode(.multiply)
+                    .offset(y: -8)
             }
             .padding(.bottom, 8)
 
