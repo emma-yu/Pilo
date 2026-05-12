@@ -23,6 +23,9 @@ struct MarkdownPreviewSheet: View {
     /// 防止 onAppear 多次触发恢复（保险，理论上 onAppear 只触发一次）
     @State private var hasRestoredScroll = false
 
+    /// TOC sidebar 全局展开偏好（per-app，跨文档生效）
+    @AppStorage("docTocExpanded") private var tocExpanded: Bool = true
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -37,8 +40,31 @@ struct MarkdownPreviewSheet: View {
 
     // MARK: - Toolbar
 
+    /// 当前 doc 是否有足够多 heading 值得显示 TOC（≥ 4 个）
+    private var hasEnoughHeadings: Bool {
+        guard let mdDoc = appState.previewDocument else { return false }
+        return MarkdownTOC.extract(from: mdDoc.blocks).count >= MarkdownTOC.minHeadingsToShow
+    }
+
+    /// 实际是否渲染 TOC sidebar（用户偏好 AND doc 够长）
+    private var shouldShowTOC: Bool {
+        tocExpanded && hasEnoughHeadings
+    }
+
     private var toolbar: some View {
         HStack(spacing: 10) {
+            // TOC 切换 —— 仅当 doc 有足够 heading 才显示按钮
+            if hasEnoughHeadings {
+                Button(action: { withAnimation(.piloSpring) { tocExpanded.toggle() } }) {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(tocExpanded ? Color.piloGoldDark : Color.inkSecondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("l", modifiers: [.command, .shift])
+                .help(Copy.Docs.tocToggle(expanded: tocExpanded, lang))
+            }
+
             Image(systemName: "envelope.open.fill")
                 .font(.system(size: 14))
                 .foregroundStyle(Color.piloGoldDark)
@@ -100,44 +126,63 @@ struct MarkdownPreviewSheet: View {
         if let err = appState.previewError {
             errorState(err)
         } else if let mdDoc = appState.previewDocument {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(mdDoc.blocks.enumerated()), id: \.offset) { i, block in
-                        BlockView(block: block)
-                            .id(i)   // .scrollPosition target —— blockIndex 作 ID
-                    }
-                    Spacer(minLength: 40)
-                }
-                .padding(.horizontal, 36)
-                .padding(.vertical, 28)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .textSelection(.enabled)
-                .scrollTargetLayout()
-            }
-            .scrollPosition(id: $scrolledBlockID)
-            .onAppear {
-                // 恢复上次滚动位置
-                guard !hasRestoredScroll, !mdDoc.blocks.isEmpty else { return }
-                hasRestoredScroll = true
-                if let saved = DocReadingMemory.savedBlockIndex(
-                    repoPath: repoPath,
-                    docRelativePath: doc.relativePath
-                ), saved > 0, saved < mdDoc.blocks.count {
-                    scrolledBlockID = saved
-                }
-            }
-            .onDisappear {
-                // 保存当前位置 —— 即便是 0（用户主动滚回顶就该记住）
-                if let id = scrolledBlockID, id >= 0 {
-                    DocReadingMemory.save(
-                        blockIndex: id,
-                        repoPath: repoPath,
-                        docRelativePath: doc.relativePath
+            HStack(spacing: 0) {
+                if shouldShowTOC {
+                    MarkdownTOCSidebar(
+                        items: MarkdownTOC.extract(from: mdDoc.blocks),
+                        lang: lang,
+                        onSelect: { blockIndex in
+                            withAnimation(.piloSpring) {
+                                scrolledBlockID = blockIndex
+                            }
+                        }
                     )
+                    .transition(.move(edge: .leading).combined(with: .opacity))
                 }
+                scrollableMarkdown(mdDoc)
             }
         } else {
             loadingState
+        }
+    }
+
+    /// 内容滚动区 —— 独立出来跟 TOC 平级 HStack 排
+    private func scrollableMarkdown(_ mdDoc: MarkdownDocument) -> some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(mdDoc.blocks.enumerated()), id: \.offset) { i, block in
+                    BlockView(block: block)
+                        .id(i)   // .scrollPosition target —— blockIndex 作 ID
+                }
+                Spacer(minLength: 40)
+            }
+            .padding(.horizontal, 36)
+            .padding(.vertical, 28)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .textSelection(.enabled)
+            .scrollTargetLayout()
+        }
+        .scrollPosition(id: $scrolledBlockID)
+        .onAppear {
+            // 恢复上次滚动位置
+            guard !hasRestoredScroll, !mdDoc.blocks.isEmpty else { return }
+            hasRestoredScroll = true
+            if let saved = DocReadingMemory.savedBlockIndex(
+                repoPath: repoPath,
+                docRelativePath: doc.relativePath
+            ), saved > 0, saved < mdDoc.blocks.count {
+                scrolledBlockID = saved
+            }
+        }
+        .onDisappear {
+            // 保存当前位置 —— 即便是 0（用户主动滚回顶就该记住）
+            if let id = scrolledBlockID, id >= 0 {
+                DocReadingMemory.save(
+                    blockIndex: id,
+                    repoPath: repoPath,
+                    docRelativePath: doc.relativePath
+                )
+            }
         }
     }
 

@@ -17,6 +17,7 @@
 		0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */; };
 		0E1538465A5BD686A7C29164 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5540EAC6848024D2E4873663 /* Copy.swift */; };
 		13F6E079D35DB79C26CC8184 /* RepoDocsIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231AF0568E988D86699B2EE4 /* RepoDocsIndexer.swift */; };
+		1764315DB68D498D0AA3C0B1 /* MarkdownTOCSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */; };
 		1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */; };
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
 		1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA6AB9592230B7D21B964718 /* PiloHero.swift */; };
@@ -65,6 +66,7 @@
 		6B9AB949B4914CA020229558 /* IdentityPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FEF8617500F6E861847FA9 /* IdentityPool.swift */; };
 		6CF51C11E1DF49DCD24C7E21 /* CopyLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8EFDE51151A74B99FD3027 /* CopyLanguageTests.swift */; };
 		6DD4F5DD058AD437E8FB144E /* LetterComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */; };
+		72637E3353D3E4C398090A37 /* MarkdownTOCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 650FCDB2CE5AC6307E508E7E /* MarkdownTOCTests.swift */; };
 		753DBF7C58E92A72A507CBEB /* RepoHealthDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70096C69DB23DA00D2156EFB /* RepoHealthDetector.swift */; };
 		75660C7C06D989B456AD23EF /* DailyDigestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329FE34277A4F2C52BAE2CA5 /* DailyDigestCard.swift */; };
 		7B45AF54D2420D669C4482CE /* UncommittedFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E4E92B76ABE6E34A7E241 /* UncommittedFile.swift */; };
@@ -172,6 +174,7 @@
 		3E7B4D9F5CB11D3900792CF8 /* BypassConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BypassConfirmDialog.swift; sourceTree = "<group>"; };
 		3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterArchiveView.swift; sourceTree = "<group>"; };
 		3FD784BD14FE954D9E6A68CE /* AIToolRepoDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIToolRepoDetector.swift; sourceTree = "<group>"; };
+		4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTOCSidebar.swift; sourceTree = "<group>"; };
 		4995B80B410566214FB4ACE8 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
 		49D4B0350924B1B73E0796E9 /* Pilo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pilo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49EB184843D10170900A08BA /* MainPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainPanel.swift; sourceTree = "<group>"; };
@@ -192,6 +195,7 @@
 		5EA01E7215C538911CC7CE44 /* GitignoreEditorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitignoreEditorTests.swift; sourceTree = "<group>"; };
 		60E9C40F45449667A059ED60 /* RepoListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoListView.swift; sourceTree = "<group>"; };
 		63E19D8E16EFADA143E2C091 /* PushOutcomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushOutcomeTests.swift; sourceTree = "<group>"; };
+		650FCDB2CE5AC6307E508E7E /* MarkdownTOCTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTOCTests.swift; sourceTree = "<group>"; };
 		65DAF0D8A1558F52399AB986 /* PostalPickers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalPickers.swift; sourceTree = "<group>"; };
 		6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingCompleteView.swift; sourceTree = "<group>"; };
 		6FB9D4B24D2ABF58B84A598D /* PushConfirmDialog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushConfirmDialog.swift; sourceTree = "<group>"; };
@@ -286,6 +290,7 @@
 				49EB184843D10170900A08BA /* MainPanel.swift */,
 				8B511655D28B12989BAB8A01 /* MainWindowView.swift */,
 				5C0963CE1804A146CAABE56E /* MarkdownPreviewSheet.swift */,
+				4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */,
 				7C4A05BE9BCECF2861C6A82F /* ProjectDocsPanel.swift */,
 				DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */,
 				60E9C40F45449667A059ED60 /* RepoListView.swift */,
@@ -434,6 +439,7 @@
 				7747DA50B33BDF3487EA9375 /* HiddenDocsTests.swift */,
 				18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */,
 				899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */,
+				650FCDB2CE5AC6307E508E7E /* MarkdownTOCTests.swift */,
 				63E19D8E16EFADA143E2C091 /* PushOutcomeTests.swift */,
 				E9066B30C3BA6E45C984CF14 /* RepoDocsIndexerTests.swift */,
 				3B6B1408663BB77B4BC4675B /* RepoHealthDetectorTests.swift */,
@@ -599,6 +605,7 @@
 				E3AE6AB6585ED6584584379A /* HiddenDocsTests.swift in Sources */,
 				4D4EEDC70D697AFB0294C959 /* IdentityValidatorTests.swift in Sources */,
 				9393DA5C1346CD914EB98299 /* MarkdownRendererTests.swift in Sources */,
+				72637E3353D3E4C398090A37 /* MarkdownTOCTests.swift in Sources */,
 				831BE57054EC9C10B0B4A3D2 /* PushOutcomeTests.swift in Sources */,
 				C91282FCBF371925561AE8AB /* RepoDocsIndexerTests.swift in Sources */,
 				9E2C3E821D491F5E3C537632 /* RepoHealthDetectorTests.swift in Sources */,
@@ -662,6 +669,7 @@
 				026FA4FE51C74681C1D1CA0A /* MarkdownDocument.swift in Sources */,
 				9C0B1ADFF2857765911A42D7 /* MarkdownPreviewSheet.swift in Sources */,
 				86FEBAEA96BF374816E8B9B4 /* MarkdownRenderer.swift in Sources */,
+				1764315DB68D498D0AA3C0B1 /* MarkdownTOCSidebar.swift in Sources */,
 				E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */,
 				A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */,
 				38AFB892059F880303E1EFFA /* OnboardingDirectoriesView.swift in Sources */,

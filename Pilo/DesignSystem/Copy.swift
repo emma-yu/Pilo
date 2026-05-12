@@ -1136,6 +1136,31 @@ enum Copy {
         static func setAsideStamp(_ lang: Language) -> String {
             lang == .zh ? "暂搁" : "PAUSED"
         }
+        /// MarkdownPreviewSheet 左侧 TOC sidebar 顶部 label
+        static func tocTitle(_ lang: Language) -> String {
+            lang == .zh ? "目 录" : "CONTENTS"
+        }
+        /// MarkdownPreviewSheet toolbar TOC toggle 按钮 tooltip
+        static func tocToggle(expanded: Bool, _ lang: Language) -> String {
+            switch (expanded, lang) {
+            case (true, .zh):  return "折起目录"
+            case (true, .en):  return "Hide contents"
+            case (false, .zh): return "翻开目录"
+            case (false, .en): return "Show contents"
+            }
+        }
+        /// MarkdownPreviewSheet ⌘F 搜索 placeholder（提前加好供 Phase 4 用）
+        static func searchPlaceholder(_ lang: Language) -> String {
+            lang == .zh ? "搜全文…" : "Search in document…"
+        }
+        /// 搜索结果计数 "3/12"，统一格式化（适配未来本地化）
+        static func searchCount(current: Int, total: Int, _ lang: Language) -> String {
+            "\(current)/\(total)"
+        }
+        /// 无匹配时小灰字
+        static func searchNoMatch(_ lang: Language) -> String {
+            lang == .zh ? "找不到" : "No matches"
+        }
     }
 
     // MARK: - 每日邮局信件
