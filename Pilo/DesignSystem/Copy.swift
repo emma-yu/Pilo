@@ -1048,6 +1048,22 @@ enum Copy {
         }
     }
 
+    // MARK: - AI 工具 menu
+
+    enum AILauncher {
+        static func openInButton(_ lang: Language) -> String {
+            lang == .zh ? "在 AI 中打开" : "Open in AI"
+        }
+        static func menuTitle(_ lang: Language) -> String {
+            lang == .zh ? "选一个 AI 编辑器" : "Pick an AI editor"
+        }
+        static func noToolsDetected(_ lang: Language) -> String {
+            lang == .zh
+                ? "没检测到 Cursor / Claude Code / Codex / Windsurf / VS Code"
+                : "No Cursor / Claude Code / Codex / Windsurf / VS Code detected"
+        }
+    }
+
     // MARK: - 关于页面
 
     enum About {

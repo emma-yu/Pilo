@@ -169,6 +169,9 @@ final class AppState {
     var gitExecutablePath: String?
     var gitVersion: String?
 
+    /// 启动时一次性检测的"已安装 AI coding 工具"列表。给主面板「打开 ▾」menu 用。
+    var detectedAITools: [AITool] = []
+
     var watchDirectories: [URL] = []
 
     // MARK: - 设置（镜像 UserDefaults）
@@ -226,6 +229,12 @@ final class AppState {
         await gitClient.detect()
         self.gitExecutablePath = await gitClient.executablePath
         self.gitVersion = await gitClient.version
+
+        // 异步检测 AI 工具（spawn which 略慢，放后台）
+        let tools = await Task.detached(priority: .userInitiated) {
+            AIToolDetector.detect()
+        }.value
+        self.detectedAITools = tools
 
         // 即使没有 watch dirs 也标记完成；空状态由 view 决定显示什么
         if watchDirectories.isEmpty {

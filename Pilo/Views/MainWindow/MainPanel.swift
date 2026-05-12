@@ -685,17 +685,54 @@ private struct PanelDetail: View {
             .buttonStyle(MiniPrimaryButtonStyle())
             .disabled(repo.aheadCount == 0 || repo.currentBranch == nil)
 
-            // 拉取（ghost）
-            Button(lang == .zh ? "拉取" : "Pull") {
-                openTerminal(at: repo.path)
-            }
-            .buttonStyle(MiniGhostButtonStyle())
+            // 在 AI 中打开 ▾ — menu 列出本机检测到的 AI 编辑器
+            // 删了之前重复的"拉取"按钮（跟"在终端打开"是同一个 openTerminal 调用）
+            aiLauncherButton(for: repo)
 
             // 在终端打开（ghost）
             Button(lang == .zh ? "在终端打开" : "Open in Terminal") {
                 openTerminal(at: repo.path)
             }
             .buttonStyle(MiniGhostButtonStyle())
+        }
+    }
+
+    @ViewBuilder
+    private func aiLauncherButton(for repo: Repository) -> some View {
+        if appState.detectedAITools.isEmpty {
+            // 没检测到任何工具 → 显示禁用 button + hover 提示
+            Button(action: {}) {
+                HStack(spacing: 5) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12))
+                    Text(Copy.AILauncher.openInButton(lang))
+                }
+            }
+            .buttonStyle(MiniGhostButtonStyle())
+            .disabled(true)
+            .help(Copy.AILauncher.noToolsDetected(lang))
+        } else {
+            Menu {
+                ForEach(appState.detectedAITools) { tool in
+                    Button {
+                        tool.launch(repoPath: repo.path)
+                    } label: {
+                        Label(tool.displayName, systemImage: tool.symbol)
+                    }
+                }
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 12))
+                    Text(Copy.AILauncher.openInButton(lang))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 9))
+                }
+            }
+            .menuStyle(.button)
+            .buttonStyle(MiniGhostButtonStyle())
+            .help(Copy.AILauncher.menuTitle(lang))
+            .fixedSize()
         }
     }
 
