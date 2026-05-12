@@ -253,22 +253,17 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    // 标题行：repo 名 + 大邮戳 overlay（部分压在标题字上）+ PrivacyPill
-                    // 邮戳不在 HStack 里 —— 它作为 Title 的 overlay，可"超出"文字行
-                    HStack(alignment: .top, spacing: 12) {
+                    // 标题行：repo 名（独享左侧）| 邮戳（trailing 独立位置）| PrivacyPill
+                    // 真实邮件的物理：邮戳在右上角邮票区，跟地址/标签共存但不重叠
+                    HStack(alignment: .center, spacing: 14) {
                         Text(repo.name)
                             .font(.piloSerifHero)
                             .tracking(0.5)
                             .foregroundStyle(Color.inkPrimary)
-                            .padding(.trailing, 44)   // 留位给 stamp 部分超出
-                            .padding(.top, 8)          // 让 stamp 顶部有空间往上"歪"
-                            .overlay(alignment: .topTrailing) {
-                                stampOverlay(for: repo)
-                                    .offset(x: 14, y: -12)   // ~50% 压在标题最后字上 / ~50% 超出
-                            }
-                        Spacer(minLength: 8)
+                        Spacer(minLength: 12)
+                        stampOverlay(for: repo)
+                            .frame(width: 56, height: 56)
                         PrivacyPill(repoId: repo.id)
-                            .padding(.top, 4)
                     }
 
                     // mono 路径 + 分支
