@@ -157,10 +157,11 @@ private struct PanelHeader: View {
 
 private struct PanelSidebar: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             // 微微 tint 的 cream 背景（HTML: rgba(238,234,228,0.22)）
             Color("CreamBg").opacity(0.22)
 
@@ -206,9 +207,21 @@ private struct PanelSidebar: View {
 
                     Spacer(minLength: 0)
                 }
+                // 给底部 indicator 让出空间，避免遮列表最后一行
+                .padding(.bottom, appState.isScanning ? 56 : 0)
             }
             .scrollIndicators(.hidden)
+
+            // 扫描中 indicator —— 浮在 sidebar 底部，淡入淡出
+            if appState.isScanning {
+                PostalScanIndicator(tone: tone, lang: lang)
+                    .padding(.bottom, 14)
+                    .transition(
+                        .opacity.combined(with: .move(edge: .bottom))
+                    )
+            }
         }
+        .animation(.piloSpring, value: appState.isScanning)
     }
 
     private func sidebarLabel(text: String) -> some View {

@@ -117,6 +117,7 @@
 		E320322D91974174E383EC5C /* SectionHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 796133FADA4A3765E8AE6859 /* SectionHeader.swift */; };
 		E3AE6AB6585ED6584584379A /* HiddenDocsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7747DA50B33BDF3487EA9375 /* HiddenDocsTests.swift */; };
 		E429E747B5CFC800E97CEFB0 /* AITool.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4A3F29AAD6917CE94CA37F5 /* AITool.swift */; };
+		E4DA20066F90E7D75B460A9F /* PostalScanIndicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A2B7B319C83FCB9F85FF0EA /* PostalScanIndicator.swift */; };
 		E6DFD3295199C54D49A40D6E /* CommitGuardFinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FB9D8EFB0D5FF1BCC5163D5 /* CommitGuardFinding.swift */; };
 		E7733C68F2808E3F1A503BD3 /* LetterReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279CD1141320BA5276C54B33 /* LetterReaderView.swift */; };
 		E8566C7C32A74D84C0709FB6 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D29E5D5B4900E37D7C09A8A /* MenuBarView.swift */; };
@@ -215,6 +216,7 @@
 		7EEADB6C294B5BFE7FAA2E63 /* MarkdownSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchBar.swift; sourceTree = "<group>"; };
 		85B45D7DAE82FA3EBF2D16D0 /* CommitNotifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotifierTests.swift; sourceTree = "<group>"; };
 		899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererTests.swift; sourceTree = "<group>"; };
+		8A2B7B319C83FCB9F85FF0EA /* PostalScanIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalScanIndicator.swift; sourceTree = "<group>"; };
 		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
 		8E1A000936EF3162CFD69CD0 /* DocReadingMemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocReadingMemoryTests.swift; sourceTree = "<group>"; };
 		901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
@@ -270,6 +272,7 @@
 			children = (
 				D5496247C53277353150F011 /* AIToolStamp.swift */,
 				F16B037F569F8B168CAFE426 /* PiloMascot.swift */,
+				8A2B7B319C83FCB9F85FF0EA /* PostalScanIndicator.swift */,
 				EAA834330F2B12036ADEF865 /* RepoCard.swift */,
 				1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */,
 				796133FADA4A3765E8AE6859 /* SectionHeader.swift */,
@@ -697,6 +700,7 @@
 				6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */,
 				3590CD9C48D12B6BF2301F32 /* PostalOrnaments.swift in Sources */,
 				3779A40FAB534489A6D2D77B /* PostalPickers.swift in Sources */,
+				E4DA20066F90E7D75B460A9F /* PostalScanIndicator.swift in Sources */,
 				D9875E6C16B2ACA738B81E05 /* ProjectDocsPanel.swift in Sources */,
 				FD89DE7ADC1DE65DB0108FFE /* PushConfirmDialog.swift in Sources */,
 				52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */,

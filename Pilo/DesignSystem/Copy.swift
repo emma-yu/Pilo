@@ -1283,6 +1283,20 @@ enum Copy {
     /// 仓库里检测到 AI 工具配置时显示。**诚实边界**：
     /// 永远说"Configured for / 在这仓库里看到了"，永不说"由 X 维护"
     /// —— 配置文件存在不代表当前活跃使用
+    // MARK: - Sidebar 扫描状态指示
+
+    enum Scanning {
+        /// PanelSidebar 底部 PostalScanIndicator 的文案（仓库扫盘进行中）
+        static func sidebarHint(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "巡视小邮局…"
+            case (.friendly, .en): return "Making rounds…"
+            case (.minimal, .zh):  return "扫描中"
+            case (.minimal, .en):  return "Scanning"
+            }
+        }
+    }
+
     enum AIRepo {
         /// Detail view 里 chip 行的引导文案
         static func configuredFor(_ tone: Tone, _ lang: Language) -> String {
