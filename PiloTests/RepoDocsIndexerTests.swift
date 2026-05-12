@@ -275,6 +275,76 @@ final class RepoDocsIndexerTests: XCTestCase {
         XCTAssertEqual(docs[0].kind, .aiInstructions)
     }
 
+    // MARK: - Phase A: 新增 AI 工具识别 + roadmap 独立 kind + release notes
+
+    func testRoadmapDetectedAsOwnKind() throws {
+        // roadmap 之前被错误映射到 .todo —— 现在独立 kind
+        try write("ROADMAP.md")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .roadmap, "ROADMAP.md 应该走 .roadmap 而不是 .todo")
+    }
+
+    func testRoadmapLowercase() throws {
+        try write("roadmap.md")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .roadmap)
+    }
+
+    func testGeminiMdDetectedAsAIInstructions() throws {
+        // Google Gemini Code Assist 的 context 文件
+        try write("GEMINI.md")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .aiInstructions)
+    }
+
+    func testCodexMdDetectedAsAIInstructions() throws {
+        // OpenAI Codex 专属 context 文件
+        try write("codex.md")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .aiInstructions)
+    }
+
+    func testConventionsMdDetectedAsAIInstructions() throws {
+        // Aider 的 CONVENTIONS.md 约定
+        try write("CONVENTIONS.md")
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .aiInstructions)
+    }
+
+    func testReleaseNotesVariantsDetectedAsChangelog() throws {
+        // 多种命名风格都应该归到 changelog
+        try write("RELEASES.md", modifiedDaysAgo: 4)
+        try write("RELEASE-NOTES.md", modifiedDaysAgo: 3)
+        try write("release_notes.md", modifiedDaysAgo: 2)
+        try write("releasenotes.md", modifiedDaysAgo: 1)
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        let releaseDocs = docs.filter {
+            ["RELEASES.md", "RELEASE-NOTES.md", "release_notes.md", "releasenotes.md"].contains($0.name)
+        }
+        XCTAssertEqual(releaseDocs.count, 4)
+        XCTAssertTrue(releaseDocs.allSatisfy { $0.kind == .changelog },
+                      "所有 release notes 变体都应该走 .changelog")
+    }
+
+    func testSortPriorityRoadmapBetweenArchitectureAndPrd() throws {
+        // 守 priority 顺序：architecture (2) < roadmap (3) < prd (4)
+        // 所有 mtime 设成同样，让 kind priority 完全决定顺序
+        try write("ARCHITECTURE.md", modifiedDaysAgo: 1)
+        try write("ROADMAP.md", modifiedDaysAgo: 1)
+        try write("PRD.md", modifiedDaysAgo: 1)
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.map(\.kind), [.architecture, .roadmap, .prd],
+                       "顺序应该是 architecture → roadmap → prd")
+    }
+
+    func testRoadmapDoesNotShadowReadme() throws {
+        // 防御：加 roadmap kind 后 readme 仍然优先
+        try write("README.md", modifiedDaysAgo: 10)
+        try write("ROADMAP.md", modifiedDaysAgo: 1)
+        let docs = RepoDocsIndexer.index(repoPath: tempDir.path)
+        XCTAssertEqual(docs.first?.kind, .readme)
+    }
+
     // MARK: - 极端
 
     func testEmptyRepo() {

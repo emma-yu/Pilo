@@ -245,6 +245,7 @@ private struct DocRow: View {
         switch kind {
         case .readme:         return "doc.text.fill"
         case .changelog:      return "scroll.fill"
+        case .roadmap:        return "signpost.right.fill"   // 路标 —— 战略方向感
         case .todo:           return "checklist"
         case .prd:            return "doc.richtext.fill"
         case .architecture:   return "square.stack.3d.up.fill"
@@ -260,6 +261,7 @@ private struct DocRow: View {
         switch kind {
         case .readme:         return .piloBlue
         case .changelog:      return .piloGoldDark
+        case .roadmap:        return .piloGoldDark           // 跟 changelog 同色系 —— 时间轴 / 计划
         case .todo:           return .amberWarn
         case .prd:            return .lavenderInfo
         case .architecture:   return .piloBlueDark

@@ -1023,12 +1023,13 @@ final class AppState {
         case .readme:          return 0
         case .aiInstructions:  return 1
         case .architecture:    return 2
-        case .prd:             return 3
-        case .todo:            return 4
-        case .changelog:       return 5
-        case .contributing:    return 6
-        case .license:         return 7
-        case .notes:           return 8
+        case .roadmap:         return 3
+        case .prd:             return 4
+        case .todo:            return 5
+        case .changelog:       return 6
+        case .contributing:    return 7
+        case .license:         return 8
+        case .notes:           return 9
         case .generic:         return 99
         }
     }

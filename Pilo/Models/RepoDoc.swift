@@ -5,14 +5,15 @@ import Foundation
 struct RepoDoc: Hashable, Sendable, Identifiable {
     enum Kind: String, Sendable {
         case readme         // README.*
-        case changelog      // CHANGELOG.*
-        case todo           // TODO.* / ROADMAP.*
+        case changelog      // CHANGELOG.* / RELEASES.* / RELEASE-NOTES.*
+        case roadmap        // ROADMAP.* —— 战略级长期规划，跟 TODO 不同
+        case todo           // TODO.* / TASKS.*
         case prd            // PRD.* / REQUIREMENTS.*
         case architecture   // ARCHITECTURE.* / DESIGN.* / IMPLEMENTATION.*
         case contributing   // CONTRIBUTING.* / CODE_OF_CONDUCT.* / SECURITY.*
         case license        // LICENSE / COPYING / AUTHORS / NOTICE
         case notes          // NOTES.* / IDEAS.*
-        case aiInstructions // CLAUDE.md / AGENTS.md / CURSOR.md / .cursorrules / AI.md
+        case aiInstructions // CLAUDE.md / AGENTS.md / GEMINI.md / CODEX.md / .cursorrules / CONVENTIONS.md
         case generic        // 其他 .md（根级或子目录）
     }
 

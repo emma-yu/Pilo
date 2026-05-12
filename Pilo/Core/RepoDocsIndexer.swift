@@ -13,14 +13,24 @@ enum RepoDocsIndexer {
 
     /// 仓库根级 + 已知 prefix（lowercased）→ kind 映射。
     /// 第一个匹配的 prefix 决定 kind。**未命中**的 .md 仍然纳入，kind = .generic。
+    ///
+    /// 顺序很关键 —— `hasPrefix` 第一个命中就决定。把更具体的放前面：
+    /// 比如 "release-notes" 必须在 "release" / "releases" 之前匹配（避免被吃掉）。
     private static let rootPrefixes: [(prefix: String, kind: RepoDoc.Kind)] = [
         // 经典开源
         ("readme",           .readme),
         ("changelog",        .changelog),
         ("changes",          .changelog),
         ("history",          .changelog),
+        // Release notes —— 跟 changelog 同语义（具体在前，泛的在后）
+        ("release-notes",    .changelog),
+        ("release_notes",    .changelog),
+        ("releasenotes",     .changelog),
+        ("releases",         .changelog),
+        // Roadmap 提升为独立 kind（不再跟 todo 混）—— 战略级长期规划
+        ("roadmap",          .roadmap),
+        // 短期 task list
         ("todo",             .todo),
-        ("roadmap",          .todo),
         ("tasks",            .todo),
         ("prd",              .prd),
         ("requirements",     .prd),
@@ -41,6 +51,9 @@ enum RepoDocsIndexer {
         // AI coding 时代专属
         ("claude",           .aiInstructions),
         ("agents",           .aiInstructions),
+        ("codex",            .aiInstructions),    // OpenAI Codex CLI
+        ("gemini",           .aiInstructions),    // Google Gemini Code Assist
+        ("conventions",      .aiInstructions),    // Aider CONVENTIONS.md 约定
         ("cursor",           .aiInstructions),
         (".cursorrules",     .aiInstructions),
         ("ai",               .aiInstructions),
@@ -133,17 +146,19 @@ enum RepoDocsIndexer {
     }
 
     /// 排序优先级（数字越小越靠前）。重要 kind 永远进 top，避免被海量 .generic 挤掉。
+    /// **AppState.docSortPriority 是镜像**，改这里时同步改那里。
     private static func sortPriority(_ kind: RepoDoc.Kind) -> Int {
         switch kind {
         case .readme:          return 0   // 最重要：项目门面
-        case .aiInstructions:  return 1   // AI 时代专属：CLAUDE.md / .cursorrules
+        case .aiInstructions:  return 1   // AI 时代专属：CLAUDE.md / .cursorrules / AGENTS.md
         case .architecture:    return 2   // 架构 / 实现记录
-        case .prd:             return 3
-        case .todo:            return 4
-        case .changelog:       return 5
-        case .contributing:    return 6
-        case .license:         return 7
-        case .notes:           return 8
+        case .roadmap:         return 3   // 战略规划（高于 PRD，介于 architecture 和 prd）
+        case .prd:             return 4
+        case .todo:            return 5
+        case .changelog:       return 6
+        case .contributing:    return 7
+        case .license:         return 8
+        case .notes:           return 9
         case .generic:         return 99  // 兜底
         }
     }
