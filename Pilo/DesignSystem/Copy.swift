@@ -318,11 +318,13 @@ enum Copy {
             }
         }
         static func preflightSubtitle(_ tone: Tone, _ lang: Language = .zh, count: Int) -> String {
+            // 精简：从 "我要把 N 个 commit 寄到远端，没问题吧？" 缩短
+            // 信息密度提升，问句感留在按钮 "寄出去" 上
             switch tone {
             case .friendly:
                 return Loc(
-                    zh: "我要把 \(count) 个 commit 寄到远端，没问题吧？",
-                    en: "I'm sending \(count) commit\(count == 1 ? "" : "s") off — sound good?"
+                    zh: "准备把 \(count) 个 commit 寄到远端",
+                    en: "About to send \(count) commit\(count == 1 ? "" : "s")"
                 ).text(lang)
             case .minimal:
                 return Loc(
@@ -343,9 +345,11 @@ enum Copy {
         }
 
         static func pushButton(_ tone: Tone, _ lang: Language = .zh) -> String {
+            // 去掉 ✨ —— 邮局动作是 paperplane / envelope，不是魔法。
+            // 按钮 icon 在 view 里加 paperplane.fill SF
             switch tone {
             case .friendly:
-                return Loc(zh: "✨ 寄出去", en: "✨ Send it").text(lang)
+                return Loc(zh: "寄出去", en: "Send it").text(lang)
             case .minimal:
                 return Loc(zh: "推送", en: "Push").text(lang)
             }
@@ -733,9 +737,11 @@ enum Copy {
         static let warningGroupTitle  = "提示 · 可以推但建议处理"
 
         static func summaryAllClear(_ tone: Tone) -> [String] {
+            // 不要 ✅ emoji —— UI 里已有 checkmark.circle.fill SF 复选圆作为视觉标记
+            // 在文本里再加 emoji 是同语义重复 + 跟 Pilo Songti 美学冲突
             switch tone {
             case .friendly:
-                return ["✅ 没有发现敏感信息", "✅ 没有可疑文件", "✅ 文件大小都正常"]
+                return ["没有发现敏感信息", "没有可疑文件", "文件大小都正常"]
             case .minimal:
                 return ["敏感信息扫描通过", "文件类型检查通过", "文件大小检查通过"]
             }
@@ -765,14 +771,16 @@ enum Copy {
             }
         }
         static func sectionTitle(_ tone: Tone) -> String {
+            // 不要 emoji 🛡️ —— SF 盾牌 icon 在 view 里已经存在
             switch tone {
-            case .friendly: "🛡️ 推送前检查"
+            case .friendly: "推送前检查"
             case .minimal:  "推送前检查"
             }
         }
         static func sectionSummaryClear(_ tone: Tone) -> String {
+            // 不要 ✨ —— 邮局美学不用 emoji 装饰
             switch tone {
-            case .friendly: "全部通过 ✨"
+            case .friendly: "全部通过"
             case .minimal:  "通过"
             }
         }

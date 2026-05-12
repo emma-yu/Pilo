@@ -153,16 +153,9 @@ struct PushConfirmDialog: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(commits) { c in
-                        HStack(alignment: .center, spacing: 8) {
-                            // 迷你邮戳印章 —— "已盖戳准备寄出"的装饰
-                            // 0.65 opacity 让它退到 hash 后面，不抢阅读焦点
-                            Image("PostalDial")
-                                .resizable()
-                                .interpolation(.high)
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 18, height: 18)
-                                .opacity(0.65)
-                                .rotationEffect(.degrees(-6))
+                        HStack(alignment: .center, spacing: 12) {
+                            // commit hash 本身就是"信件标识"——不再加邮戳 icon。
+                            // 每行装饰邮戳是视觉噪音，违反"快扫"原则
                             Text(c.hash)
                                 .font(.piloMono)
                                 .foregroundStyle(Color.piloBlue)
@@ -542,8 +535,12 @@ struct PushConfirmDialog: View {
                     Button {
                         Task { await appState.executePush() }
                     } label: {
-                        Text(Copy.Push.pushButton(tone, lang))
-                            .frame(minWidth: 110)
+                        HStack(spacing: 6) {
+                            Image(systemName: "paperplane.fill")
+                                .font(.system(size: 12))
+                            Text(Copy.Push.pushButton(tone, lang))
+                        }
+                        .frame(minWidth: 110)
                     }
                     .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
