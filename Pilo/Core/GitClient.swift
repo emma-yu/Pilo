@@ -232,6 +232,35 @@ actor GitClient {
         return out
     }
 
+    /// S2 跨 Repo 工作日报：从某个时间点开始的 commits（HEAD 上）。
+    /// 用 `git log --since=<ISO>` 拉，按 commit 时间倒序返回。
+    func commitsSince(repo: URL, since: Date) async -> [CommitSummary] {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        let isoSince = formatter.string(from: since)
+
+        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
+        guard let r = await runGit(
+            ["log", "--since=\(isoSince)", "--format=\(format)"],
+            in: repo
+        ), r.ok else { return [] }
+
+        var out: [CommitSummary] = []
+        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
+            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+            guard cols.count >= 4 else { continue }
+            guard let ts = TimeInterval(cols[2]) else { continue }
+            out.append(CommitSummary(
+                hash: cols[0],
+                subject: cols[1],
+                date: Date(timeIntervalSince1970: ts),
+                author: cols[3],
+                authorEmail: cols.count >= 5 ? cols[4] : nil
+            ))
+        }
+        return out
+    }
+
     /// S3 Identity Sentinel：读 repo 本地的 git config user.email
     /// （local 优先 local config，没有再 fallback global）。
     func localUserEmail(repo: URL) async -> String? {

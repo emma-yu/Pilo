@@ -1056,6 +1056,44 @@ enum Copy {
         }
     }
 
+    // MARK: - S2 跨 Repo 工作日报
+
+    enum DailyDigest {
+        static func cardTitle(_ lang: Language, dateString: String) -> String {
+            lang == .zh ? "今日邮局 · \(dateString)" : "Today's Post · \(dateString)"
+        }
+        static func sectionPushed(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "— 今日寄出 · \(count) 封 —" }
+            return count == 1 ? "— Sent today · 1 letter —" : "— Sent today · \(count) letters —"
+        }
+        static func sectionDrafting(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "— 还在写 · \(count) 个 —" }
+            return count == 1 ? "— Drafting · 1 —" : "— Drafting · \(count) —"
+        }
+        static func sectionVisited(count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "— 今天看过 · \(count) 个 —" }
+            return count == 1 ? "— Visited · 1 —" : "— Visited · \(count) —"
+        }
+        static func emptyState(_ tone: Tone, _ lang: Language) -> String {
+            switch (tone, lang) {
+            case (.friendly, .zh): return "今天还没寄出过信"
+            case (.friendly, .en): return "Nothing posted today yet"
+            case (.minimal, .zh):  return "今日无活动"
+            case (.minimal, .en):  return "No activity today"
+            }
+        }
+        static func commitCountSuffix(_ count: Int, _ lang: Language) -> String {
+            if lang == .zh { return "\(count) 个 commit" }
+            return count == 1 ? "1 commit" : "\(count) commits"
+        }
+        static func collapseLabel(_ lang: Language) -> String {
+            lang == .zh ? "收起" : "Collapse"
+        }
+        static func expandLabel(_ lang: Language) -> String {
+            lang == .zh ? "展开" : "Expand"
+        }
+    }
+
     // MARK: - S3 Identity Sentinel
 
     enum Identity {

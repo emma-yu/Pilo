@@ -273,6 +273,11 @@ private struct PanelDetail: View {
         if let repo = currentRepo {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    // S2: 跨 Repo 工作日报（仅当今天有活动才显示）
+                    if let digest = appState.dailyDigest, !digest.isEmpty {
+                        DailyDigestCard(digest: digest)
+                            .padding(.bottom, 20)
+                    }
                     // 标题行：repo 名（独享左侧）| 邮戳（trailing 独立位置）| PrivacyPill
                     // 真实邮件的物理：邮戳在右上角邮票区，跟地址/标签共存但不重叠
                     HStack(alignment: .center, spacing: 14) {

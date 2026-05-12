@@ -18,6 +18,7 @@ final class AppState {
     let secretScanner: SecretScanner
     let commitGuard: CommitGuardScanner
     let visibilityClient: GitHubVisibilityClient
+    let dailyDigestService: DailyDigestService
     private let fsMonitor: FSEventMonitor
 
     // MARK: - 仓库可见性缓存（24h TTL）
@@ -182,6 +183,10 @@ final class AppState {
     /// S3 Identity Sentinel —— 用户配的"work/personal/experiment" 各自期望 email
     var identityPool: IdentityPool = IdentityPool(work: nil, personal: nil, experiment: nil)
 
+    /// S2 跨 Repo 工作日报 —— 当前刚算出的 daily digest（每次 rescan / 5min 刷一次）
+    var dailyDigest: DailyDigest?
+    private var dailyDigestTask: Task<Void, Never>?
+
     // MARK: - 启动
 
     init() {
@@ -192,6 +197,7 @@ final class AppState {
         self.secretScanner = SecretScanner()
         self.commitGuard = CommitGuardScanner()
         self.visibilityClient = GitHubVisibilityClient()
+        self.dailyDigestService = DailyDigestService(gitClient: git)
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -284,6 +290,19 @@ final class AppState {
         isScanning = false
         scanProgressMessage = nil
         isInitialScanComplete = true
+        // S2: 扫盘后刷新今日 digest（非阻塞）
+        refreshDailyDigest()
+    }
+
+    /// S2: 刷新跨 repo 工作日报 —— 异步 detached，不阻塞 UI
+    func refreshDailyDigest() {
+        dailyDigestTask?.cancel()
+        let repos = self.repositories
+        let service = self.dailyDigestService
+        dailyDigestTask = Task { [weak self] in
+            let digest = await service.compute(repos: repos)
+            await MainActor.run { self?.dailyDigest = digest }
+        }
     }
 
     // MARK: - Tone
