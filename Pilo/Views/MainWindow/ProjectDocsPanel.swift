@@ -120,6 +120,8 @@ private struct DocRow: View {
 
     @Environment(AppState.self) private var appState
     @State private var isHovered = false
+    /// 复制全文后短暂显示 ✓，1.5s 后回到 doc.on.doc icon
+    @State private var justCopied = false
 
     var body: some View {
         // 主行 = 预览 sheet；hover 时右侧出现 ↗ + ⋯ 副按钮
@@ -142,13 +144,18 @@ private struct DocRow: View {
                     .font(.piloSerifCaption)
                     .foregroundStyle(Color.inkTertiary)
 
-                Text(Copy.Docs.relativeModified(doc.modifiedAt, lang))
-                    .font(.piloSerifCaption)
-                    .foregroundStyle(Color.inkTertiary)
-                    .frame(minWidth: 70, alignment: .trailing)
+                // ↻ 最近改动：< 1h 高亮 piloGoldDark（吸引视觉「这个刚动过」），其它 inkTertiary
+                HStack(spacing: 3) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(isRecentlyModified(doc.modifiedAt) ? Color.piloGoldDark : Color.inkTertiary)
+                    Text(Copy.Docs.relativeModified(doc.modifiedAt, lang))
+                        .font(.piloSerifCaption)
+                        .foregroundStyle(isRecentlyModified(doc.modifiedAt) ? Color.piloGoldDark : Color.inkTertiary)
+                }
+                .frame(minWidth: 60, alignment: .trailing)
 
-                // hover 时副按钮组：↗ 外部编辑器 + 📥 收进抽屉
-                // 移除 ⋯ —— 右键 contextMenu 已足够；邮局世界不该出现工程符号
+                // hover 时副按钮组：↗ 外部编辑器 + 誊抄全文 + 📥 收进抽屉
                 if isHovered {
                     Button(action: openInDefaultApp) {
                         Image(systemName: "arrow.up.right.square")
@@ -157,6 +164,18 @@ private struct DocRow: View {
                     }
                     .buttonStyle(.plain)
                     .help(lang == .zh ? "用编辑器打开" : "Open in editor")
+                    .transition(.opacity)
+
+                    Button(action: copyFullText) {
+                        // 复制后 1.5s 内显示 ✓，反馈"已誊抄"
+                        Image(systemName: justCopied ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 11))
+                            .foregroundStyle(justCopied ? Color.mintSafe : Color.piloGoldDark)
+                    }
+                    .buttonStyle(.plain)
+                    .help(lang == .zh
+                          ? (justCopied ? "已誊抄到剪贴板" : "誊抄全文")
+                          : (justCopied ? "Copied to clipboard" : "Copy full text"))
                     .transition(.opacity)
 
                     Button(action: hideThis) {
@@ -168,8 +187,11 @@ private struct DocRow: View {
                     .help(Copy.Docs.setAsideHint(lang))
                     .transition(.opacity)
                 } else {
-                    // 占位让 row 宽度不跳
+                    // 占位让 row 宽度不跳 —— 3 个 11pt icon
                     Image(systemName: "arrow.up.right.square")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.clear)
+                    Image(systemName: "doc.on.doc")
                         .font(.system(size: 11))
                         .foregroundStyle(Color.clear)
                     Image(systemName: "archivebox")
@@ -222,6 +244,26 @@ private struct DocRow: View {
 
     private func presentPreview() {
         appState.presentPreview(for: doc, in: repoPath)
+    }
+
+    /// < 1 小时内有改动 —— UI 上 ↻ glyph 改 piloGoldDark 高亮，吸引视觉
+    private func isRecentlyModified(_ date: Date) -> Bool {
+        Date().timeIntervalSince(date) < 3600
+    }
+
+    /// 誊抄全文到剪贴板。无 UI 错误 toast —— 失败静默（用户能直接看到 ✓ 没出现）
+    private func copyFullText() {
+        let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
+        guard let text = try? String(contentsOf: fullPath, encoding: .utf8) else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        withAnimation(.piloHover) { justCopied = true }
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await MainActor.run {
+                withAnimation(.piloHover) { justCopied = false }
+            }
+        }
     }
 
     private func openInDefaultApp() {

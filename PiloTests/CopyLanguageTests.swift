@@ -142,4 +142,36 @@ final class CopyLanguageTests: XCTestCase {
         XCTAssertTrue(bypass.contains("revoke") || bypass.contains("重新生成") || bypass.contains(".env"),
                       "bypass 文案应给出实际建议")
     }
+
+    // MARK: - Phase 1: doc 列表紧凑时间 indicator
+
+    func testRelativeModifiedJustNow_zh() {
+        // < 60s 应该走 "刚刚" 而不是 "0 seconds ago"
+        let recent = Date().addingTimeInterval(-30)
+        let s = Copy.Docs.relativeModified(recent, .zh)
+        XCTAssertEqual(s, "刚刚")
+    }
+
+    func testRelativeModifiedJustNow_en() {
+        let recent = Date().addingTimeInterval(-15)
+        let s = Copy.Docs.relativeModified(recent, .en)
+        XCTAssertEqual(s, "just now")
+    }
+
+    func testRelativeModifiedShortStyle_en() {
+        // 2 小时前应该走 ".short" → 紧凑形式
+        let twoHoursAgo = Date().addingTimeInterval(-7200)
+        let s = Copy.Docs.relativeModified(twoHoursAgo, .en)
+        XCTAssertFalse(s.contains("hours ago"),
+                       "应该是紧凑形式（'2 hr.' 或 '2h'），不是 '2 hours ago'")
+        XCTAssertTrue(s.contains("2"), "应包含数字 2")
+    }
+
+    func testRelativeModifiedShortStyle_zh() {
+        let twoHoursAgo = Date().addingTimeInterval(-7200)
+        let s = Copy.Docs.relativeModified(twoHoursAgo, .zh)
+        // 紧凑形式不会有完整的"前"字 + 单位 — 而是 "2小时" 之类
+        XCTAssertTrue(s.contains("2"), "应包含数字 2")
+        XCTAssertNotEqual(s, "刚刚")
+    }
 }

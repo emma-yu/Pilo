@@ -1085,8 +1085,14 @@ enum Copy {
         }
         /// 文件 mtime 的人类可读相对时间（"3 天前" / "2 周前"）
         static func relativeModified(_ date: Date, _ lang: Language) -> String {
+            // < 60s 强制"刚刚"，避免系统给出"0 seconds ago"这种笨拙文案
+            let elapsed = Date().timeIntervalSince(date)
+            if elapsed >= 0 && elapsed < 60 {
+                return lang == .zh ? "刚刚" : "just now"
+            }
             let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .full
+            // 紧凑显示：行尾空间小，".short" → "2h ago" / "2小时前"，比 ".full" 紧凑一半
+            formatter.unitsStyle = .short
             formatter.locale = (lang == .zh) ? Locale(identifier: "zh_CN") : Locale(identifier: "en_US")
             return formatter.localizedString(for: date, relativeTo: Date())
         }

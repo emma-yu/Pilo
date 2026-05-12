@@ -14,6 +14,9 @@ struct MarkdownPreviewSheet: View {
     @Environment(AppState.self) private var appState
     private var lang: Language { appState.language }
 
+    /// 复制全文后短暂显示 ✓ 反馈
+    @State private var justCopied = false
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -39,6 +42,21 @@ struct MarkdownPreviewSheet: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
+            // 誊抄全文 —— ⌘C 通用快捷键被 textSelection 抢了；用专门按钮
+            Button(action: copyFullText) {
+                HStack(spacing: 4) {
+                    Image(systemName: justCopied ? "checkmark" : "doc.on.doc")
+                        .font(.system(size: 11))
+                    Text(justCopied
+                         ? (lang == .zh ? "已誊抄" : "Copied")
+                         : (lang == .zh ? "誊抄" : "Copy"))
+                        .font(.piloSerifCaption)
+                }
+                .foregroundStyle(justCopied ? Color.mintSafe : Color.piloGoldDark)
+            }
+            .buttonStyle(.plain)
+            .help(lang == .zh ? "把全文复制到剪贴板" : "Copy full text to clipboard")
+
             Button(action: openInEditor) {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.right.square")
@@ -159,6 +177,21 @@ struct MarkdownPreviewSheet: View {
         let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
         NSWorkspace.shared.open(fullPath)
         appState.dismissPreview()
+    }
+
+    /// 誊抄全文到剪贴板。失败静默（用户看不到 ✓ 就是失败了 —— 比 toast 更克制）
+    private func copyFullText() {
+        let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
+        guard let text = try? String(contentsOf: fullPath, encoding: .utf8) else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        withAnimation(.piloHover) { justCopied = true }
+        Task {
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await MainActor.run {
+                withAnimation(.piloHover) { justCopied = false }
+            }
+        }
     }
 }
 
