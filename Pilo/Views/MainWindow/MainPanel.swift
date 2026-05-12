@@ -246,87 +246,18 @@ private struct PanelSidebar: View {
             .padding(.horizontal, 18)
     }
 
+    /// sidebar 单行 —— 提到 SidebarRepoRow 子 view（hover/popover state 局部化，
+    /// 避免触发整个 PanelSidebar re-render）
     private func sidebarItem(_ repo: Repository) -> some View {
-        let isActive = repo.id == appState.selectedRepoId
-        let stamp = Copy.Inventory.categoryStamp(repo.category, lang)
-        return Button {
-            appState.selectRepo(repo.id)
-        } label: {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(dotColor(for: repo))
-                    .frame(width: 9, height: 9)
-                Text(repo.name)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(Color.inkPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                if !stamp.isEmpty {
-                    Text(stamp)
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(categoryStampColor(repo.category))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                                .stroke(categoryStampColor(repo.category).opacity(0.5), lineWidth: 0.6)
-                        )
-                }
-                Spacer(minLength: 4)
-                if let count = countLabel(for: repo) {
-                    Text(count)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Color.piloBlue)
-                }
-            }
-            .padding(.horizontal, isActive ? 16 : 18)
-            .padding(.vertical, 11)
-            .background(
-                isActive
-                    ? Color.piloBlue.opacity(0.12)
-                    : Color.clear
-            )
-            .overlay(alignment: .leading) {
-                if isActive {
-                    Rectangle()
-                        .fill(Color.piloBlue)
-                        .frame(width: 3)
-                }
-            }
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .hoverable(highlight: isActive ? .clear : Color.piloBlue.opacity(0.06))
-        // 右键菜单 —— 在 Bear-vibe sidebar 重写时丢了，现在补回来
-        .contextMenu {
-            Button {
-                NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
-            } label: {
-                Label(lang == .zh ? "在 Finder 中显示" : "Show in Finder", systemImage: "folder")
-            }
-            Button {
-                NSWorkspace.shared.open(
-                    [URL(fileURLWithPath: repo.path)],
-                    withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
-                    configuration: NSWorkspace.OpenConfiguration(),
-                    completionHandler: nil
-                )
-            } label: {
-                Label(lang == .zh ? "在终端打开" : "Open in Terminal", systemImage: "terminal")
-            }
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(repo.path, forType: .string)
-            } label: {
-                Label(lang == .zh ? "复制路径" : "Copy path", systemImage: "doc.on.doc")
-            }
-            Divider()
-            Button(role: .destructive) {
-                appState.setHidden(true, repoId: repo.id)
-            } label: {
-                Label(lang == .zh ? "隐藏此仓库" : "Hide this repo", systemImage: "eye.slash")
-            }
-        }
+        SidebarRepoRow(
+            repo: repo,
+            isActive: repo.id == appState.selectedRepoId,
+            stamp: Copy.Inventory.categoryStamp(repo.category, lang),
+            countLabel: countLabel(for: repo),
+            dotColor: dotColor(for: repo),
+            stampColor: categoryStampColor(repo.category),
+            lang: lang
+        )
     }
 
     /// 按 mood 区分 synced 状态下的颜色（Phase B：让"沉寂"项目视觉上更暗）。
@@ -1006,6 +937,165 @@ private struct StampBadge: View {
         case .experiment: return .lavenderInfo
         case .unset:      return .piloGold
         }
+    }
+}
+
+// MARK: - Sidebar Repo Row（独立子 view + 自带 hover/popover state）
+
+/// 单行 sidebar repo entry。把 hover + ⋯ popover state 隔离在这里，
+/// 避免每次 hover 触发整个 PanelSidebar / PanelDetail re-render。
+///
+/// **交互**：
+///   - 左键 button：选中 repo（appState.selectRepo）
+///   - 右键：系统 `.contextMenu`（macOS 通用约定）
+///   - hover 时 row 末尾出现 ⋯ 按钮 → 点开 → 自定义邮局风 popover
+private struct SidebarRepoRow: View {
+    let repo: Repository
+    let isActive: Bool
+    let stamp: String
+    let countLabel: String?
+    let dotColor: Color
+    let stampColor: Color
+    let lang: Language
+
+    @Environment(AppState.self) private var appState
+    @State private var isHovered = false
+    @State private var isMenuOpen = false
+
+    var body: some View {
+        Button {
+            appState.selectRepo(repo.id)
+        } label: {
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 9, height: 9)
+                Text(repo.name)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.inkPrimary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                if !stamp.isEmpty {
+                    Text(stamp)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(stampColor)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .stroke(stampColor.opacity(0.5), lineWidth: 0.6)
+                        )
+                }
+                Spacer(minLength: 4)
+                if let countLabel {
+                    Text(countLabel)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.piloBlue)
+                }
+                // hover-only ⋯ 按钮 —— 显式触发邮局风 popover，
+                // 给"我不喜欢系统右键 chrome"的用户一条 postal-aesthetic 替代路径
+                if isHovered {
+                    Button {
+                        isMenuOpen = true
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundStyle(Color.inkSecondary)
+                            .frame(width: 18, height: 18)
+                            .background(
+                                Circle().fill(Color.piloGold.opacity(0.10))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .help(lang == .zh ? "更多操作" : "More actions")
+                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                    .popover(isPresented: $isMenuOpen, arrowEdge: .leading) {
+                        PostalContextMenu(items: menuItems)
+                    }
+                }
+            }
+            .padding(.horizontal, isActive ? 16 : 18)
+            .padding(.vertical, 11)
+            .background(
+                isActive
+                    ? Color.piloBlue.opacity(0.12)
+                    : Color.clear
+            )
+            .overlay(alignment: .leading) {
+                if isActive {
+                    Rectangle()
+                        .fill(Color.piloBlue)
+                        .frame(width: 3)
+                }
+            }
+            .contentShape(Rectangle())
+            .animation(.piloHover, value: isHovered)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .background(
+            // 兜底 hover 高亮 —— 跟 .hoverable 的逻辑等价但 self-contained
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isHovered && !isActive ? Color.piloBlue.opacity(0.06) : Color.clear)
+                .padding(.horizontal, 6)
+        )
+        // 系统 contextMenu —— 右键 macOS 通用约定，跟 ⋯ 按钮并存
+        .contextMenu {
+            Button { openInFinder() } label: {
+                Label(lang == .zh ? "在 Finder 中显示" : "Show in Finder", systemImage: "folder")
+            }
+            Button { openInTerminal() } label: {
+                Label(lang == .zh ? "在终端打开" : "Open in Terminal", systemImage: "terminal")
+            }
+            Button { copyPath() } label: {
+                Label(lang == .zh ? "复制路径" : "Copy path", systemImage: "doc.on.doc")
+            }
+            Divider()
+            Button(role: .destructive) { hideRepo() } label: {
+                Label(lang == .zh ? "隐藏此仓库" : "Hide this repo", systemImage: "eye.slash")
+            }
+        }
+    }
+
+    /// PostalContextMenu 的 item 数组 —— 跟系统 contextMenu 内容保持一致
+    private var menuItems: [PostalContextMenu.Item] {
+        [
+            .init(icon: "folder", label: lang == .zh ? "在 Finder 中显示" : "Show in Finder",
+                  isDestructive: false, action: { closeAnd(openInFinder) }),
+            .init(icon: "terminal", label: lang == .zh ? "在终端打开" : "Open in Terminal",
+                  isDestructive: false, action: { closeAnd(openInTerminal) }),
+            .init(icon: "doc.on.doc", label: lang == .zh ? "复制路径" : "Copy path",
+                  isDestructive: false, action: { closeAnd(copyPath) }),
+            .separator(),
+            .init(icon: "eye.slash", label: lang == .zh ? "隐藏此仓库" : "Hide this repo",
+                  isDestructive: true, action: { closeAnd(hideRepo) }),
+        ]
+    }
+
+    private func closeAnd(_ action: () -> Void) {
+        isMenuOpen = false
+        action()
+    }
+
+    private func openInFinder() {
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
+    }
+    private func openInTerminal() {
+        NSWorkspace.shared.open(
+            [URL(fileURLWithPath: repo.path)],
+            withApplicationAt: URL(fileURLWithPath: "/System/Applications/Utilities/Terminal.app"),
+            configuration: NSWorkspace.OpenConfiguration(),
+            completionHandler: nil
+        )
+    }
+    private func copyPath() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(repo.path, forType: .string)
+    }
+    private func hideRepo() {
+        appState.setHidden(true, repoId: repo.id)
     }
 }
 
