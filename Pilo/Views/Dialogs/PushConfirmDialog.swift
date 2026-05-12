@@ -96,6 +96,24 @@ struct PushConfirmDialog: View {
         .padding(24)
     }
 
+    /// S1 AI Push Guard: 看起来像 AI 写的 commit 旁的小标
+    @ViewBuilder
+    private func aiLikelihoodMarker(_ likelihood: AILikelihood) -> some View {
+        switch likelihood {
+        case .likelyAI:
+            Text("🤖")
+                .font(.system(size: 11))
+                .help(Copy.AIAudit.likelyAITooltip(lang))
+        case .maybeAI:
+            Image(systemName: "questionmark.circle")
+                .font(.system(size: 10))
+                .foregroundStyle(Color.amberWarn.opacity(0.7))
+                .help(Copy.AIAudit.maybeAITooltip(lang))
+        case .unknown:
+            EmptyView()
+        }
+    }
+
     /// S3 Identity 错位 warning banner
     private func identityMismatchBanner(_ mismatch: IdentityValidator.Mismatch) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -225,6 +243,10 @@ struct PushConfirmDialog: View {
                                 .font(.piloMono)
                                 .foregroundStyle(Color.piloBlue)
                                 .frame(width: 64, alignment: .leading)
+                            // S1 AI Push Guard：启发式标记
+                            if c.aiLikelihood != .unknown {
+                                aiLikelihoodMarker(c.aiLikelihood)
+                            }
                             Text(c.subject)
                                 .font(.piloBody)
                                 .foregroundStyle(Color.inkPrimary)

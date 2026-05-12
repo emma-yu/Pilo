@@ -1056,6 +1056,17 @@ enum Copy {
         }
     }
 
+    // MARK: - S1 AI Push Guard
+
+    enum AIAudit {
+        static func likelyAITooltip(_ lang: Language) -> String {
+            lang == .zh ? "看起来像 AI 写的 commit" : "Looks like an AI-written commit"
+        }
+        static func maybeAITooltip(_ lang: Language) -> String {
+            lang == .zh ? "可能是 AI 写的" : "Possibly AI-written"
+        }
+    }
+
     // MARK: - S2 跨 Repo 工作日报
 
     enum DailyDigest {

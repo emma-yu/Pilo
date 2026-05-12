@@ -12,11 +12,24 @@ struct CommitSummary: Identifiable, Hashable, Sendable {
     /// 老调用方不传时 nil，identity check 会 skip 这 commit
     var authorEmail: String?
 
-    init(hash: String, subject: String, date: Date, author: String, authorEmail: String? = nil) {
+    /// S1 AI Push Guard: 启发式判断这个 commit 看起来像不像 AI 写的。
+    /// 默认 .unknown；填充时机：RepoScanner / GitClient 拉 commits 后跑 detector。
+    var aiLikelihood: AILikelihood = .unknown
+
+    init(hash: String, subject: String, date: Date, author: String,
+         authorEmail: String? = nil, aiLikelihood: AILikelihood = .unknown) {
         self.hash = hash
         self.subject = subject
         self.date = date
         self.author = author
         self.authorEmail = authorEmail
+        self.aiLikelihood = aiLikelihood
     }
+}
+
+/// S1 启发式判断 commit 是不是 AI 写的。Indicative not authoritative —— UI 措辞用"看起来"。
+enum AILikelihood: String, Sendable, Hashable {
+    case unknown       // 无信号
+    case maybeAI       // 1 个信号命中
+    case likelyAI      // ≥2 个信号命中
 }

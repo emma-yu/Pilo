@@ -157,12 +157,22 @@ actor GitClient {
             // 兼容老格式（4 列）和新格式（5 列含 author email）
             guard cols.count >= 4 else { continue }
             guard let ts = TimeInterval(cols[2]) else { continue }
+            let author = cols[3]
+            let email = cols.count >= 5 ? cols[4] : nil
+            // S1 AI Push Guard：启发式标记
+            let likelihood = AICommitDetector.detect(
+                author: author,
+                authorEmail: email,
+                subject: cols[1],
+                changedFileCount: 0   // 暂不每个 commit 都跑 git show，避免 N+1
+            )
             out.append(CommitSummary(
                 hash: cols[0],
                 subject: cols[1],
                 date: Date(timeIntervalSince1970: ts),
-                author: cols[3],
-                authorEmail: cols.count >= 5 ? cols[4] : nil
+                author: author,
+                authorEmail: email,
+                aiLikelihood: likelihood
             ))
         }
         return out
@@ -221,12 +231,19 @@ actor GitClient {
             let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
             guard cols.count >= 4 else { continue }
             guard let ts = TimeInterval(cols[2]) else { continue }
+            let author = cols[3]
+            let email = cols.count >= 5 ? cols[4] : nil
+            let likelihood = AICommitDetector.detect(
+                author: author, authorEmail: email,
+                subject: cols[1], changedFileCount: 0
+            )
             out.append(CommitSummary(
                 hash: cols[0],
                 subject: cols[1],
                 date: Date(timeIntervalSince1970: ts),
-                author: cols[3],
-                authorEmail: cols.count >= 5 ? cols[4] : nil
+                author: author,
+                authorEmail: email,
+                aiLikelihood: likelihood
             ))
         }
         return out
@@ -250,12 +267,19 @@ actor GitClient {
             let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
             guard cols.count >= 4 else { continue }
             guard let ts = TimeInterval(cols[2]) else { continue }
+            let author = cols[3]
+            let email = cols.count >= 5 ? cols[4] : nil
+            let likelihood = AICommitDetector.detect(
+                author: author, authorEmail: email,
+                subject: cols[1], changedFileCount: 0
+            )
             out.append(CommitSummary(
                 hash: cols[0],
                 subject: cols[1],
                 date: Date(timeIntervalSince1970: ts),
-                author: cols[3],
-                authorEmail: cols.count >= 5 ? cols[4] : nil
+                author: author,
+                authorEmail: email,
+                aiLikelihood: likelihood
             ))
         }
         return out
