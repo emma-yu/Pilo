@@ -323,9 +323,10 @@ private struct PanelDetail: View {
             isStampPickerOpen.toggle()
         } label: {
             HStack(spacing: 6) {
-                // Trigger 处用简笔字戳——20pt 圆 + Songti 楷书单字，跟标题衬线和谐
+                // Trigger 处用简笔字戳——双线圆环 + 楷书单字 + -5° 倾斜
+                // 模拟"盖在纸上的油墨邮戳"，跟 Songti 标题衬线和谐
                 // 完整插画留在 popover 里独享视觉冲击
-                StampBadge(category: repo.category, size: 20, style: .glyph)
+                StampBadge(category: repo.category, size: 22, style: .glyph)
                 Text(stampTriggerLabel(for: repo.category))
                     .font(.piloSerifCaption)
                     .italic()
@@ -815,16 +816,29 @@ private struct StampBadge: View {
             .shadow(color: Color.black.opacity(0.10), radius: 1.5, y: 0.8)
     }
 
-    /// 简笔字戳（trigger 小尺寸专用）：实色圆 + 楷书白字 + 极轻微 -3° 旋转
-    /// 跟 Songti 标题视觉和谐：小、单色、留白多，但仍带邮戳的歪度
+    /// 简笔字戳（trigger 小尺寸专用）：双线圆环 + 单色透明字戳，模拟"盖在纸上的油墨痕迹"。
+    /// 视觉原则：
+    ///   1. 轮廓是线条不是填充 —— paper 底色从中央透出来
+    ///   2. 双线圆环（外粗内细），邮戳的标志结构
+    ///   3. 字跟描边同色（单色油墨）
+    ///   4. -5° 倾斜 + 88% opacity，"盖印"的物理不完美感
     private var glyphBadge: some View {
-        Text(stampGlyph)
-            .font(.custom("Songti SC", size: size * 0.58).weight(.semibold))
-            .foregroundStyle(.white)
-            .frame(width: size, height: size)
-            .background(Circle().fill(stampColor))
-            .rotationEffect(.degrees(-3))
-            .shadow(color: stampColor.opacity(0.25), radius: 0.8, y: 0.5)
+        ZStack {
+            // 外圈实线
+            Circle()
+                .strokeBorder(stampColor.opacity(0.85), lineWidth: 1.2)
+            // 内圈细线（间距 2.5pt）
+            Circle()
+                .strokeBorder(stampColor.opacity(0.55), lineWidth: 0.5)
+                .padding(2.5)
+            // 中央楷书字 —— 类别色，不是白色
+            Text(stampGlyph)
+                .font(.custom("Songti SC", size: size * 0.5).weight(.semibold))
+                .foregroundStyle(stampColor.opacity(0.9))
+        }
+        .frame(width: size, height: size)
+        .rotationEffect(.degrees(-5))
+        .opacity(0.88)
     }
 
     /// 完整插画 asset 名
