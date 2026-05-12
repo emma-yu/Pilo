@@ -940,6 +940,40 @@ private struct StampBadge: View {
     }
 }
 
+// MARK: - 右键拦截桥（NSView 接 rightMouseDown，避开 SwiftUI .contextMenu 系统 chrome）
+
+/// 用 NSView 做右键侦测 —— SwiftUI 原生没有 onRightClick gesture。
+/// 把它作为 `.background(...)` 挂在 row 上：左键被 SwiftUI Button 抢走，
+/// 右键穿透到这个 NSView 触发 callback。
+private struct RightClickCatcher: NSViewRepresentable {
+    let onRightClick: () -> Void
+
+    final class HitView: NSView {
+        var callback: () -> Void = {}
+        override func rightMouseDown(with event: NSEvent) {
+            callback()
+        }
+        // 不挡左键：让事件穿透给前面的 SwiftUI Button
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            // 仅当 NSEvent 是右键时认领；其它情况返回 nil 让事件穿透
+            if let event = NSApp.currentEvent, event.type == .rightMouseDown {
+                return self
+            }
+            return nil
+        }
+    }
+
+    func makeNSView(context: Context) -> HitView {
+        let view = HitView()
+        view.callback = onRightClick
+        return view
+    }
+
+    func updateNSView(_ nsView: HitView, context: Context) {
+        nsView.callback = onRightClick
+    }
+}
+
 // MARK: - Sidebar Repo Row（独立子 view + 自带 hover/popover state）
 
 /// 单行 sidebar repo entry。把 hover + ⋯ popover state 隔离在这里，
@@ -1041,22 +1075,11 @@ private struct SidebarRepoRow: View {
                 .fill(isHovered && !isActive ? Color.piloBlue.opacity(0.06) : Color.clear)
                 .padding(.horizontal, 6)
         )
-        // 系统 contextMenu —— 右键 macOS 通用约定，跟 ⋯ 按钮并存
-        .contextMenu {
-            Button { openInFinder() } label: {
-                Label(lang == .zh ? "在 Finder 中显示" : "Show in Finder", systemImage: "folder")
-            }
-            Button { openInTerminal() } label: {
-                Label(lang == .zh ? "在终端打开" : "Open in Terminal", systemImage: "terminal")
-            }
-            Button { copyPath() } label: {
-                Label(lang == .zh ? "复制路径" : "Copy path", systemImage: "doc.on.doc")
-            }
-            Divider()
-            Button(role: .destructive) { hideRepo() } label: {
-                Label(lang == .zh ? "隐藏此仓库" : "Hide this repo", systemImage: "eye.slash")
-            }
-        }
+        // 拦截右键 → 弹自定义邮局风 popover（不走系统 contextMenu）
+        // 通过 NSView background 接 rightMouseDown 事件；左键不被影响（仍 Button 处理）
+        .background(
+            RightClickCatcher { isMenuOpen = true }
+        )
     }
 
     /// PostalContextMenu 的 item 数组 —— 跟系统 contextMenu 内容保持一致
