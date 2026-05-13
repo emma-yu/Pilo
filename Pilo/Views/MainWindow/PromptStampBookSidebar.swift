@@ -171,17 +171,32 @@ struct PromptStampBookSidebar: View {
     // MARK: - Stamps grid
 
     private var stampsGrid: some View {
-        // 3 列 grid，矩形 illustration 邮票 + 1 行 caption
+        // 3 列 grid，矩形 illustration 邮票 + 1 行 caption。
+        // 高于 9 张（3 行）—— 卡片内部 ScrollView 防止挤死 repo list。
         let columns: [GridItem] = Array(
             repeating: GridItem(.flexible(), spacing: 8, alignment: .center),
             count: 3
         )
-        return LazyVGrid(columns: columns, alignment: .center, spacing: 14) {
+        let shouldScroll = appState.sidebarStamps.count > 9
+        let gridContent = LazyVGrid(columns: columns, alignment: .center, spacing: 14) {
             ForEach(appState.sidebarStamps) { stamp in
                 StampGridCell(stamp: stamp, lang: lang)
             }
+            // overflow chip：邮票本里还有未钉的，引导去 archive 看全部
             if appState.sidebarOverflowCount > 0 {
                 overflowCell
+            }
+        }
+
+        return Group {
+            if shouldScroll {
+                ScrollView(showsIndicators: false) {
+                    gridContent
+                        .padding(.vertical, 2)
+                }
+                .frame(maxHeight: 270)
+            } else {
+                gridContent
             }
         }
     }
@@ -201,7 +216,7 @@ struct PromptStampBookSidebar: View {
                         .foregroundStyle(Color.piloGoldDark)
                 }
                 .rotationEffect(.degrees(-3))
-                Text(Copy.Stamps.overflowMore(count: appState.sidebarOverflowCount, lang))
+                Text(Copy.Stamps.unpinnedMore(count: appState.sidebarOverflowCount, lang))
                     .font(.piloSerifCaption)
                     .italic()
                     .foregroundStyle(Color.inkTertiary)

@@ -243,20 +243,19 @@ final class AppState {
     var stampToastMessage: String?
     private var stampToastTask: Task<Void, Never>?
 
-    /// Sidebar 展示用：钉住的邮票（最多 5 张，按 lastUsedAt 倒序，未使用按 createdAt）
+    /// Sidebar 展示用：所有钉住的邮票（按 lastUsedAt 倒序，未使用按 createdAt）。
+    /// **不再硬限制 N 张** —— 用户 pin 多少都显示；grid 超 9 张时 sticky note 卡片内部 ScrollView 滑动。
     var sidebarStamps: [PromptStamp] {
         promptStampArchive.stamps
             .filter { $0.pinned }
             .sorted { a, b in
                 (a.lastUsedAt ?? a.createdAt) > (b.lastUsedAt ?? b.createdAt)
             }
-            .prefix(5)
-            .map { $0 }
     }
 
     /// 总邮票数（empty state 判断用）
     var totalStampCount: Int { promptStampArchive.stamps.count }
-    /// sidebar 之外还有多少张邮票
+    /// 邮票本里还有多少张**未钉**的邮票 —— sidebar 不显示这部分，archive 才看得到
     var sidebarOverflowCount: Int {
         max(0, totalStampCount - sidebarStamps.count)
     }

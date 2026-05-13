@@ -1373,9 +1373,13 @@ enum Copy {
                 ? "存常用 prompt，一键复制到任何 AI 工具"
                 : "Save reusable prompts. One click copies to any AI tool."
         }
-        /// "…还有 N 张" overflow row
+        /// 通用 overflow（已退役，保留以防别处仍调用）
         static func overflowMore(count: Int, _ lang: Language) -> String {
             lang == .zh ? "…还有 \(count) 张" : "…and \(count) more"
+        }
+        /// 邮票本里还有 N 张未钉 —— sidebar overflow chip
+        static func unpinnedMore(count: Int, _ lang: Language) -> String {
+            lang == .zh ? "+\(count) 张未钉" : "+\(count) unpinned"
         }
         /// Tooltip on stamp hover
         static func hoverHint(_ lang: Language) -> String {
@@ -1409,7 +1413,7 @@ enum Copy {
             lang == .zh ? "贴你的 prompt …" : "Paste your prompt…"
         }
         static func fieldPin(_ lang: Language) -> String {
-            lang == .zh ? "钉到 sidebar（最多显示 5 张）" : "Pin to sidebar (shows up to 5)"
+            lang == .zh ? "钉到 sidebar" : "Pin to sidebar"
         }
         static func saveAction(_ lang: Language) -> String {
             lang == .zh ? "保存邮票" : "Save stamp"

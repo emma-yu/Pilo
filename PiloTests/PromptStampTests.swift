@@ -89,16 +89,27 @@ final class PromptStampTests: XCTestCase {
     }
 
     @MainActor
-    func testSidebarStampsCappedAtFive() {
+    func testSidebarStampsShowsAllPinned() {
+        // P6: 取消硬限制。pinned 邮票全部 sidebar 可见；
+        // overflowCount 改为"未钉" = total - pinned
         let state = AppState()
         state.promptStampArchive = .empty
-        // 加 7 个钉住的
-        for i in 0..<7 {
-            state.addPromptStamp(.init(title: "S\(i)", body: "x", emoji: "✨", pinned: true))
+        // 5 钉 + 3 未钉
+        for i in 0..<5 {
+            state.addPromptStamp(.init(title: "P\(i)", body: "x", emoji: "✨", pinned: true))
         }
-        XCTAssertEqual(state.sidebarStamps.count, 5, "sidebar 上限 5 张")
-        XCTAssertEqual(state.totalStampCount, 7)
-        XCTAssertEqual(state.sidebarOverflowCount, 2)
+        for i in 0..<3 {
+            state.addPromptStamp(.init(title: "U\(i)", body: "y", emoji: "📖", pinned: false))
+        }
+        XCTAssertEqual(state.sidebarStamps.count, 5, "sidebar 显示全部 pinned，不再硬截")
+        XCTAssertEqual(state.totalStampCount, 8)
+        XCTAssertEqual(state.sidebarOverflowCount, 3, "overflow 现在表示未钉的数量")
+
+        // 验证 30 张 pin 也全显
+        for i in 0..<25 {
+            state.addPromptStamp(.init(title: "X\(i)", body: "z", emoji: "🔧", pinned: true))
+        }
+        XCTAssertEqual(state.sidebarStamps.count, 30, "无硬上限")
 
         // 清理
         for stamp in state.promptStampArchive.stamps {
