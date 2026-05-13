@@ -1324,6 +1324,102 @@ enum Copy {
         }
     }
 
+    // MARK: - Prompt 邮票本
+
+    enum Stamps {
+        /// Sidebar widget header
+        static func sectionTitle(_ lang: Language) -> String {
+            lang == .zh ? "邮票本" : "Stamps"
+        }
+        /// 空状态文案
+        static func emptyTitle(_ lang: Language) -> String {
+            lang == .zh ? "还没有邮票" : "No stamps yet"
+        }
+        static func emptyHint(_ lang: Language) -> String {
+            lang == .zh ? "盖第一张 prompt 邮票" : "Make your first stamp"
+        }
+        /// "…还有 N 张" overflow row
+        static func overflowMore(count: Int, _ lang: Language) -> String {
+            lang == .zh ? "…还有 \(count) 张" : "…and \(count) more"
+        }
+        /// Tooltip on stamp hover
+        static func hoverHint(_ lang: Language) -> String {
+            lang == .zh ? "点击复制到剪贴板" : "Click to copy"
+        }
+
+        /// Editor sheet title
+        static func editorNewTitle(_ lang: Language) -> String {
+            lang == .zh ? "新邮票" : "New stamp"
+        }
+        static func editorEditTitle(_ lang: Language) -> String {
+            lang == .zh ? "编辑邮票" : "Edit stamp"
+        }
+        static func fieldTitle(_ lang: Language) -> String {
+            lang == .zh ? "标签" : "Title"
+        }
+        static func fieldTitlePlaceholder(_ lang: Language) -> String {
+            lang == .zh ? "例如：重构这段" : "e.g. Refactor this"
+        }
+        static func fieldEmojiColor(_ lang: Language) -> String {
+            lang == .zh ? "Emoji + 颜色" : "Emoji + color"
+        }
+        static func fieldBody(_ lang: Language) -> String {
+            lang == .zh ? "Prompt 内容" : "Prompt body"
+        }
+        static func fieldBodyPlaceholder(_ lang: Language) -> String {
+            lang == .zh ? "贴你的 prompt …" : "Paste your prompt…"
+        }
+        static func fieldPin(_ lang: Language) -> String {
+            lang == .zh ? "钉在邮票本（最多 5 张）" : "Pin to sidebar (max 5)"
+        }
+        static func saveAction(_ lang: Language) -> String {
+            lang == .zh ? "盖章保存" : "Save"
+        }
+        static func cancelAction(_ lang: Language) -> String {
+            lang == .zh ? "取消" : "Cancel"
+        }
+
+        /// 右键菜单
+        static func menuEdit(_ lang: Language) -> String { lang == .zh ? "编辑" : "Edit" }
+        static func menuPin(_ lang: Language) -> String { lang == .zh ? "钉住" : "Pin" }
+        static func menuUnpin(_ lang: Language) -> String { lang == .zh ? "取消钉住" : "Unpin" }
+        static func menuDelete(_ lang: Language) -> String { lang == .zh ? "删除" : "Delete" }
+        static func menuCopy(_ lang: Language) -> String { lang == .zh ? "复制" : "Copy" }
+
+        /// Toast 文案：「✓ 「重构这段」已盖章到剪贴板」
+        static func toastCopied(_ title: String, _ lang: Language) -> String {
+            if title.isEmpty {
+                return lang == .zh ? "✓ 邮票已盖章" : "✓ Stamp copied"
+            }
+            return lang == .zh ? "✓ 「\(title)」已盖章" : "✓ \"\(title)\" copied"
+        }
+
+        /// Archive sheet 标题
+        static func archiveTitle(_ lang: Language) -> String {
+            lang == .zh ? "我的邮票本" : "My stamp book"
+        }
+        static func archiveSubtitle(_ lang: Language) -> String {
+            lang == .zh ? "全部 prompt 邮票" : "All prompt stamps"
+        }
+        static func sortByUseCount(_ lang: Language) -> String { lang == .zh ? "按用度" : "Most used" }
+        static func sortByRecent(_ lang: Language) -> String { lang == .zh ? "按时间" : "Recent" }
+        static func sortByName(_ lang: Language) -> String { lang == .zh ? "按字母" : "Alphabetical" }
+        static func useCountLabel(_ count: Int, _ lang: Language) -> String {
+            lang == .zh ? "用过 \(count) 次" : "\(count) uses"
+        }
+        static func pinnedBadge(_ lang: Language) -> String {
+            lang == .zh ? "钉" : "Pinned"
+        }
+        /// Add new stamp button hint
+        static func addNewHint(_ lang: Language) -> String {
+            lang == .zh ? "新建邮票" : "New stamp"
+        }
+        /// "All stamps" 入口 hint
+        static func allHint(_ lang: Language) -> String {
+            lang == .zh ? "看全部" : "See all"
+        }
+    }
+
     // MARK: - 邮局音效（opt-in）
 
     enum SoundEffects {

@@ -34,6 +34,11 @@ enum AppPaths {
         applicationSupport.appendingPathComponent("update-available.json", isDirectory: false)
     }
 
+    /// Prompt 邮票本：跨 AI 工具通用的 prompt 收藏
+    static var promptStampsJSON: URL {
+        applicationSupport.appendingPathComponent("prompt-stamps.json", isDirectory: false)
+    }
+
     static var logsDir: URL {
         let base = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first!
         let dir = base.appendingPathComponent("Logs/Pilo", isDirectory: true)

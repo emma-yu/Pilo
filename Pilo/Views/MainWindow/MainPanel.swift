@@ -81,6 +81,58 @@ struct MainPanel: View {
         )) { letter in
             UpdateAvailableReaderView(letter: letter)
         }
+        // Prompt 邮票 editor sheet（新建 / 编辑）
+        .sheet(item: Binding(
+            get: { appState.editingStamp },
+            set: { if $0 == nil { appState.closeStampEditor() } }
+        )) { stamp in
+            PromptStampEditorSheet(initial: stamp)
+        }
+        // Prompt 邮票全集 archive sheet
+        .sheet(isPresented: Binding(
+            get: { appState.isStampArchiveOpen },
+            set: { if !$0 { appState.closeStampArchive() } }
+        )) {
+            PromptStampArchiveSheet()
+        }
+        // Toast overlay —— 「✓ 邮票已盖章」短暂悬浮
+        .overlay(alignment: .top) {
+            if let msg = appState.stampToastMessage {
+                StampToastView(message: msg)
+                    .padding(.top, 30)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(100)
+            }
+        }
+        .animation(.piloSpring, value: appState.stampToastMessage)
+    }
+}
+
+// MARK: - 邮票盖章 toast
+
+private struct StampToastView: View {
+    let message: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.mintSafe)
+            Text(message)
+                .font(.piloSerifSubtitle)
+                .foregroundStyle(Color.inkPrimary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(
+            Capsule(style: .continuous)
+                .fill(Color.piloPaper.opacity(0.95))
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.08), radius: 6, y: 2)
     }
 }
 
@@ -180,54 +232,58 @@ private struct PanelSidebar: View {
             // 微微 tint 的 cream 背景（HTML: rgba(238,234,228,0.22)）
             Color("CreamBg").opacity(0.22)
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    // Phase B: 三段分组——活跃 / 静默 / 沉寂
+            // 主结构 VStack —— ScrollView 弹性占空间；邮票本 widget 钉在底部
+            VStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Phase B: 三段分组——活跃 / 静默 / 沉寂
 
-                    if !appState.activeRepos.isEmpty {
-                        sidebarLabel(
-                            text: Copy.Inventory.sidebarActive(lang) + " · \(appState.activeRepos.count)"
-                        )
-                        .padding(.top, PiloSpacing.s)
-                        .padding(.bottom, PiloSpacing.xs)
+                        if !appState.activeRepos.isEmpty {
+                            sidebarLabel(
+                                text: Copy.Inventory.sidebarActive(lang) + " · \(appState.activeRepos.count)"
+                            )
+                            .padding(.top, PiloSpacing.s)
+                            .padding(.bottom, PiloSpacing.xs)
 
-                        ForEach(appState.activeRepos) { repo in
-                            sidebarItem(repo)
+                            ForEach(appState.activeRepos) { repo in
+                                sidebarItem(repo)
+                            }
                         }
-                    }
 
-                    if !appState.idleRepos.isEmpty {
-                        sidebarLabel(
-                            text: Copy.Inventory.sidebarIdle(lang) + " · \(appState.idleRepos.count)"
-                        )
-                        .padding(.top, PiloSpacing.m)
-                        .padding(.bottom, PiloSpacing.xs)
+                        if !appState.idleRepos.isEmpty {
+                            sidebarLabel(
+                                text: Copy.Inventory.sidebarIdle(lang) + " · \(appState.idleRepos.count)"
+                            )
+                            .padding(.top, PiloSpacing.m)
+                            .padding(.bottom, PiloSpacing.xs)
 
-                        ForEach(appState.idleRepos) { repo in
-                            sidebarItem(repo)
+                            ForEach(appState.idleRepos) { repo in
+                                sidebarItem(repo)
+                            }
                         }
-                    }
 
-                    if !appState.dormantRepos.isEmpty {
-                        sidebarLabel(
-                            text: Copy.Inventory.sidebarDormant(lang) + " · \(appState.dormantRepos.count)"
-                        )
-                        .padding(.top, PiloSpacing.m)
-                        .padding(.bottom, PiloSpacing.xs)
+                        if !appState.dormantRepos.isEmpty {
+                            sidebarLabel(
+                                text: Copy.Inventory.sidebarDormant(lang) + " · \(appState.dormantRepos.count)"
+                            )
+                            .padding(.top, PiloSpacing.m)
+                            .padding(.bottom, PiloSpacing.xs)
 
-                        ForEach(appState.dormantRepos) { repo in
-                            sidebarItem(repo)
+                            ForEach(appState.dormantRepos) { repo in
+                                sidebarItem(repo)
+                            }
                         }
-                    }
 
-                    Spacer(minLength: 0)
+                        Spacer(minLength: 0)
+                    }
                 }
-                // 给底部 indicator 让出空间，避免遮列表最后一行
-                .padding(.bottom, appState.isScanning ? 56 : 0)
-            }
-            .scrollIndicators(.hidden)
+                .scrollIndicators(.hidden)
 
-            // 扫描中 indicator —— 浮在 sidebar 底部，淡入淡出
+                // 邮票本 widget —— 钉在 sidebar 底部，始终可见
+                PromptStampBookSidebar()
+            }
+
+            // 扫描中 indicator —— 浮在 sidebar 底部偏上，避免覆盖邮票本 header
             if appState.isScanning {
                 PostalScanIndicator(tone: tone, lang: lang)
                     .padding(.bottom, 14)

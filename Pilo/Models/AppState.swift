@@ -232,6 +232,35 @@ final class AppState {
     /// 当前正在阅读的更新通告
     var readingUpdateLetter: UpdateAvailableLetter?
 
+    // === Prompt 邮票本 ===
+    /// 邮票本归档（持久化在 prompt-stamps.json）
+    var promptStampArchive: PromptStampArchive = .empty
+    /// 当前正在编辑的邮票（nil = editor sheet 关闭；非 nil 但 id 是新 UUID 表示新建）
+    var editingStamp: PromptStamp?
+    /// 邮票全集 sheet 是否打开
+    var isStampArchiveOpen: Bool = false
+    /// 邮戳 toast —— "已盖章" 提示。nil = 不显示；自动 1.5s 后清空
+    var stampToastMessage: String?
+    private var stampToastTask: Task<Void, Never>?
+
+    /// Sidebar 展示用：钉住的邮票（最多 5 张，按 lastUsedAt 倒序，未使用按 createdAt）
+    var sidebarStamps: [PromptStamp] {
+        promptStampArchive.stamps
+            .filter { $0.pinned }
+            .sorted { a, b in
+                (a.lastUsedAt ?? a.createdAt) > (b.lastUsedAt ?? b.createdAt)
+            }
+            .prefix(5)
+            .map { $0 }
+    }
+
+    /// 总邮票数（empty state 判断用）
+    var totalStampCount: Int { promptStampArchive.stamps.count }
+    /// sidebar 之外还有多少张邮票
+    var sidebarOverflowCount: Int {
+        max(0, totalStampCount - sidebarStamps.count)
+    }
+
     /// 信箱总未读数（DailyLetter + ReleaseLetter + UpdateAvailableLetter）
     var inboxUnreadCount: Int {
         let daily = letterArchive.unreadCount
@@ -298,6 +327,7 @@ final class AppState {
         self.letterArchive = LetterStore.load()
         self.releaseLetterArchive = ReleaseLetterStore.load()
         self.updateAvailableArchive = UpdateAvailableStore.load()
+        self.promptStampArchive = PromptStampStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
         // 邮局音效开关（默认 false）
         let soundOn = UserDefaults.standard.bool(forKey: SettingsKey.enableSoundEffects.rawValue)
@@ -1446,6 +1476,91 @@ final class AppState {
                 )
             }
         }
+    }
+
+    // MARK: - Prompt 邮票本 CRUD
+
+    /// 添加新邮票（在 archive 顶部插入，便于刚建完就看见）
+    func addPromptStamp(_ stamp: PromptStamp) {
+        var archive = promptStampArchive
+        archive.stamps.insert(stamp, at: 0)
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+    }
+
+    /// 更新现有邮票（id 匹配）
+    func updatePromptStamp(_ stamp: PromptStamp) {
+        guard let idx = promptStampArchive.stamps.firstIndex(where: { $0.id == stamp.id }) else { return }
+        var archive = promptStampArchive
+        archive.stamps[idx] = stamp
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+    }
+
+    /// 删除邮票
+    func deletePromptStamp(_ id: UUID) {
+        var archive = promptStampArchive
+        archive.stamps.removeAll { $0.id == id }
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+    }
+
+    /// 切换钉住
+    func togglePinStamp(_ id: UUID) {
+        guard let idx = promptStampArchive.stamps.firstIndex(where: { $0.id == id }) else { return }
+        var archive = promptStampArchive
+        archive.stamps[idx].pinned.toggle()
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+    }
+
+    /// 用户点击邮票：复制 prompt 到剪贴板 + 更新 lastUsedAt / useCount + 播放音 + toast
+    func pasteStamp(_ stamp: PromptStamp) {
+        // 1. 复制到剪贴板
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(stamp.body, forType: .string)
+
+        // 2. 更新邮票元数据
+        guard let idx = promptStampArchive.stamps.firstIndex(where: { $0.id == stamp.id }) else { return }
+        var archive = promptStampArchive
+        archive.stamps[idx].lastUsedAt = Date()
+        archive.stamps[idx].useCount += 1
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+
+        // 3. 邮戳音
+        soundPlayer.play(.waxSealCrack)
+
+        // 4. Toast「✓ 邮票已盖章」—— 1.5s 后自动消失
+        stampToastTask?.cancel()
+        let msg = Copy.Stamps.toastCopied(stamp.title, language)
+        stampToastMessage = msg
+        stampToastTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await MainActor.run {
+                guard let self else { return }
+                if self.stampToastMessage == msg { self.stampToastMessage = nil }
+            }
+        }
+    }
+
+    // MARK: - Sheet 控制
+
+    /// 打开新建邮票 editor —— 传 nil 表示新建
+    func openStampEditor(_ stamp: PromptStamp? = nil) {
+        editingStamp = stamp ?? PromptStamp(title: "", body: "", emoji: "✨")
+    }
+
+    func closeStampEditor() {
+        editingStamp = nil
+    }
+
+    func openStampArchive() {
+        isStampArchiveOpen = true
+    }
+
+    func closeStampArchive() {
+        isStampArchiveOpen = false
     }
 }
 
