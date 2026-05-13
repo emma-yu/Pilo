@@ -1392,6 +1392,10 @@ enum Copy {
         static func fieldEmojiColor(_ lang: Language) -> String {
             lang == .zh ? "Emoji + 颜色" : "Emoji + color"
         }
+        /// 选邮票 illustration —— editor 替代 emoji + tint 的新选项
+        static func fieldDesign(_ lang: Language) -> String {
+            lang == .zh ? "选张邮票" : "Pick a stamp"
+        }
         static func fieldBody(_ lang: Language) -> String {
             lang == .zh ? "Prompt 内容" : "Prompt body"
         }

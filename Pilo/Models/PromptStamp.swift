@@ -28,17 +28,21 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
     var lastUsedAt: Date?
     /// 累计 click 次数 —— archive 里展示"用过 N 次"
     var useCount: Int
+    /// 邮票视觉 design —— 7 张 illustration preset。
+    /// nil = 旧数据，chip 自动 fallback 到 emoji + tint 圆盘视觉（向后兼容）
+    var design: StampDesign?
 
     init(
         id: UUID = UUID(),
         title: String,
         body: String,
-        emoji: String,
+        emoji: String = "",
         tint: StampTint = .gold,
         pinned: Bool = false,
         createdAt: Date = Date(),
         lastUsedAt: Date? = nil,
-        useCount: Int = 0
+        useCount: Int = 0,
+        design: StampDesign? = nil
     ) {
         self.id = id
         self.title = title
@@ -49,6 +53,7 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
         self.createdAt = createdAt
         self.lastUsedAt = lastUsedAt
         self.useCount = useCount
+        self.design = design
     }
 
     /// 邮票底色 —— 6 个跟 Pilo 设计系统对齐的可选色
@@ -81,6 +86,55 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
             case .lavender: return "紫"
             case .neutral:  return "灰"
             }
+        }
+    }
+}
+
+/// 邮票 illustration preset —— 7 张完整邮票视觉（postage perforation + colored panel + 卡通 illustration）
+/// 每张对应 prompt 的典型语义。资源在 `Assets.xcassets/StampPostage<Case>.imageset/`。
+enum StampDesign: String, Codable, CaseIterable, Sendable, Hashable {
+    case checklist     // 粉 · 代码审查 / 验收清单
+    case bug           // 黄 · 找 bug / debug
+    case idea          // 绿 · 解释 / 灵感 / 思路
+    case refactor      // 紫 · 重构 / 优化
+    case fix           // 橙 · 修复 / 维护
+    case docs          // 蓝 · 阅读文档 / 分析
+    case alert         // 桃 · 重要 / 警告 / 收藏
+
+    /// Assets.xcassets 里 imageset 名字
+    var imageName: String {
+        switch self {
+        case .checklist: return "StampPostageChecklist"
+        case .bug:       return "StampPostageBug"
+        case .idea:      return "StampPostageIdea"
+        case .refactor:  return "StampPostageRefactor"
+        case .fix:       return "StampPostageFix"
+        case .docs:      return "StampPostageDocs"
+        case .alert:     return "StampPostageAlert"
+        }
+    }
+
+    var labelZH: String {
+        switch self {
+        case .checklist: return "审查"
+        case .bug:       return "捉虫"
+        case .idea:      return "灵感"
+        case .refactor:  return "重构"
+        case .fix:       return "修复"
+        case .docs:      return "阅读"
+        case .alert:     return "重要"
+        }
+    }
+
+    var labelEN: String {
+        switch self {
+        case .checklist: return "Review"
+        case .bug:       return "Debug"
+        case .idea:      return "Idea"
+        case .refactor:  return "Refactor"
+        case .fix:       return "Fix"
+        case .docs:      return "Read"
+        case .alert:     return "Alert"
         }
     }
 }

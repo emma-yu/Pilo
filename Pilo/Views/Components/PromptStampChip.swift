@@ -2,65 +2,95 @@ import SwiftUI
 
 /// 单张「Prompt 邮票」视觉组件 —— sidebar / archive 都用。
 ///
-/// 默认样式：圆形 24pt + emoji 居中 + tint bg + 金色描边 + -3° 倾斜（"盖章瞬间"质感）。
+/// **两种渲染模式：**
+///   - `stamp.design != nil` —— 完整 postage 邮票 illustration（PNG asset，矩形带 perforation）
+///   - `stamp.design == nil` —— 老 fallback：emoji 居中圆盘（向后兼容旧数据）
 ///
-/// 提供两个 size 变体：
-///   - `.compact`（默认 24pt）—— sidebar 用
-///   - `.large`（36pt）—— archive sheet 用
-///
-/// 点击 / 右键 / hover 行为由父 view 提供；本组件**仅渲染**邮票本身。
+/// 都带 -3° 倾斜（"盖章瞬间"质感）。
 struct PromptStampChip: View {
     let stamp: PromptStamp
     var size: Size = .compact
-    var rotated: Bool = true       // 是否带 -3° 倾斜（archive sheet row 可关掉避免视觉碎）
+    var rotated: Bool = true
 
     enum Size {
-        case compact   // 24pt 圆 —— sidebar
-        case large     // 36pt 圆 —— archive
+        case compact   // sidebar 紧凑
+        case grid      // sidebar grid 主 cell
+        case large     // archive sheet / editor preview
 
-        var diameter: CGFloat {
+        /// 邮票宽度（矩形 illustration 模式）
+        var width: CGFloat {
             switch self {
-            case .compact: return 24
-            case .large:   return 36
+            case .compact: return 36
+            case .grid:    return 52
+            case .large:   return 64
             }
         }
-        var emojiFontSize: CGFloat {
+        /// 邮票高度 —— illustration 是横长方形（≈1:0.9）
+        var height: CGFloat {
+            width * 0.92
+        }
+        /// 旧 fallback 圆盘直径
+        var fallbackDiameter: CGFloat {
+            switch self {
+            case .compact: return 24
+            case .grid:    return 40
+            case .large:   return 48
+            }
+        }
+        var fallbackEmojiSize: CGFloat {
             switch self {
             case .compact: return 13
-            case .large:   return 20
+            case .grid:    return 20
+            case .large:   return 24
             }
         }
     }
 
     var body: some View {
-        Text(stamp.emoji.isEmpty ? "✨" : stamp.emoji)
-            .font(.system(size: size.emojiFontSize))
-            .frame(width: size.diameter, height: size.diameter)
-            .background(
-                Circle().fill(stamp.tint.color.opacity(0.18))
-            )
-            .overlay(
-                Circle()
-                    .stroke(Color.piloGold.opacity(0.55), lineWidth: 0.5)
-            )
-            .rotationEffect(.degrees(rotated ? -3 : 0))
+        Group {
+            if let design = stamp.design {
+                Image(design.imageName)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: size.width, height: size.height)
+            } else {
+                // 旧数据 fallback：emoji + 圆盘 tint
+                Text(stamp.emoji.isEmpty ? "✨" : stamp.emoji)
+                    .font(.system(size: size.fallbackEmojiSize))
+                    .frame(width: size.fallbackDiameter, height: size.fallbackDiameter)
+                    .background(Circle().fill(stamp.tint.color.opacity(0.18)))
+                    .overlay(
+                        Circle()
+                            .stroke(Color.piloGold.opacity(0.55), lineWidth: 0.5)
+                    )
+            }
+        }
+        .rotationEffect(.degrees(rotated ? -3 : 0))
     }
 }
 
 #Preview {
-    VStack(spacing: 16) {
-        HStack(spacing: 12) {
-            ForEach(PromptStamp.StampTint.allCases, id: \.self) { tint in
+    VStack(spacing: 20) {
+        // illustration 模式
+        HStack(spacing: 10) {
+            ForEach(StampDesign.allCases, id: \.self) { d in
                 PromptStampChip(
-                    stamp: PromptStamp(title: "重构", body: "...", emoji: "🔧", tint: tint),
-                    size: .compact
+                    stamp: PromptStamp(title: d.labelZH, body: "...", design: d),
+                    size: .grid
                 )
             }
         }
-        HStack(spacing: 16) {
-            PromptStampChip(stamp: .init(title: "解释", body: "...", emoji: "📖", tint: .gold), size: .large)
-            PromptStampChip(stamp: .init(title: "Bug", body: "...", emoji: "🐛", tint: .rose), size: .large)
-            PromptStampChip(stamp: .init(title: "测试", body: "...", emoji: "✨", tint: .mint), size: .large)
+        // 旧 fallback 模式
+        HStack(spacing: 12) {
+            PromptStampChip(
+                stamp: PromptStamp(title: "重构", body: "...", emoji: "🔧"),
+                size: .compact
+            )
+            PromptStampChip(
+                stamp: PromptStamp(title: "Bug", body: "...", emoji: "🐛", tint: .rose),
+                size: .grid
+            )
         }
     }
     .padding(40)

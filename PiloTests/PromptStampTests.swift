@@ -182,4 +182,44 @@ final class PromptStampTests: XCTestCase {
         state.deletePromptStamp(id)
         XCTAssertEqual(state.totalStampCount, 0)
     }
+
+    // MARK: - StampDesign (v2 illustration mode)
+
+    func testStampDesignCodableRoundTrip() throws {
+        let stamp = PromptStamp(
+            title: "重构",
+            body: "...",
+            pinned: true,
+            design: .refactor
+        )
+        let data = try JSONEncoder.pilo.encode(stamp)
+        let decoded = try JSONDecoder.pilo.decode(PromptStamp.self, from: data)
+        XCTAssertEqual(decoded.design, .refactor)
+    }
+
+    func testStampWithoutDesignDecodes() throws {
+        // 模拟旧 stamps.json：encode 一个 design=nil 的 stamp，decode 后 design 仍 nil
+        let oldStamp = PromptStamp(
+            title: "old",
+            body: "x",
+            emoji: "🔧",
+            tint: .blue
+            // design 缺省 = nil
+        )
+        let data = try JSONEncoder.pilo.encode(oldStamp)
+        let decoded = try JSONDecoder.pilo.decode(PromptStamp.self, from: data)
+        XCTAssertNil(decoded.design, "旧 stamp 无 design 字段")
+        XCTAssertEqual(decoded.emoji, "🔧", "旧 emoji 保留作 chip fallback")
+        XCTAssertEqual(decoded.tint, .blue)
+    }
+
+    func testAllDesignsHaveImageName() {
+        // 守门：新加 design case 要记得加 imageName mapping
+        for d in StampDesign.allCases {
+            XCTAssertFalse(d.imageName.isEmpty)
+            XCTAssertFalse(d.labelZH.isEmpty)
+            XCTAssertFalse(d.labelEN.isEmpty)
+        }
+        XCTAssertEqual(StampDesign.allCases.count, 7)
+    }
 }

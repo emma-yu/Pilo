@@ -2,7 +2,11 @@ import SwiftUI
 
 /// 邮票 editor —— 新建或编辑一张 prompt 邮票。
 ///
-/// 视觉：cream paper 信纸 + Songti 标题 + OrnamentDivider + emoji picker + tint picker + TextEditor
+/// 视觉：cream paper 信纸 + Songti 标题 + 7 张 illustration 邮票 picker（2 行 × 4 列）+ TextEditor
+///
+/// **设计简化**：v2 用 7 张 illustration preset 替代 emoji + tint 双 picker —— 决策从
+/// 48 组合（8×6）降到 7，视觉立即统一。老 stamps（无 design 字段）编辑时若用户没换 design，
+/// 仍保留 emoji+tint fallback；选了任意 design 即覆盖。
 struct PromptStampEditorSheet: View {
 
     /// 初始 stamp —— 新建时传一个空 stamp（title=""），编辑时传现有 stamp
@@ -13,18 +17,14 @@ struct PromptStampEditorSheet: View {
 
     @State private var title: String
     @State private var body_: String
-    @State private var emoji: String
-    @State private var tint: PromptStamp.StampTint
+    @State private var design: StampDesign?
     @State private var pinned: Bool
-
-    private static let emojiPresets: [String] = ["🔧", "📖", "🐛", "✨", "📝", "💡", "🚀", "🧪"]
 
     init(initial: PromptStamp) {
         self.initial = initial
         _title = State(initialValue: initial.title)
         _body_ = State(initialValue: initial.body)
-        _emoji = State(initialValue: initial.emoji.isEmpty ? "✨" : initial.emoji)
-        _tint = State(initialValue: initial.tint)
+        _design = State(initialValue: initial.design ?? .checklist)  // 默认第一张
         _pinned = State(initialValue: initial.pinned)
     }
 
@@ -43,12 +43,12 @@ struct PromptStampEditorSheet: View {
             ScrollView {
                 content
                     .padding(.horizontal, 36)
-                    .padding(.vertical, 24)
+                    .padding(.vertical, 22)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             footer
         }
-        .frame(width: 540, height: 620)
+        .frame(width: 560, height: 660)
         .background(Color.piloPaper.opacity(0.95))
     }
 
@@ -81,7 +81,7 @@ struct PromptStampEditorSheet: View {
 
     @ViewBuilder
     private var content: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 20) {
             // 标签
             VStack(alignment: .leading, spacing: 6) {
                 sectionLabel(Copy.Stamps.fieldTitle(lang))
@@ -101,16 +101,10 @@ struct PromptStampEditorSheet: View {
                     )
             }
 
-            // Emoji + 颜色
-            VStack(alignment: .leading, spacing: 8) {
-                sectionLabel(Copy.Stamps.fieldEmojiColor(lang))
-                HStack(spacing: 16) {
-                    livePreview
-                    VStack(alignment: .leading, spacing: 8) {
-                        emojiPicker
-                        tintPicker
-                    }
-                }
+            // 邮票 illustration picker —— 替代 emoji + tint
+            VStack(alignment: .leading, spacing: 10) {
+                sectionLabel(Copy.Stamps.fieldDesign(lang))
+                designPickerGrid
             }
 
             // Prompt 内容
@@ -130,7 +124,7 @@ struct PromptStampEditorSheet: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                 }
-                .frame(minHeight: 140)
+                .frame(minHeight: 120)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .fill(Color.piloPaper.opacity(0.6))
@@ -159,68 +153,54 @@ struct PromptStampEditorSheet: View {
             .foregroundStyle(Color.piloGoldDark)
     }
 
-    // MARK: - Live preview
+    // MARK: - Design picker grid（4 列 × 2 行 = 8 格，7 个 illustration + 1 空）
 
-    private var livePreview: some View {
-        PromptStampChip(
-            stamp: PromptStamp(title: title, body: body_, emoji: emoji, tint: tint),
-            size: .large,
-            rotated: true
+    private var designPickerGrid: some View {
+        let cols: [GridItem] = Array(
+            repeating: GridItem(.flexible(), spacing: 12, alignment: .center),
+            count: 4
         )
-        .padding(.horizontal, 6)
-    }
-
-    // MARK: - Emoji picker
-
-    private var emojiPicker: some View {
-        HStack(spacing: 4) {
-            ForEach(Self.emojiPresets, id: \.self) { e in
-                Button(action: { emoji = e }) {
-                    Text(e)
-                        .font(.system(size: 18))
-                        .frame(width: 26, height: 26)
-                        .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(emoji == e ? Color.piloGold.opacity(0.18) : Color.clear)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .stroke(
-                                    emoji == e ? Color.piloGold.opacity(0.6) : Color.clear,
-                                    lineWidth: 0.8
-                                )
-                        )
-                }
-                .buttonStyle(.plain)
+        return LazyVGrid(columns: cols, alignment: .center, spacing: 14) {
+            ForEach(StampDesign.allCases, id: \.self) { d in
+                designCell(d)
             }
         }
     }
 
-    // MARK: - Tint picker
-
-    private var tintPicker: some View {
-        HStack(spacing: 5) {
-            ForEach(PromptStamp.StampTint.allCases, id: \.self) { t in
-                Button(action: { tint = t }) {
-                    Circle()
-                        .fill(t.color)
-                        .frame(width: 18, height: 18)
-                        .overlay(
-                            Circle()
-                                .stroke(
-                                    tint == t ? Color.piloGoldDark : Color.clear,
-                                    lineWidth: 1.5
-                                )
-                        )
-                        .overlay(
-                            Circle()
-                                .stroke(Color.black.opacity(0.08), lineWidth: 0.5)
-                        )
-                }
-                .buttonStyle(.plain)
-                .help(t.labelZH)
+    private func designCell(_ d: StampDesign) -> some View {
+        let isSelected = design == d
+        return Button(action: { design = d }) {
+            VStack(spacing: 5) {
+                Image(d.imageName)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: 64, height: 60)
+                    .rotationEffect(.degrees(isSelected ? 0 : -3))
+                    .scaleEffect(isSelected ? 1.06 : 1.0)
+                Text(lang == .zh ? d.labelZH : d.labelEN)
+                    .font(.system(size: 11, weight: isSelected ? .semibold : .medium, design: .rounded))
+                    .foregroundStyle(isSelected ? Color.piloGoldDark : Color.inkSecondary)
+                    .lineLimit(1)
             }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 4)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(isSelected ? Color.piloGold.opacity(0.12) : Color.clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(
+                        isSelected ? Color.piloGoldDark.opacity(0.55) : Color.clear,
+                        lineWidth: 0.8
+                    )
+            )
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .animation(.spring(response: 0.25, dampingFraction: 0.7), value: isSelected)
     }
 
     // MARK: - Footer
@@ -262,18 +242,16 @@ struct PromptStampEditorSheet: View {
             let stamp = PromptStamp(
                 title: trimmedTitle,
                 body: trimmedBody,
-                emoji: emoji,
-                tint: tint,
-                pinned: pinned
+                pinned: pinned,
+                design: design
             )
             appState.addPromptStamp(stamp)
         } else {
             var updated = initial
             updated.title = trimmedTitle
             updated.body = trimmedBody
-            updated.emoji = emoji
-            updated.tint = tint
             updated.pinned = pinned
+            updated.design = design  // 覆盖旧 emoji+tint
             appState.updatePromptStamp(updated)
         }
         appState.closeStampEditor()
