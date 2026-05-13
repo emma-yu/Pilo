@@ -109,6 +109,7 @@
 		9F08118739013091ECBAD2D7 /* RepoCategory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A4B3E0E07D922AC3657E20B /* RepoCategory.swift */; };
 		9F3ED4D598C59F71BEE560F4 /* ReleaseLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABAB44DEA31759E3640B84C0 /* ReleaseLetter.swift */; };
 		A26484D71D57D2FF26E182ED /* UpdateAvailableStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C616E9875229F0A9F6D777 /* UpdateAvailableStore.swift */; };
+		A2FB161B013AF658D5FDCE00 /* pushInFlight.caf in Resources */ = {isa = PBXBuildFile; fileRef = 15D634745F9A37CDB406ADC4 /* pushInFlight.caf */; };
 		A4A47958200A15953FB1A5AD /* MarkdownSearchBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EEADB6C294B5BFE7FAA2E63 /* MarkdownSearchBar.swift */; };
 		A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74EC3C4B71E63346D274F034 /* SettingsView.swift */; };
 		A73B2C32B5550F9117534544 /* OnboardingCompleteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6964DADEF324417B2BBA43EA /* OnboardingCompleteView.swift */; };
@@ -169,6 +170,7 @@
 		10FD9EC9B0DF845E634994DF /* ReleaseLetterReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseLetterReaderView.swift; sourceTree = "<group>"; };
 		12738ED463FC35FD0587E770 /* DiffParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParser.swift; sourceTree = "<group>"; };
 		12CD1D7DED539597461A6D89 /* CommitNotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotificationDelegate.swift; sourceTree = "<group>"; };
+		15D634745F9A37CDB406ADC4 /* pushInFlight.caf */ = {isa = PBXFileReference; path = pushInFlight.caf; sourceTree = "<group>"; };
 		1894FF036FBFB212679A29AC /* SecretScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScannerTests.swift; sourceTree = "<group>"; };
 		18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityValidatorTests.swift; sourceTree = "<group>"; };
 		1E5A56B1B22A7465DD8ECBD5 /* ResumeSubtitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeSubtitleTests.swift; sourceTree = "<group>"; };
@@ -387,6 +389,7 @@
 			isa = PBXGroup;
 			children = (
 				DE50032C977CA171EC24D578 /* letterArrived.caf */,
+				15D634745F9A37CDB406ADC4 /* pushInFlight.caf */,
 				E22A671E12F52C4A4A74CAB6 /* pushSuccess.caf */,
 				2A79C2918D847AB6F1EC0444 /* README.md */,
 				E988AE0F12FE4AC61C8CBC82 /* updateArrived.caf */,
@@ -656,6 +659,7 @@
 				1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */,
 				D30DBD935F24496CEA9A3DA2 /* README.md in Resources */,
 				75358BB2026E8661270C9884 /* letterArrived.caf in Resources */,
+				A2FB161B013AF658D5FDCE00 /* pushInFlight.caf in Resources */,
 				8F3AC8516FD9836CB6F97DF8 /* pushSuccess.caf in Resources */,
 				E4A7CCF587AFCCC0A5B2E0EF /* release-notes.json in Resources */,
 				9DEEC0DADF8BD727564A530D /* secret-rules.json in Resources */,
