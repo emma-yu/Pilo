@@ -137,6 +137,41 @@ enum StampDesign: String, Codable, CaseIterable, Sendable, Hashable {
         case .alert:     return "Alert"
         }
     }
+
+    /// Starter template —— 帮新用户跨过"白纸恐惧"。
+    /// 选了 design + body 还是空 → editor 提供「用模板」按钮一键填入。
+    func templateBody(_ lang: Language) -> String {
+        switch (self, lang) {
+        case (.checklist, .zh):
+            return "请审查以下代码：\n[贴代码]\n\n按这几点：\n- 正确性\n- 边缘 case\n- 可读性 / 命名\n- 是否有更简洁的写法"
+        case (.checklist, _):
+            return "Review the following code:\n[paste code]\n\nCheck for:\n- correctness\n- edge cases\n- readability / naming\n- simpler alternatives"
+        case (.bug, .zh):
+            return "我遇到这个错误：\n[贴报错 / stack trace]\n\n相关代码：\n[贴代码]\n\n请帮我找根因并修复。"
+        case (.bug, _):
+            return "I'm hitting this error:\n[paste error / stack trace]\n\nRelevant code:\n[paste code]\n\nPlease find the root cause and fix it."
+        case (.idea, .zh):
+            return "解释这段代码做什么，特别是 [具体点]：\n[贴代码]"
+        case (.idea, _):
+            return "Explain what this code does, especially [specific aspect]:\n[paste code]"
+        case (.refactor, .zh):
+            return "请重构以下函数，让它更清晰、可测试：\n[贴代码]\n\n约束：\n- 保持公共 API 不变\n- 不引入新依赖"
+        case (.refactor, _):
+            return "Refactor the following function for clarity and testability:\n[paste code]\n\nConstraints:\n- keep the public API the same\n- no new dependencies"
+        case (.fix, .zh):
+            return "这段代码有问题，请修复：\n[贴代码]\n\n症状：[描述]"
+        case (.fix, _):
+            return "This code has an issue, please fix:\n[paste code]\n\nSymptom: [describe]"
+        case (.docs, .zh):
+            return "总结这份文档 / 代码的关键点：\n[贴内容]\n\n我关心：[具体问题]"
+        case (.docs, _):
+            return "Summarize the key points of this doc / code:\n[paste content]\n\nI care about: [specific question]"
+        case (.alert, .zh):
+            return "这件事很重要，请慎重处理：\n[描述]\n\n请说明风险 + 推荐做法 + 不该做的事。"
+        case (.alert, _):
+            return "This is important, please be careful:\n[describe]\n\nList risks + recommended approach + what to avoid."
+        }
+    }
 }
 
 /// 邮票本顶层容器

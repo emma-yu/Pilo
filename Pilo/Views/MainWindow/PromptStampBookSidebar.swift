@@ -138,22 +138,42 @@ struct PromptStampBookSidebar: View {
     }
 
     // MARK: - Empty state
+    //
+    // 设计目标：让用户看一眼就知道这是个 prompt 库。
+    //   - 3 张半透明 preview 邮票排成一行（"集邮册"感）
+    //   - 1 行 explanation: "存常用 prompt，1 click 复制到任何 AI 工具"
+    //   - + CTA 按钮
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "envelope.badge")
-                .font(.system(size: 26))
-                .foregroundStyle(Color.piloGoldDark.opacity(0.45))
-            Text(Copy.Stamps.emptyTitle(lang))
+        VStack(spacing: 10) {
+            // 3 张 faded preview 邮票 —— 暗示"可以填什么"
+            HStack(spacing: 10) {
+                ForEach([StampDesign.refactor, .bug, .idea], id: \.self) { d in
+                    Image(d.imageName)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(width: 38, height: 35)
+                        .opacity(0.4)
+                        .rotationEffect(.degrees(Double.random(in: -6...6)))
+                }
+            }
+            .padding(.top, 4)
+
+            Text(Copy.Stamps.emptyExplanation(lang))
                 .font(.piloSerifCaption)
                 .italic()
                 .foregroundStyle(Color.inkSecondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .padding(.horizontal, 4)
+
             Button(action: { appState.openStampEditor() }) {
                 Text("+ " + Copy.Stamps.emptyHint(lang))
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.piloGoldDark)
-                    .padding(.horizontal, 11)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                     .background(Capsule().fill(Color.piloGold.opacity(0.12)))
                     .overlay(Capsule().stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5))
             }

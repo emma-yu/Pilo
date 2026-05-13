@@ -109,7 +109,29 @@ struct PromptStampEditorSheet: View {
 
             // Prompt 内容
             VStack(alignment: .leading, spacing: 6) {
-                sectionLabel(Copy.Stamps.fieldBody(lang))
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    sectionLabel(Copy.Stamps.fieldBody(lang))
+                    Spacer()
+                    // 「用模板」inline 按钮 —— 仅 body 为空 + 已选 design 时显示，
+                    // 帮新用户跨过"白纸恐惧"
+                    if body_.isEmpty, let d = design {
+                        Button(action: { body_ = d.templateBody(lang) }) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 10, weight: .medium))
+                                Text(Copy.Stamps.useTemplate(lang))
+                                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                            }
+                            .foregroundStyle(Color.piloGoldDark)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Capsule().fill(Color.piloGold.opacity(0.12)))
+                            .overlay(Capsule().stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5))
+                        }
+                        .buttonStyle(.plain)
+                        .help(Copy.Stamps.useTemplateHint(lang))
+                    }
+                }
                 ZStack(alignment: .topLeading) {
                     if body_.isEmpty {
                         Text(Copy.Stamps.fieldBodyPlaceholder(lang))

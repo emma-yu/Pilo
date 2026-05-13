@@ -1367,6 +1367,12 @@ enum Copy {
         static func emptyHint(_ lang: Language) -> String {
             lang == .zh ? "盖第一张 prompt 邮票" : "Make your first stamp"
         }
+        /// Empty state explanation —— 告诉新用户这是干嘛的
+        static func emptyExplanation(_ lang: Language) -> String {
+            lang == .zh
+                ? "存常用 prompt，一键复制到任何 AI 工具"
+                : "Save reusable prompts. One click copies to any AI tool."
+        }
         /// "…还有 N 张" overflow row
         static func overflowMore(count: Int, _ lang: Language) -> String {
             lang == .zh ? "…还有 \(count) 张" : "…and \(count) more"
@@ -1450,6 +1456,14 @@ enum Copy {
         /// "All stamps" 入口 hint
         static func allHint(_ lang: Language) -> String {
             lang == .zh ? "看全部" : "See all"
+        }
+
+        // MARK: - Editor template
+        static func useTemplate(_ lang: Language) -> String {
+            lang == .zh ? "用模板" : "Use template"
+        }
+        static func useTemplateHint(_ lang: Language) -> String {
+            lang == .zh ? "用这张邮票的起手模板填入" : "Prefill a starter for this stamp"
         }
 
         // MARK: - Archive search
