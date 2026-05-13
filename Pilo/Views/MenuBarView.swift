@@ -144,9 +144,9 @@ struct MenuBarView: View {
     private var content: some View {
         if !appState.pendingRepos.isEmpty {
             VStack(alignment: .leading, spacing: PiloSpacing.s) {
-                // 斜体宋体 group label — 邮局风 + 邮差挎包 icon 强化"今天要送的信"叙事
+                // 斜体宋体 group label — 邮局风 + 信堆叠 icon，强化"待寄出"复数感
                 HStack(spacing: 6) {
-                    Image("PostalSatchel")
+                    Image("LetterStack")
                         .resizable()
                         .interpolation(.high)
                         .aspectRatio(contentMode: .fit)
