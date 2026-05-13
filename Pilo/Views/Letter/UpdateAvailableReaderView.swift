@@ -31,7 +31,10 @@ struct UpdateAvailableReaderView: View {
         .frame(width: 640, height: 720)
         .background(Color.piloPaper.opacity(0.95))
         .onAppear {
+            // 蜡封 crack —— 仅首次开启未读时响
+            let wasUnread = letter.isUnread
             appState.markUpdateLetterRead(letter)
+            if wasUnread { appState.soundPlayer.play(.waxSealCrack) }
         }
     }
 

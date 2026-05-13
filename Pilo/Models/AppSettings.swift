@@ -30,6 +30,9 @@ enum SettingsKey: String {
 
     /// Commit 通知（macOS 推送）。默认 OFF，opt-in only —— 避免用户首次使用就被通知轰炸
     case enableCommitNotifications
+
+    /// 邮局音效。默认 OFF —— productivity app 静音是 macOS 惯例（Bear/Things/Reeder 都没）
+    case enableSoundEffects
 }
 
 enum AppSettingsDefaults {

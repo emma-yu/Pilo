@@ -82,6 +82,9 @@ struct SettingsView: View {
                     // Commit 通知 —— opt-in，本地新邮件提醒
                     commitNotificationSection
 
+                    // 邮局音效 —— opt-in，4 个高 ROI 场景的轻量声音反馈
+                    soundEffectsSection
+
                     // S3 Identity Sentinel —— 身份分拣
                     identityPoolSection
                 }
@@ -178,6 +181,61 @@ struct SettingsView: View {
             )
 
             Text(Copy.Notification.coalesceFooter(lang))
+                .font(.piloSerifCaption)
+                .italic()
+                .foregroundStyle(Color.inkTertiary)
+                .padding(.top, 2)
+        }
+    }
+
+    // MARK: - 邮局音效（opt-in 高 ROI 场景的轻量声音）
+
+    @ViewBuilder
+    private var soundEffectsSection: some View {
+        VStack(alignment: .leading, spacing: PiloSpacing.s) {
+            sectionLabel(Copy.SoundEffects.sectionHeader(lang))
+
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "speaker.wave.2")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Color.piloGoldDark)
+                    .frame(width: 28, height: 28)
+                    .background(
+                        Circle().fill(Color.piloGold.opacity(0.12))
+                    )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(Copy.SoundEffects.toggleTitle(lang))
+                        .font(.piloSection)
+                        .foregroundStyle(Color.inkPrimary)
+                    Text(Copy.SoundEffects.toggleHint(lang))
+                        .font(.piloSerifSubtitle)
+                        .foregroundStyle(Color.inkSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Toggle("", isOn: Binding(
+                    get: { appState.enableSoundEffects },
+                    set: { newValue in appState.setSoundEffects(newValue) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .tint(Color.piloGoldDark)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.6))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
+            )
+
+            Text(Copy.SoundEffects.scenesFooter(lang))
                 .font(.piloSerifCaption)
                 .italic()
                 .foregroundStyle(Color.inkTertiary)

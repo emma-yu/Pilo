@@ -29,7 +29,10 @@ struct ReleaseLetterReaderView: View {
         .frame(width: 640, height: 720)
         .background(Color.piloPaper.opacity(0.95))
         .onAppear {
+            // 蜡封 crack —— 仅首次开启未读时响（已读再开静默）
+            let wasUnread = letter.isUnread
             appState.markReleaseLetterRead(letter)
+            if wasUnread { appState.soundPlayer.play(.waxSealCrack) }
         }
     }
 

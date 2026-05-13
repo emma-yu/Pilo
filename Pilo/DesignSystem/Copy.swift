@@ -1324,6 +1324,27 @@ enum Copy {
         }
     }
 
+    // MARK: - 邮局音效（opt-in）
+
+    enum SoundEffects {
+        static func sectionHeader(_ lang: Language) -> String {
+            lang == .zh ? "音效 / Sounds" : "Sounds / 音效"
+        }
+        static func toggleTitle(_ lang: Language) -> String {
+            lang == .zh ? "邮局音效" : "Postal sound effects"
+        }
+        static func toggleHint(_ lang: Language) -> String {
+            lang == .zh
+                ? "推送 / 信件到达 / 蜡封信开启时的轻量提示音（默认关；尊重系统音量）"
+                : "Soft cues on push / letter arrival / wax seal open (off by default; respects system volume)"
+        }
+        static func scenesFooter(_ lang: Language) -> String {
+            lang == .zh
+                ? "仅 4 个高价值时刻：推送成功 · 每日信件投递 · 新版推送 · 蜡封信开启"
+                : "Only 4 high-value moments: push success · daily letter delivery · update push · seal break"
+        }
+    }
+
     // MARK: - AI 工具配置（per-repo detection badge）
 
     /// 仓库里检测到 AI 工具配置时显示。**诚实边界**：

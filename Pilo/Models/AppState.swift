@@ -23,6 +23,7 @@ final class AppState {
     let letterComposer: LetterComposer
     let commitNotifier: CommitNotifier
     let updateChecker: UpdateChecker
+    let soundPlayer: SoundPlayer
     private let fsMonitor: FSEventMonitor
     private var updateCheckTask: Task<Void, Never>?
 
@@ -198,6 +199,11 @@ final class AppState {
     /// 启动时：UserDefaults 说 true 但系统权限被撤 → 此处也是 false（不会偷偷发通知）
     var enableCommitNotifications: Bool = false
 
+    /// 邮局音效开关（镜像 UserDefaults）。默认 OFF —— productivity app 静音惯例
+    var enableSoundEffects: Bool = false {
+        didSet { soundPlayer.enabled = enableSoundEffects }
+    }
+
     /// 通知点击 delegate（强引用 —— UN center.delegate 是 weak）
     private var notificationDelegate: CommitNotificationDelegate?
 
@@ -261,6 +267,7 @@ final class AppState {
         self.letterComposer = LetterComposer(gitClient: git)
         self.commitNotifier = CommitNotifier()
         self.updateChecker = UpdateChecker()
+        self.soundPlayer = SoundPlayer()
         self.fsMonitor = FSEventMonitor()
         // 恢复 kill switch 状态
         if let ts = UserDefaults.standard.object(forKey: SettingsKey.killSwitchExpiresAt.rawValue) as? TimeInterval {
@@ -292,6 +299,10 @@ final class AppState {
         self.releaseLetterArchive = ReleaseLetterStore.load()
         self.updateAvailableArchive = UpdateAvailableStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
+        // 邮局音效开关（默认 false）
+        let soundOn = UserDefaults.standard.bool(forKey: SettingsKey.enableSoundEffects.rawValue)
+        self.enableSoundEffects = soundOn
+        soundPlayer.enabled = soundOn
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
         // 在 MainActor 的下一个 tick 启动后端检测和首扫；
@@ -379,6 +390,14 @@ final class AppState {
             self.enableCommitNotifications = false
             UserDefaults.standard.set(false, forKey: SettingsKey.enableCommitNotifications.rawValue)
         }
+    }
+
+    /// 用户在 Settings 切音效 toggle 时调用
+    func setSoundEffects(_ on: Bool) {
+        enableSoundEffects = on   // didSet 会同步 SoundPlayer
+        UserDefaults.standard.set(on, forKey: SettingsKey.enableSoundEffects.rawValue)
+        // 切到 ON 时立刻预览一下"信件到达"音效，让用户感受到"开关确实生效了"
+        if on { soundPlayer.play(.letterArrived) }
     }
 
     /// 用户在 Settings 切 Commit 通知 toggle 时调用。
@@ -480,6 +499,8 @@ final class AppState {
                 archive.letters.insert(letter, at: 0)
                 self.letterArchive = archive
                 LetterStore.save(archive)
+                // 🕊️ 信件到达音
+                self.soundPlayer.play(.letterArrived)
             }
         }
     }
@@ -557,6 +578,8 @@ final class AppState {
         archive.current = new
         updateAvailableArchive = archive
         UpdateAvailableStore.save(archive)
+        // 📮 柜台铃 —— 新版本到达是仪式时刻
+        soundPlayer.play(.updateArrived)
     }
 
     /// 用户从信箱点更新通告 → 进入 reader
@@ -982,6 +1005,7 @@ final class AppState {
                 repositories[idx].aheadCount = 0
                 saveRepositoriesToDisk()
             }
+            soundPlayer.play(.pushSuccess)
         }
 
         var s2 = session
@@ -1017,6 +1041,7 @@ final class AppState {
                 repositories[idx].aheadCount = 0
                 saveRepositoriesToDisk()
             }
+            soundPlayer.play(.pushSuccess)
         }
 
         var s2 = session
