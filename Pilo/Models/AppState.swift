@@ -400,15 +400,49 @@ final class AppState {
     /// 安装通知 delegate —— 通知被点 → 跳到对应 repo 并打开主窗
     private func installNotificationDelegate() {
         let weakSelf = self
-        let delegate = CommitNotificationDelegate { [weak weakSelf] repoId in
-            guard let self = weakSelf else { return }
-            // 通知 → 打开主窗 + 选中 repo（如果还在仓库列表里）
-            if self.repositories.contains(where: { $0.id == repoId }) {
-                self.selectRepo(repoId)
+        let delegate = CommitNotificationDelegate(
+            onCommitTap: { [weak weakSelf] repoId in
+                guard let self = weakSelf else { return }
+                if self.repositories.contains(where: { $0.id == repoId }) {
+                    self.selectRepo(repoId)
+                }
+            },
+            onLetterTap: { [weak weakSelf] in
+                guard let self = weakSelf else { return }
+                // 任意 letter banner 点击 → 打开信箱（letter 已在 inbox 里）
+                self.openLetterArchive()
             }
-        }
+        )
         self.notificationDelegate = delegate
         UNUserNotificationCenter.current().delegate = delegate
+    }
+
+    /// 投递一封 letter 时同步弹 macOS banner（gated by enableCommitNotifications —
+    /// 同一个 macOS 通知权限/开关，UX 一致）。三种 letter 都用 "Pilo · 新邮件" 标题。
+    ///
+    /// - Parameters:
+    ///   - body: 副标题，比如 "今日工作简报 · 3 commits · 2 repos"
+    ///   - kind: "dailyLetter" / "releaseLetter" / "updateLetter"，用于 tap 路由
+    ///   - itemId: letter UUID 字符串，作为 notification identifier（替换式）
+    func emitLetterBanner(body: String, kind: String, itemId: String) {
+        guard enableCommitNotifications else { return }
+        let content = UNMutableNotificationContent()
+        content.title = Copy.Notification.letterBannerTitle(language)
+        content.body = body
+        content.relevanceScore = 0.8
+        content.userInfo = ["kind": kind, "id": itemId]
+        let req = UNNotificationRequest(
+            identifier: "\(kind).\(itemId)",
+            content: content,
+            trigger: nil
+        )
+        Task {
+            do {
+                try await UNUserNotificationCenter.current().add(req)
+            } catch {
+                print("[AppState] letter banner add() failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     /// 启动时调用：UserDefaults 持久化的开关 ∧ 系统当前授权状态。
@@ -542,6 +576,16 @@ final class AppState {
                 LetterStore.save(archive)
                 // 🕊️ 信件到达音
                 self.soundPlayer.play(.letterArrived)
+                // 📬 macOS banner —— 信箱新邮件提醒（gated by enableCommitNotifications）
+                self.emitLetterBanner(
+                    body: Copy.Notification.dailyLetterBannerBody(
+                        commits: letter.totalCommits,
+                        repos: letter.activeRepoCount,
+                        self.language
+                    ),
+                    kind: "dailyLetter",
+                    itemId: letter.id.uuidString
+                )
             }
         }
     }
@@ -568,23 +612,36 @@ final class AppState {
 
         var archive = releaseLetterArchive
         let now = Date()
+        var newLetterEntries: [ReleaseLetter] = []
         for release in newReleases where !existingVersions.contains(release.version) {
-            archive.letters.insert(
-                ReleaseLetter(
-                    id: UUID(),
-                    version: release.version,
-                    releaseDate: release.releaseDate,
-                    deliveredAt: now,
-                    readAt: nil,
-                    title: release.title,
-                    highlights: release.highlights,
-                    bodyParagraphs: release.body
-                ),
-                at: 0
+            let letter = ReleaseLetter(
+                id: UUID(),
+                version: release.version,
+                releaseDate: release.releaseDate,
+                deliveredAt: now,
+                readAt: nil,
+                title: release.title,
+                highlights: release.highlights,
+                bodyParagraphs: release.body
             )
+            archive.letters.insert(letter, at: 0)
+            newLetterEntries.append(letter)
         }
         releaseLetterArchive = archive
         ReleaseLetterStore.save(archive)
+
+        // 📬 macOS banner —— 每封新 release letter 一条（典型场景只有 0 或 1 封）
+        for letter in newLetterEntries {
+            emitLetterBanner(
+                body: Copy.Notification.releaseLetterBannerBody(
+                    version: letter.version,
+                    title: letter.title,
+                    language
+                ),
+                kind: "releaseLetter",
+                itemId: letter.id.uuidString
+            )
+        }
 
         // 把"已见过"标记推到最新（即便有信延迟读，下次启动也不会再投）
         if let latest = bundled.max(by: { Semver.compare($0.version, $1.version) == .orderedAscending }) {
@@ -621,6 +678,12 @@ final class AppState {
         UpdateAvailableStore.save(archive)
         // 📮 柜台铃 —— 新版本到达是仪式时刻
         soundPlayer.play(.updateArrived)
+        // 📬 macOS banner —— 新邮件提醒（gated by enableCommitNotifications）
+        emitLetterBanner(
+            body: Copy.Notification.updateLetterBannerBody(version: new.version, language),
+            kind: "updateLetter",
+            itemId: new.id.uuidString
+        )
     }
 
     /// 用户从信箱点更新通告 → 进入 reader

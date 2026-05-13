@@ -1558,6 +1558,28 @@ enum Copy {
                 ? "Pilo 会等你停下手 60 秒后再投递 —— 不会一直叮叮咚咚"
                 : "Pilo waits 60s of quiet before delivery — no constant pings"
         }
+
+        // MARK: - 新邮件 banner（信箱里的 letter 到达时弹 macOS banner）
+
+        /// 通用 "新邮件" 标题，三种 letter (daily/release/update) 共用
+        static func letterBannerTitle(_ lang: Language) -> String {
+            lang == .zh ? "Pilo · 新邮件" : "Pilo · New mail"
+        }
+        /// Daily letter banner body —— 今日工作简报 + 简短摘要
+        static func dailyLetterBannerBody(commits: Int, repos: Int, _ lang: Language) -> String {
+            if lang == .zh {
+                return "今日工作简报 · \(commits) 个 commit · \(repos) 个仓库"
+            }
+            return "Today's letter · \(commits) commit\(commits == 1 ? "" : "s") · \(repos) repo\(repos == 1 ? "" : "s")"
+        }
+        /// Release letter banner body —— 用版本号 + 标题
+        static func releaseLetterBannerBody(version: String, title: String, _ lang: Language) -> String {
+            "v\(version) · \(title)"
+        }
+        /// Update letter banner body
+        static func updateLetterBannerBody(version: String, _ lang: Language) -> String {
+            lang == .zh ? "v\(version) · 新版已发车" : "v\(version) · New version available"
+        }
     }
 
     // MARK: - S1 AI Push Guard
