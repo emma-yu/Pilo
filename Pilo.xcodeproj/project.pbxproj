@@ -50,6 +50,7 @@
 		49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */; };
 		49C36AAC4321706D27F95F7F /* PushReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E456950F8860CE112F3A249B /* PushReport.swift */; };
 		4D4EEDC70D697AFB0294C959 /* IdentityValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */; };
+		4F6D8BF95D8BC4D99F8D97A2 /* waxSealCrack.caf in Resources */ = {isa = PBXBuildFile; fileRef = 8D7E5816576CAD583CE6FD14 /* waxSealCrack.caf */; };
 		516EC7CEADBF8C101F72DA1D /* ReleaseLetterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25437B2E50340E84E16B7346 /* ReleaseLetterTests.swift */; };
 		5269C86B4F668014D2043EE4 /* RepoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */; };
 		52E8A9053CF5E96A4DD99548 /* PushExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75A704D753347DA0624F8EE5 /* PushExecutor.swift */; };
@@ -73,7 +74,9 @@
 		6B9AB949B4914CA020229558 /* IdentityPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FEF8617500F6E861847FA9 /* IdentityPool.swift */; };
 		6CF51C11E1DF49DCD24C7E21 /* CopyLanguageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8EFDE51151A74B99FD3027 /* CopyLanguageTests.swift */; };
 		6DD4F5DD058AD437E8FB144E /* LetterComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */; };
+		7179F3F9E29BF2EEE732B520 /* updateArrived.caf in Resources */ = {isa = PBXBuildFile; fileRef = E988AE0F12FE4AC61C8CBC82 /* updateArrived.caf */; };
 		72637E3353D3E4C398090A37 /* MarkdownTOCTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 650FCDB2CE5AC6307E508E7E /* MarkdownTOCTests.swift */; };
+		75358BB2026E8661270C9884 /* letterArrived.caf in Resources */ = {isa = PBXBuildFile; fileRef = DE50032C977CA171EC24D578 /* letterArrived.caf */; };
 		753DBF7C58E92A72A507CBEB /* RepoHealthDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70096C69DB23DA00D2156EFB /* RepoHealthDetector.swift */; };
 		75660C7C06D989B456AD23EF /* DailyDigestCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 329FE34277A4F2C52BAE2CA5 /* DailyDigestCard.swift */; };
 		78D7A7AF7BAC3F82782139FB /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5216F34411251C6CF3819D4F /* UpdateChecker.swift */; };
@@ -92,6 +95,7 @@
 		8CA43165BADE530DC18C04B7 /* LetterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39A2CB3CAEB5CE6735095D5 /* LetterStore.swift */; };
 		8CF12033FE476F193D4DEA31 /* ResumeWorkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F67DC1463A93D6A38D78CB24 /* ResumeWorkCard.swift */; };
 		8D26D59EC29DFACD7BF4E59B /* CommitGuardScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */; };
+		8F3AC8516FD9836CB6F97DF8 /* pushSuccess.caf in Resources */ = {isa = PBXBuildFile; fileRef = E22A671E12F52C4A4A74CAB6 /* pushSuccess.caf */; };
 		8F4FCBC600D92304B724494C /* DiffHunk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */; };
 		8F6A6D248A5E4B279F628D2B /* DailyLetterScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B304A773A8905DDBC2B13CE9 /* DailyLetterScheduler.swift */; };
 		8FF4DA132472F527B5E480C2 /* UncommittedFileParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5B37440B334B6D98141BE2 /* UncommittedFileParsingTests.swift */; };
@@ -242,6 +246,7 @@
 		899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRendererTests.swift; sourceTree = "<group>"; };
 		8A2B7B319C83FCB9F85FF0EA /* PostalScanIndicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalScanIndicator.swift; sourceTree = "<group>"; };
 		8B511655D28B12989BAB8A01 /* MainWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainWindowView.swift; sourceTree = "<group>"; };
+		8D7E5816576CAD583CE6FD14 /* waxSealCrack.caf */ = {isa = PBXFileReference; path = waxSealCrack.caf; sourceTree = "<group>"; };
 		8E1A000936EF3162CFD69CD0 /* DocReadingMemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocReadingMemoryTests.swift; sourceTree = "<group>"; };
 		901BE8E3BC6E337625717B59 /* OnboardingFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlow.swift; sourceTree = "<group>"; };
 		904EB76716C0484B1818DB33 /* MarkdownRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownRenderer.swift; sourceTree = "<group>"; };
@@ -276,12 +281,15 @@
 		DAE45D55C757CD61606DCF1C /* SecretRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretRule.swift; sourceTree = "<group>"; };
 		DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDetailView.swift; sourceTree = "<group>"; };
 		DD4C9E61A9BD4272EF5FB41F /* AICommitDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICommitDetector.swift; sourceTree = "<group>"; };
+		DE50032C977CA171EC24D578 /* letterArrived.caf */ = {isa = PBXFileReference; path = letterArrived.caf; sourceTree = "<group>"; };
 		DE5D85F98C2D52B4B9888F05 /* FalsePositiveMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FalsePositiveMark.swift; sourceTree = "<group>"; };
 		DE9C13BCCED7CDF23020AF7B /* GitClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitClient.swift; sourceTree = "<group>"; };
 		E197D0F0D4782B0B6AF5F1DC /* PostalContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostalContextMenu.swift; sourceTree = "<group>"; };
+		E22A671E12F52C4A4A74CAB6 /* pushSuccess.caf */ = {isa = PBXFileReference; path = pushSuccess.caf; sourceTree = "<group>"; };
 		E456950F8860CE112F3A249B /* PushReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushReport.swift; sourceTree = "<group>"; };
 		E8D6517FA445163036BB8FEC /* GitHubVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitHubVisibility.swift; sourceTree = "<group>"; };
 		E9066B30C3BA6E45C984CF14 /* RepoDocsIndexerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDocsIndexerTests.swift; sourceTree = "<group>"; };
+		E988AE0F12FE4AC61C8CBC82 /* updateArrived.caf */ = {isa = PBXFileReference; path = updateArrived.caf; sourceTree = "<group>"; };
 		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
 		ED602865C8E6B7BC5AEB009F /* MarkdownSearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchEngine.swift; sourceTree = "<group>"; };
 		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
@@ -378,7 +386,11 @@
 		4D1493CAB99AE7C3B280DE58 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
+				DE50032C977CA171EC24D578 /* letterArrived.caf */,
+				E22A671E12F52C4A4A74CAB6 /* pushSuccess.caf */,
 				2A79C2918D847AB6F1EC0444 /* README.md */,
+				E988AE0F12FE4AC61C8CBC82 /* updateArrived.caf */,
+				8D7E5816576CAD583CE6FD14 /* waxSealCrack.caf */,
 			);
 			path = Sounds;
 			sourceTree = "<group>";
@@ -643,8 +655,12 @@
 			files = (
 				1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */,
 				D30DBD935F24496CEA9A3DA2 /* README.md in Resources */,
+				75358BB2026E8661270C9884 /* letterArrived.caf in Resources */,
+				8F3AC8516FD9836CB6F97DF8 /* pushSuccess.caf in Resources */,
 				E4A7CCF587AFCCC0A5B2E0EF /* release-notes.json in Resources */,
 				9DEEC0DADF8BD727564A530D /* secret-rules.json in Resources */,
+				7179F3F9E29BF2EEE732B520 /* updateArrived.caf in Resources */,
+				4F6D8BF95D8BC4D99F8D97A2 /* waxSealCrack.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
