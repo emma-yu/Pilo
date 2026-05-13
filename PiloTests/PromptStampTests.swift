@@ -2,7 +2,26 @@ import XCTest
 @testable import Pilo
 
 /// PromptStamp 模型 + persistence + 派生逻辑测试
+///
+/// **测试隔离**：`PromptStampStore.testOverrideURL` 在 setUp 时重定向到 temp
+/// 文件，所有 AppState CRUD 触发的 `PromptStampStore.save(...)` 不会污染用户
+/// 真生产 `~/Library/Application Support/Pilo/prompt-stamps.json`。
 final class PromptStampTests: XCTestCase {
+
+    private var tempURL: URL!
+
+    override func setUp() {
+        super.setUp()
+        tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("pilo-stamp-test-\(UUID().uuidString).json")
+        PromptStampStore.testOverrideURL = tempURL
+    }
+
+    override func tearDown() {
+        PromptStampStore.testOverrideURL = nil
+        try? FileManager.default.removeItem(at: tempURL)
+        super.tearDown()
+    }
 
     // MARK: - Codable round-trip
 
