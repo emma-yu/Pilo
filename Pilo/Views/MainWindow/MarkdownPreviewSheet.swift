@@ -348,11 +348,13 @@ struct MarkdownPreviewSheet: View {
     }
 
     /// 誊抄全文到剪贴板。失败静默（用户看不到 ✓ 就是失败了 —— 比 toast 更克制）
+    /// 跟邮票誊抄统一：waxSealCrack 邮戳音 = 「誊抄」动作的反馈
     private func copyFullText() {
         let fullPath = URL(fileURLWithPath: repoPath).appendingPathComponent(doc.relativePath)
         guard let text = try? String(contentsOf: fullPath, encoding: .utf8) else { return }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
+        appState.soundPlayer.play(.waxSealCrack)
         withAnimation(.piloHover) { justCopied = true }
         Task {
             try? await Task.sleep(nanoseconds: 1_500_000_000)
