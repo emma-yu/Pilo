@@ -49,32 +49,56 @@ struct PostalWaveDots: View {
     }
 }
 
-/// **PostalScanIndicator** —— sidebar 底部"巡视中"胶囊（dots + 文案 + cream paper bg）
+/// **PostalScanIndicator** —— "巡视中"胶囊（dots + 文案 + cream paper bg）
 ///
-/// 用法：`if appState.isScanning { PostalScanIndicator(...) }` 挂在 sidebar 底部
+/// 两个尺寸变体：
+///   - `.sidebar` —— 大号，曾在 sidebar 底部用（v1）
+///   - `.topbar`  —— 紧凑款，跟 inbox / health pill 同高 (~22pt)，在 PanelHeader 右侧
+///
+/// 用法：`if appState.isScanning { PostalScanIndicator(...) }`
 struct PostalScanIndicator: View {
 
     let tone: Tone
     let lang: Language
+    var size: Size = .sidebar
+
+    enum Size {
+        case sidebar
+        case topbar
+    }
 
     var body: some View {
-        HStack(spacing: 8) {
-            PostalWaveDots()
+        HStack(spacing: size == .topbar ? 6 : 8) {
+            PostalWaveDots(size: size == .topbar ? 4 : 5)
             Text(Copy.Scanning.sidebarHint(tone, lang))
-                .font(.piloSerifCaption)
+                .font(size == .topbar
+                      ? .piloSerifCaption
+                      : .piloSerifCaption)
                 .italic()
                 .foregroundStyle(Color.piloGoldDark.opacity(0.85))
                 .lineLimit(1)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .padding(.horizontal, size == .topbar ? 10 : 14)
+        .padding(.vertical, size == .topbar ? 4 : 10)
         .background(
-            Capsule(style: .continuous)
-                .fill(Color.piloPaper.opacity(0.7))
+            // topbar 用跟其它 pill 一致的 RoundedRectangle 7pt；sidebar 用 capsule
+            Group {
+                if size == .topbar {
+                    RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        .fill(Color.piloGold.opacity(0.15))
+                } else {
+                    Capsule(style: .continuous)
+                        .fill(Color.piloPaper.opacity(0.7))
+                }
+            }
         )
         .overlay(
-            Capsule(style: .continuous)
-                .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
+            Group {
+                if size == .sidebar {
+                    Capsule(style: .continuous)
+                        .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
+                }
+            }
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Copy.Scanning.sidebarHint(tone, lang))

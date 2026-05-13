@@ -1540,7 +1540,7 @@ enum Copy {
         }
     }
 
-    // MARK: - Commit 通知（opt-in 本地新邮件提醒）
+    // MARK: - Commit 通知（opt-in 本地新消息提醒）
 
     enum Notification {
         /// Settings section 标题
@@ -1549,12 +1549,12 @@ enum Copy {
         }
         /// Toggle 主标题
         static func toggleTitle(_ lang: Language) -> String {
-            lang == .zh ? "新邮件提醒" : "New mail alerts"
+            lang == .zh ? "新消息提醒" : "New message alerts"
         }
         /// Toggle hint —— 解释做什么 + 隐私不打扰
         static func toggleHint(_ lang: Language) -> String {
             lang == .zh
-                ? "扫到新 commit 时给你一封系统通知（默认关，需 macOS 通知权限）"
+                ? "扫到新 commit 时给你一条系统通知（默认关，需 macOS 通知权限）"
                 : "Banner when a new commit is detected (off by default; needs macOS permission)"
         }
         /// 解释 throttle 行为
@@ -1562,6 +1562,12 @@ enum Copy {
             lang == .zh
                 ? "Pilo 会等你停下手 60 秒后再投递 —— 不会一直叮叮咚咚"
                 : "Pilo waits 60s of quiet before delivery — no constant pings"
+        }
+        /// 提示 user 如果觉得通知消失太快，去系统设置改 Alert 风格
+        static func alertStyleHint(_ lang: Language) -> String {
+            lang == .zh
+                ? "通知消失太快？打开「系统设置 → 通知 → Pilo」，把提醒方式改为「Alerts」—— 通知会一直显示直到你点击关闭"
+                : "Banner disappears too fast? In macOS Settings → Notifications → Pilo, switch alert style to “Alerts” — they stay until you dismiss them."
         }
     }
 

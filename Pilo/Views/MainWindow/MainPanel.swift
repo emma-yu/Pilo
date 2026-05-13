@@ -141,6 +141,7 @@ private struct StampToastView: View {
 
 private struct PanelHeader: View {
     @Environment(AppState.self) private var appState
+    @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
     var body: some View {
@@ -157,6 +158,11 @@ private struct PanelHeader: View {
 
             Spacer()
 
+            // 巡视中 pill —— 仅 isScanning 时出现，紧贴 inbox 左侧
+            if appState.isScanning {
+                PostalScanIndicator(tone: tone, lang: lang, size: .topbar)
+                    .transition(.opacity.combined(with: .scale(scale: 0.92)))
+            }
             // 每日邮局信箱入口 —— 红框位置；跟 healthPill 风格一致
             inboxPill
             healthPill
@@ -164,6 +170,7 @@ private struct PanelHeader: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
         .background(Color("CreamBg").opacity(0.35))
+        .animation(.piloSpring, value: appState.isScanning)
     }
 
     /// 信箱入口 chip：跟 healthPill 同样的 ~22pt 高 + 7pt 圆角 + 15% bg
@@ -283,17 +290,8 @@ private struct PanelSidebar: View {
                 // 邮票本 widget —— 钉在 sidebar 底部，始终可见
                 PromptStampBookSidebar()
             }
-
-            // 扫描中 indicator —— 浮在 sidebar 底部偏上，避免覆盖邮票本 header
-            if appState.isScanning {
-                PostalScanIndicator(tone: tone, lang: lang)
-                    .padding(.bottom, 14)
-                    .transition(
-                        .opacity.combined(with: .move(edge: .bottom))
-                    )
-            }
+            // 扫描指示器现在在 topbar inbox 旁，不再 overlay sidebar 底部
         }
-        .animation(.piloSpring, value: appState.isScanning)
     }
 
     private func sidebarLabel(text: String) -> some View {

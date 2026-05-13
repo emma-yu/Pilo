@@ -150,6 +150,10 @@ actor CommitNotifier {
         content.title = Self.titleText(count: commits.count, repoName: repoName)
         content.body = body
         // 不放 sound —— commit 频繁，叮咚太吵
+        // .timeSensitive 让通知不被 Focus Mode 静默；macOS banner 显示时长仍由用户在
+        // System Settings → Notifications → Pilo 选 Banner / Alert 决定（app 无法强制）
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 0.8
         content.userInfo = [
             "kind": "commit",
             "repoId": repoId.uuidString,
@@ -170,13 +174,16 @@ actor CommitNotifier {
 
     // MARK: - 文案（postal aesthetic）
 
-    /// 标题：1 封 "X 仓库有新邮件"；多封 "X 仓库 · 3 封新邮件"
-    /// 注意：通知文案**永远中文为主**，因为 macOS 通知中心宽度有限，混用 lang 太啰嗦
+    /// 标题：1 条 "X 仓库 · 一条新消息"；多条 "X 仓库 · 3 条新消息"
+    ///
+    /// **诚实文案**：commit 通知不进 Pilo 信箱（信箱只装 daily letter / release / update letter），
+    /// 它就是个"路过看一眼"的系统消息，所以用「新消息」而非「新邮件」避免跟信箱混淆。
+    /// 通知文案**永远中文为主**，因为 macOS 通知中心宽度有限，混用 lang 太啰嗦
     static func titleText(count: Int, repoName: String) -> String {
         if count == 1 {
-            return "\(repoName) · 一封新邮件"
+            return "\(repoName) · 一条新消息"
         }
-        return "\(repoName) · \(count) 封新邮件"
+        return "\(repoName) · \(count) 条新消息"
     }
 
     /// body：用第一封 commit 的 subject + （多于一封时）"…等 N 封"

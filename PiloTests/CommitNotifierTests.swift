@@ -114,13 +114,15 @@ final class CommitNotifierTests: XCTestCase {
     func testTitleSingle() {
         let t = CommitNotifier.titleText(count: 1, repoName: "pilo")
         XCTAssertTrue(t.contains("pilo"))
-        XCTAssertTrue(t.contains("一封"))
+        XCTAssertTrue(t.contains("一条"))
+        XCTAssertTrue(t.contains("新消息"))
     }
 
     func testTitleMultiple() {
         let t = CommitNotifier.titleText(count: 5, repoName: "pilo")
         XCTAssertTrue(t.contains("pilo"))
-        XCTAssertTrue(t.contains("5 封"))
+        XCTAssertTrue(t.contains("5 条"))
+        XCTAssertTrue(t.contains("新消息"))
     }
 
     // MARK: - disable 清理
