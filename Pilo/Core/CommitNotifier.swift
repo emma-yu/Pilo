@@ -173,9 +173,14 @@ actor CommitNotifier {
             "repoId": repoId.uuidString,
             "commitCount": commits.count
         ]
-        // identifier 用 repoId —— 同一 repo 的新通知会替换旧的（避免堆几十条）
+        // identifier 用 repoId —— 同一 repo 的新通知会"就地更新"（不重弹 banner）。
+        // 我们想要每个新 batch 都是 fresh banner，所以**先显式删旧的 delivered**
+        // 再 add 新的；这样 NC 仍只有一条（不堆几十条）+ banner 每次重新弹。
+        let identifier = "commit.\(repoId.uuidString)"
+        UNUserNotificationCenter.current()
+            .removeDeliveredNotifications(withIdentifiers: [identifier])
         let req = UNNotificationRequest(
-            identifier: "commit.\(repoId.uuidString)",
+            identifier: identifier,
             content: content,
             trigger: nil    // 立即投递
         )

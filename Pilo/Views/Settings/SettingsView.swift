@@ -185,22 +185,6 @@ struct SettingsView: View {
                 .italic()
                 .foregroundStyle(Color.inkTertiary)
                 .padding(.top, 2)
-
-            // macOS banner 持续时间是系统级设置，app 无法强制 —— 给用户一个明确入口
-            if appState.enableCommitNotifications {
-                HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: "info.circle")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.piloGoldDark.opacity(0.7))
-                        .padding(.top, 2)
-                    Text(Copy.Notification.alertStyleHint(lang))
-                        .font(.piloSerifCaption)
-                        .italic()
-                        .foregroundStyle(Color.inkSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 2)
-            }
         }
     }
 
@@ -250,12 +234,6 @@ struct SettingsView: View {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
             )
-
-            Text(Copy.SoundEffects.scenesFooter(lang))
-                .font(.piloSerifCaption)
-                .italic()
-                .foregroundStyle(Color.inkTertiary)
-                .padding(.top, 2)
         }
     }
 

@@ -1496,11 +1496,6 @@ enum Copy {
                 ? "推送 / 信件到达 / 蜡封信开启时的轻量提示音（默认关；尊重系统音量）"
                 : "Soft cues on push / letter arrival / wax seal open (off by default; respects system volume)"
         }
-        static func scenesFooter(_ lang: Language) -> String {
-            lang == .zh
-                ? "仅 4 个高价值时刻：推送成功 · 每日信件投递 · 新版推送 · 蜡封信开启"
-                : "Only 4 high-value moments: push success · daily letter delivery · update push · seal break"
-        }
     }
 
     // MARK: - AI 工具配置（per-repo detection badge）
@@ -1562,12 +1557,6 @@ enum Copy {
             lang == .zh
                 ? "Pilo 会等你停下手 60 秒后再投递 —— 不会一直叮叮咚咚"
                 : "Pilo waits 60s of quiet before delivery — no constant pings"
-        }
-        /// 提示 user 如果觉得通知消失太快，去系统设置改 Alert 风格
-        static func alertStyleHint(_ lang: Language) -> String {
-            lang == .zh
-                ? "通知消失太快？打开「系统设置 → 通知 → Pilo」，把提醒方式改为「Alerts」—— 通知会一直显示直到你点击关闭"
-                : "Banner disappears too fast? In macOS Settings → Notifications → Pilo, switch alert style to “Alerts” — they stay until you dismiss them."
         }
     }
 
