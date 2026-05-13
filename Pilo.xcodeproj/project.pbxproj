@@ -69,6 +69,7 @@
 		633B853592053727D02E7284 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE88C8A171ED935AA6B683B /* Typography.swift */; };
 		6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */; };
 		63C6904E4AE3867B463E3811 /* GitignoreEditorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA01E7215C538911CC7CE44 /* GitignoreEditorTests.swift */; };
+		63F961230373C5918137BAB6 /* AICompanionDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBC9DAE14319491EDC3DC655 /* AICompanionDetectorTests.swift */; };
 		6415F36F53444D6B42524D80 /* CopyToneTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A66D0C526983B516A167203C /* CopyToneTests.swift */; };
 		688E2B734BCE5E1286C0624E /* RepositoryCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02E3AB9D907AA5223683DD44 /* RepositoryCodableTests.swift */; };
 		6B58B4EFD7941301409A146F /* DiffParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAA8A635B27743E4BB1A0078 /* DiffParserTests.swift */; };
@@ -154,6 +155,7 @@
 		F5997710B77C0E052D9C9718 /* MainWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B511655D28B12989BAB8A01 /* MainWindowView.swift */; };
 		FD89DE7ADC1DE65DB0108FFE /* PushConfirmDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FB9D4B24D2ABF58B84A598D /* PushConfirmDialog.swift */; };
 		FDA41BCEF17EE06187CD9EEF /* PromptStampStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DB11A6DF93F2DF018926A5B /* PromptStampStore.swift */; };
+		FDFA40F80A294011047EBAD6 /* AICompanionDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4E7FBA08BB71368F974118 /* AICompanionDetector.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -181,6 +183,7 @@
 		1894FF036FBFB212679A29AC /* SecretScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScannerTests.swift; sourceTree = "<group>"; };
 		18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityValidatorTests.swift; sourceTree = "<group>"; };
 		1DB11A6DF93F2DF018926A5B /* PromptStampStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptStampStore.swift; sourceTree = "<group>"; };
+		1E4E7FBA08BB71368F974118 /* AICompanionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICompanionDetector.swift; sourceTree = "<group>"; };
 		1E5A56B1B22A7465DD8ECBD5 /* ResumeSubtitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeSubtitleTests.swift; sourceTree = "<group>"; };
 		1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoStatePills.swift; sourceTree = "<group>"; };
 		20E05A4CA192EA6913C4E82F /* SecretScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScanner.swift; sourceTree = "<group>"; };
@@ -295,6 +298,7 @@
 		D607F291980A6E4B49E06DBC /* DocReadingMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocReadingMemory.swift; sourceTree = "<group>"; };
 		D7FEF8617500F6E861847FA9 /* IdentityPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityPool.swift; sourceTree = "<group>"; };
 		DAE45D55C757CD61606DCF1C /* SecretRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretRule.swift; sourceTree = "<group>"; };
+		DBC9DAE14319491EDC3DC655 /* AICompanionDetectorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICompanionDetectorTests.swift; sourceTree = "<group>"; };
 		DC9AE69BEC25D0FC0BDEA488 /* RepoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDetailView.swift; sourceTree = "<group>"; };
 		DD4C9E61A9BD4272EF5FB41F /* AICommitDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICommitDetector.swift; sourceTree = "<group>"; };
 		DE50032C977CA171EC24D578 /* letterArrived.caf */ = {isa = PBXFileReference; path = letterArrived.caf; sourceTree = "<group>"; };
@@ -377,6 +381,7 @@
 			isa = PBXGroup;
 			children = (
 				DD4C9E61A9BD4272EF5FB41F /* AICommitDetector.swift */,
+				1E4E7FBA08BB71368F974118 /* AICompanionDetector.swift */,
 				2F3AAACB3FDAEC5E46763D44 /* AIToolDetector.swift */,
 				3FD784BD14FE954D9E6A68CE /* AIToolRepoDetector.swift */,
 				4A11D640FBE8823567CB8EF4 /* AppPaths.swift */,
@@ -528,6 +533,7 @@
 			isa = PBXGroup;
 			children = (
 				9F9D030355043420418DF14D /* AICommitDetectorTests.swift */,
+				DBC9DAE14319491EDC3DC655 /* AICompanionDetectorTests.swift */,
 				2C59D1A5328C387379B4AA63 /* AIToolRepoDetectorTests.swift */,
 				4A0BA958122099B5E1829931 /* CommitGuardScannerTests.swift */,
 				85B45D7DAE82FA3EBF2D16D0 /* CommitNotifierTests.swift */,
@@ -705,6 +711,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				848AF0D3D47AB1E230A5E582 /* AICommitDetectorTests.swift in Sources */,
+				63F961230373C5918137BAB6 /* AICompanionDetectorTests.swift in Sources */,
 				DBE7942FD4B19AEF2AC3FF55 /* AIToolRepoDetectorTests.swift in Sources */,
 				8D26D59EC29DFACD7BF4E59B /* CommitGuardScannerTests.swift in Sources */,
 				CE4E4023E158D06C593BA4C3 /* CommitNotifierTests.swift in Sources */,
@@ -739,6 +746,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				94F1467CFD126B4D77E1EE35 /* AICommitDetector.swift in Sources */,
+				FDFA40F80A294011047EBAD6 /* AICompanionDetector.swift in Sources */,
 				E429E747B5CFC800E97CEFB0 /* AITool.swift in Sources */,
 				546B61C8A257B149E3A3793B /* AIToolDetector.swift in Sources */,
 				5CDBDF51ADC1AC350D0EA862 /* AIToolRepoDetector.swift in Sources */,

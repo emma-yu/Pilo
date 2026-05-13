@@ -123,6 +123,11 @@ struct LetterReaderView: View {
                 draftSection
             }
 
+            // 今日邮局合作社 —— AI 工具协作日志（仅当今天检测到活动）
+            if let companions = letter.aiCompanions, !companions.isEmpty {
+                aiCompanionsSection(companions)
+            }
+
             // 工作时段已删 —— 容易引发焦虑且非用户关心的信息
 
             // 总结线
@@ -239,6 +244,48 @@ struct LetterReaderView: View {
                 .italic()
                 .foregroundStyle(Color.inkSecondary)
         }
+    }
+
+    /// 今日邮局合作社 —— 跨 AI 工具的活跃度摘要 section
+    /// 风格镜像 draftSection（icon + Songti 标题 + 缩进列表）
+    private func aiCompanionsSection(_ companions: [AICompanionSummary]) -> some View {
+        let total = companions.reduce(0) { $0 + $1.activityCount }
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: "person.2.fill")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.piloGoldDark)
+                Text(Copy.Letter.aiCompanionsHeader(lang))
+                    .font(.custom("Songti SC", size: 16))
+                    .foregroundStyle(Color.inkPrimary)
+            }
+            VStack(alignment: .leading, spacing: 5) {
+                ForEach(companions, id: \.tool) { c in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: c.tool.symbol)
+                            .font(.system(size: 11))
+                            .foregroundStyle(c.tool.tintColor)
+                            .frame(width: 14)
+                        Text(c.tool.displayName)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.inkPrimary)
+                        Text("· " + Copy.Letter.aiCompanionUnit(count: c.activityCount, tool: c.tool, lang))
+                            .font(.piloSerifCaption)
+                            .italic()
+                            .foregroundStyle(Color.inkSecondary)
+                    }
+                }
+                if companions.count > 1 {
+                    Text(Copy.Letter.aiCompanionsFooter(totalCount: total, toolCount: companions.count, lang))
+                        .font(.piloSerifCaption)
+                        .italic()
+                        .foregroundStyle(Color.inkTertiary)
+                        .padding(.top, 2)
+                }
+            }
+            .padding(.leading, 22)
+        }
+        .padding(.top, 8)
     }
 
     private var totalLine: some View {

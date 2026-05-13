@@ -24,6 +24,8 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
     var workSpan: WorkSpan? = nil
     /// 收信人称呼（dynamic name；空 = fallback 到 "朋友"）
     var addressee: String? = nil
+    /// 今日 AI 协作摘要 —— optional 向后兼容旧 letters.json
+    var aiCompanions: [AICompanionSummary]? = nil
 
     struct RepoSummary: Codable, Sendable, Hashable {
         let repoName: String
@@ -71,6 +73,18 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
     }
 
     var isUnread: Bool { readAt == nil }
+}
+
+/// 今日"邮局合作社" —— 跨 AI 工具的活跃度摘要。
+/// 数据来自 `AICompanionDetector` 扫各工具数据目录的文件 mtime（不读内容）。
+struct AICompanionSummary: Codable, Sendable, Hashable {
+    let tool: AITool
+    /// 今天检测到的活动单位数。Per-tool 定义：
+    ///   - Claude Code: 今天被改的 `.jsonl` conversation 文件数
+    ///   - Cursor / Windsurf: 今天被改的 workspace 子目录数
+    ///   - Codex / Gemini: 今天被改的文件数
+    ///   - Aider: 今天有 `.aider.chat.history.md` mtime 的 repo 数
+    let activityCount: Int
 }
 
 /// 信件箱顶层容器

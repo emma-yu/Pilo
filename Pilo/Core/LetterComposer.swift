@@ -9,9 +9,11 @@ import Foundation
 actor LetterComposer {
 
     let gitClient: GitClient
+    let companionDetector: AICompanionDetector
 
-    init(gitClient: GitClient) {
+    init(gitClient: GitClient, companionDetector: AICompanionDetector = AICompanionDetector()) {
         self.gitClient = gitClient
+        self.companionDetector = companionDetector
     }
 
     /// 为"今天"compose 一封信。caller 应判断 letter.isWorthSending 决定要不要存。
@@ -25,6 +27,9 @@ actor LetterComposer {
         let endOfDay = cal.date(byAdding: .day, value: 1, to: startOfDay) ?? Date()
 
         let visible = repos.filter { !$0.isHidden }
+
+        // 并发扫 AI 工具数据目录拿今日活动 —— 跟 repo activity 同时跑，不阻塞主流程
+        async let aiActivity = companionDetector.detectActivity(repos: visible, date: date)
 
         // 并发拉每个 repo 的"今天 commits + 行数 stat + 草稿文件列表"
         let activities = await withTaskGroup(of: RepoActivity?.self) { group in
@@ -83,6 +88,8 @@ actor LetterComposer {
         let totalCommits = summaries.reduce(0) { $0 + $1.commitCount }
         let activeCount = summaries.count + drafts.count
 
+        let companions = await aiActivity
+
         return DailyLetter(
             id: UUID(),
             date: startOfDay,
@@ -93,7 +100,8 @@ actor LetterComposer {
             totalCommits: totalCommits,
             activeRepoCount: activeCount,
             workSpan: nil,    // 工作时段已删 —— 避免焦虑数据
-            addressee: addressee
+            addressee: addressee,
+            aiCompanions: companions.isEmpty ? nil : companions
         )
     }
 

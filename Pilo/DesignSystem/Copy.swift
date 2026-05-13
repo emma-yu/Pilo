@@ -1277,6 +1277,35 @@ enum Copy {
         static func draftCount(_ count: Int, _ lang: Language) -> String {
             lang == .zh ? "\(count) 个未提交" : "\(count) uncommitted"
         }
+
+        /// 「今日邮局合作社」section 标题 —— AI 协作日志
+        static func aiCompanionsHeader(_ lang: Language) -> String {
+            lang == .zh ? "今日邮局合作社" : "Today's postal partners"
+        }
+        /// 单个 AI 工具的活动量描述 —— 不同工具单位不同（项目 / 工作区 / 次）
+        static func aiCompanionUnit(count: Int, tool: AITool, _ lang: Language) -> String {
+            // 每种 tool 选合适的中文量词
+            let unitZH: String
+            let unitEN: String
+            switch tool {
+            case .claudeCode:
+                unitZH = "个对话"; unitEN = count == 1 ? "conversation" : "conversations"
+            case .cursor, .windsurf:
+                unitZH = "个工作区"; unitEN = count == 1 ? "workspace" : "workspaces"
+            case .aider:
+                unitZH = "个项目"; unitEN = count == 1 ? "project" : "projects"
+            case .codex, .gemini, .vscode:
+                unitZH = "次"; unitEN = count == 1 ? "session" : "sessions"
+            }
+            return lang == .zh ? "\(count) \(unitZH)" : "\(count) \(unitEN)"
+        }
+        /// 合作社 section 底部小结
+        static func aiCompanionsFooter(totalCount: Int, toolCount: Int, _ lang: Language) -> String {
+            if lang == .zh {
+                return "共 \(totalCount) 次跨 \(toolCount) 个工具"
+            }
+            return "\(totalCount) total across \(toolCount) tool\(toolCount == 1 ? "" : "s")"
+        }
         static func totalLine(commits: Int, repos: Int, _ lang: Language) -> String {
             if lang == .zh {
                 return "今日累计 \(commits) 个 commit · \(repos) 个仓库"
