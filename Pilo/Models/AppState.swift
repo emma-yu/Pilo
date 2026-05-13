@@ -985,11 +985,11 @@ final class AppState {
               case .completed(let prevReport) = session.state,
               prevReport.outcome.isHistoryDiverged else { return }
 
-        // 切到 running —— 鸽子起飞瞬间播"信件出发"音
+        // 切到 running —— 鸽子起飞，循环播放"飞行中"音直到结果回来
         var s = session
         s.state = .running(.init(remote: prevReport.remote))
         pushSession = s
-        soundPlayer.play(.pushInFlight)
+        soundPlayer.playLooping(.pushInFlight)
 
         let report = await pushExecutor.forcePush(
             repoURL: URL(fileURLWithPath: repositories.first(where: { $0.id == prevReport.repoId })?.path ?? ""),
@@ -999,6 +999,9 @@ final class AppState {
             branch: prevReport.branch,
             commitCount: prevReport.commitCount
         )
+
+        // 推送完成 —— 先停 in-flight loop，再播抵达音 / 切 completed 态
+        soundPlayer.stop(.pushInFlight)
 
         // 成功 → 乐观更新 aheadCount = 0
         if report.outcome.isSuccess {
@@ -1021,11 +1024,11 @@ final class AppState {
         // 安全闸门：critical findings 必须 bypass 才能继续。UI 应该已经禁推，这里再兜底。
         guard pre.canPushDirectly else { return }
 
-        // 切到 running —— 鸽子起飞瞬间播"信件出发"音
+        // 切到 running —— 鸽子起飞，循环播放"飞行中"音直到结果回来
         var s = session
         s.state = .running(.init(remote: pre.remote))
         pushSession = s
-        soundPlayer.play(.pushInFlight)
+        soundPlayer.playLooping(.pushInFlight)
 
         let report = await pushExecutor.push(
             repoURL: URL(fileURLWithPath: pre.repoPath),
@@ -1036,6 +1039,9 @@ final class AppState {
             commitCount: pre.commits.count,
             setUpstream: pre.willSetUpstream
         )
+
+        // 推送完成 —— 先停 in-flight loop，再播抵达音 / 切 completed 态
+        soundPlayer.stop(.pushInFlight)
 
         // 推送成功 → 该仓库 aheadCount 清零（后续 fetch 会校准；先乐观更新）
         if report.outcome.isSuccess {
@@ -1310,6 +1316,8 @@ final class AppState {
     }
 
     func dismissPushSession() {
+        // 防御性：用户在 running 态强关 sheet，确保 in-flight loop 不留尾音
+        soundPlayer.stop(.pushInFlight)
         pushSession = nil
         // 推送后做一次轻量 rescan 校准 ahead/behind
         Task { [weak self] in

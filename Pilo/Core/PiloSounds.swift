@@ -80,12 +80,33 @@ final class SoundPlayer {
         return NSSound(named: kind.systemSoundName)
     }
 
-    /// 播放音效。enabled = false 时 no-op。
+    /// 播放音效一次。enabled = false 时 no-op。
     /// 同一个声音连续 play 不叠加 —— 先 stop 再 play（debounce 视觉级别 ≥ 200ms 由 caller 控）
     func play(_ kind: PiloSounds) {
         guard enabled else { return }
         guard let sound = cache[kind] else { return }
         sound.stop()
+        sound.loops = false   // 重置 —— NSSound 是共享实例，上次 loop 完不重置会脏
         _ = sound.play()
+    }
+
+    /// 循环播放 —— 用于推送 in-flight 这种"持续多久就响多久"的场景。
+    /// 必须显式 `stop(_:)` 才停。状态退出时 caller 务必 stop，否则一直响。
+    func playLooping(_ kind: PiloSounds) {
+        guard enabled else { return }
+        guard let sound = cache[kind] else { return }
+        sound.stop()
+        sound.loops = true
+        _ = sound.play()
+    }
+
+    /// 停止指定音效（loop 或 one-shot 都停）。无论 enabled 都执行 —— 避免"关掉 enable 后 loop 还在响"
+    func stop(_ kind: PiloSounds) {
+        cache[kind]?.stop()
+    }
+
+    /// 停所有 —— 用于 dismissPushSession 等关闭面板的兜底
+    func stopAll() {
+        cache.values.forEach { $0.stop() }
     }
 }
