@@ -22,16 +22,24 @@ struct PromptStampBookSidebar: View {
     var body: some View {
         VStack(spacing: 6) {
             toolbarHeader
-            stickyNoteCard
+            if !appState.isStampBookCollapsed {
+                stickyNoteCard
+                    .transition(.asymmetric(
+                        insertion: .scale(scale: 0.96, anchor: .top).combined(with: .opacity),
+                        removal: .scale(scale: 0.96, anchor: .top).combined(with: .opacity)
+                    ))
+            }
         }
         .padding(.horizontal, 12)
         .padding(.top, 6)
         .padding(.bottom, 4)
+        .animation(.spring(response: 0.32, dampingFraction: 0.82), value: appState.isStampBookCollapsed)
     }
 
     // MARK: - Toolbar header（三段式：左 + / 中 标题 / 右 archive）
 
-    /// 把"邮票本"标题嵌进 toolbar capsule 中间 —— 解决两按钮中间空、标题位置低的问题
+    /// 把"邮票本"标题嵌进 toolbar capsule 中间 —— 解决两按钮中间空、标题位置低的问题。
+    /// 最右侧 chevron 控制便签卡片展开/折叠。
     private var toolbarHeader: some View {
         HStack(spacing: 0) {
             // 左：+ 新建邮票
@@ -47,30 +55,51 @@ struct PromptStampBookSidebar: View {
 
             Spacer(minLength: 4)
 
-            // 中：邮票本 Songti italic gold
-            Text(Copy.Stamps.sectionTitle(lang))
-                .font(.custom("Songti SC", size: 14).italic())
-                .tracking(1.0)
-                .foregroundStyle(Color.piloGoldDark)
-                .fixedSize()
-
-            Spacer(minLength: 4)
-
-            // 右：📕 archive
-            Button(action: { appState.openStampArchive() }) {
-                Image(systemName: "books.vertical")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(
-                        appState.totalStampCount == 0
-                            ? Color.piloGoldDark.opacity(0.35)
-                            : Color.piloGoldDark
-                    )
-                    .frame(width: 24, height: 24)
+            // 中：邮票本 Songti italic gold（可点击 toggle —— 跟 chevron 等价的 secondary 入口）
+            Button(action: toggleCollapsed) {
+                Text(Copy.Stamps.sectionTitle(lang))
+                    .font(.custom("Songti SC", size: 14).italic())
+                    .tracking(1.0)
+                    .foregroundStyle(Color.piloGoldDark)
+                    .fixedSize()
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(appState.totalStampCount == 0)
-            .help(Copy.Stamps.allHint(lang))
+            .help(appState.isStampBookCollapsed
+                  ? Copy.Stamps.expandHint(lang)
+                  : Copy.Stamps.collapseHint(lang))
+
+            Spacer(minLength: 4)
+
+            // 右组：📕 archive + chevron 折叠 / 展开
+            HStack(spacing: 2) {
+                Button(action: { appState.openStampArchive() }) {
+                    Image(systemName: "books.vertical")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(
+                            appState.totalStampCount == 0
+                                ? Color.piloGoldDark.opacity(0.35)
+                                : Color.piloGoldDark
+                        )
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(appState.totalStampCount == 0)
+                .help(Copy.Stamps.allHint(lang))
+
+                Button(action: toggleCollapsed) {
+                    Image(systemName: appState.isStampBookCollapsed ? "chevron.down" : "chevron.up")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color.piloGoldDark)
+                        .frame(width: 22, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(appState.isStampBookCollapsed
+                      ? Copy.Stamps.expandHint(lang)
+                      : Copy.Stamps.collapseHint(lang))
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
@@ -83,6 +112,10 @@ struct PromptStampBookSidebar: View {
                 .stroke(Color.piloGold.opacity(0.5), lineWidth: 0.6)
         )
         .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 1)
+    }
+
+    private func toggleCollapsed() {
+        appState.isStampBookCollapsed.toggle()
     }
 
     // MARK: - Sticky note card（下方便签纸 —— 标题已上移到 toolbar，内部直接展 grid）

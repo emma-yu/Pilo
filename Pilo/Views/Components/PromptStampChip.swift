@@ -46,6 +46,26 @@ struct PromptStampChip: View {
         }
     }
 
+    /// 深褐色 drop shadow —— 邮票"贴在便签纸上"的物理感。
+    /// 阴影 .rotationEffect **之后** 应用，所以阴影投在 canvas 上不跟邮票一起歪。
+    private static let stampShadowColor = Color(red: 0.26, green: 0.16, blue: 0.08).opacity(0.32)
+
+    /// 不同 size 的阴影规格（小邮票阴影要更轻，否则糊）
+    private var shadowRadius: CGFloat {
+        switch size {
+        case .compact: return 1.8
+        case .grid:    return 2.6
+        case .large:   return 3.2
+        }
+    }
+    private var shadowOffset: (x: CGFloat, y: CGFloat) {
+        switch size {
+        case .compact: return (0.8, 1.2)
+        case .grid:    return (1.2, 1.8)
+        case .large:   return (1.6, 2.2)
+        }
+    }
+
     var body: some View {
         Group {
             if let design = stamp.design {
@@ -67,6 +87,12 @@ struct PromptStampChip: View {
             }
         }
         .rotationEffect(.degrees(rotated ? -3 : 0))
+        .shadow(
+            color: Self.stampShadowColor,
+            radius: shadowRadius,
+            x: shadowOffset.x,
+            y: shadowOffset.y
+        )
     }
 }
 

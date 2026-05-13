@@ -243,6 +243,14 @@ final class AppState {
     var stampToastMessage: String?
     private var stampToastTask: Task<Void, Never>?
 
+    /// Sidebar 邮票本 widget 是否折叠（仅 toolbar capsule 可见，便签卡片隐藏）。
+    /// 默认展开；用户偏好持久化到 UserDefaults。
+    var isStampBookCollapsed: Bool = UserDefaults.standard.bool(forKey: "pilo.stampBook.collapsed") {
+        didSet {
+            UserDefaults.standard.set(isStampBookCollapsed, forKey: "pilo.stampBook.collapsed")
+        }
+    }
+
     /// Sidebar 展示用：所有钉住的邮票（按 lastUsedAt 倒序，未使用按 createdAt）。
     /// **不再硬限制 N 张** —— 用户 pin 多少都显示；grid 超 9 张时 sticky note 卡片内部 ScrollView 滑动。
     var sidebarStamps: [PromptStamp] {

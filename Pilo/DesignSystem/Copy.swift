@@ -1462,13 +1462,12 @@ enum Copy {
         static func allHint(_ lang: Language) -> String {
             lang == .zh ? "看全部" : "See all"
         }
-
-        // MARK: - Editor template
-        static func useTemplate(_ lang: Language) -> String {
-            lang == .zh ? "用模板" : "Use template"
+        /// 折叠/展开 toggle hint
+        static func collapseHint(_ lang: Language) -> String {
+            lang == .zh ? "收起邮票本" : "Collapse"
         }
-        static func useTemplateHint(_ lang: Language) -> String {
-            lang == .zh ? "用这张邮票的起手模板填入" : "Prefill a starter for this stamp"
+        static func expandHint(_ lang: Language) -> String {
+            lang == .zh ? "展开邮票本" : "Expand"
         }
 
         // MARK: - Archive search
