@@ -46,9 +46,11 @@ struct PromptStampChip: View {
         }
     }
 
-    /// 深褐色 drop shadow —— 邮票"贴在便签纸上"的物理感。
+    /// 深橘黄 drop shadow —— 邮票"贴在便签纸上"的物理感。
+    /// 之前用冷褐色，跟 cream paper 暖底色温冲突看起来"脏"；换成跟 piloGoldDark
+    /// 同色系的深 amber/橘黄 → patina/陈旧感，跟 cream 同色温和谐。
     /// 阴影 .rotationEffect **之后** 应用，所以阴影投在 canvas 上不跟邮票一起歪。
-    private static let stampShadowColor = Color(red: 0.26, green: 0.16, blue: 0.08).opacity(0.32)
+    private static let stampShadowColor = Color(red: 0.55, green: 0.32, blue: 0.06).opacity(0.32)
 
     /// 不同 size 的阴影规格（小邮票阴影要更轻，否则糊）
     private var shadowRadius: CGFloat {

@@ -8,6 +8,7 @@ struct PromptStampArchiveSheet: View {
 
     @State private var sortKey: SortKey = .recent
     @State private var searchText: String = ""
+    @State private var isSortMenuOpen: Bool = false
 
     enum SortKey: String, CaseIterable {
         case useCount, recent, name
@@ -125,6 +126,84 @@ struct PromptStampArchiveSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: - Sort picker（Pilo 风 dropdown，替代系统 .pickerStyle(.menu)）
+    //
+    // Trigger = cream paper button + 当前 sort label + 小 chevron；
+    // 点击弹 popover 三项选择，hover gold tint，selected 项加 ✓ icon。
+
+    private var sortPicker: some View {
+        Button(action: { isSortMenuOpen.toggle() }) {
+            HStack(spacing: 5) {
+                Text(sortKey.label(lang))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.inkPrimary)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.piloGoldDark.opacity(0.7))
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.75))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.4), lineWidth: 0.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(lang == .zh ? "排序方式" : "Sort by")
+        .popover(isPresented: $isSortMenuOpen, arrowEdge: .bottom) {
+            VStack(spacing: 1) {
+                ForEach(SortKey.allCases, id: \.self) { key in
+                    sortRow(key)
+                }
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 6)
+            .frame(width: 160)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.piloPaper.opacity(0.98))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.piloGold.opacity(0.35), lineWidth: 0.5)
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func sortRow(_ key: SortKey) -> some View {
+        let isSelected = sortKey == key
+        Button(action: {
+            sortKey = key
+            isSortMenuOpen = false
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: isSelected ? "checkmark" : "circle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(isSelected ? Color.piloGoldDark : Color.piloGoldDark.opacity(0.25))
+                    .frame(width: 14, alignment: .center)
+                Text(key.label(lang))
+                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium, design: .rounded))
+                    .foregroundStyle(Color.inkPrimary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(isSelected ? Color.piloGold.opacity(0.12) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
     // MARK: - Toolbar
 
     private var toolbar: some View {
@@ -143,14 +222,8 @@ struct PromptStampArchiveSheet: View {
             }
             Spacer()
 
-            // 排序 picker
-            Picker("", selection: $sortKey) {
-                ForEach(SortKey.allCases, id: \.self) { key in
-                    Text(key.label(lang)).tag(key)
-                }
-            }
-            .pickerStyle(.menu)
-            .frame(width: 100)
+            // 排序 picker —— Pilo 风（cream paper + gold border + 衬线 label）
+            sortPicker
 
             // + 新建按钮
             Button(action: {
