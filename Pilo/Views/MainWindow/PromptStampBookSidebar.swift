@@ -32,7 +32,7 @@ struct PromptStampBookSidebar: View {
         }
         .padding(.horizontal, 12)
         .padding(.top, 6)
-        .padding(.bottom, 4)
+        .padding(.bottom, 14)
         .animation(.spring(response: 0.32, dampingFraction: 0.82), value: appState.isStampBookCollapsed)
     }
 
