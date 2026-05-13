@@ -985,10 +985,11 @@ final class AppState {
               case .completed(let prevReport) = session.state,
               prevReport.outcome.isHistoryDiverged else { return }
 
-        // 切到 running
+        // 切到 running —— 鸽子起飞瞬间播"信件出发"音
         var s = session
         s.state = .running(.init(remote: prevReport.remote))
         pushSession = s
+        soundPlayer.play(.pushInFlight)
 
         let report = await pushExecutor.forcePush(
             repoURL: URL(fileURLWithPath: repositories.first(where: { $0.id == prevReport.repoId })?.path ?? ""),
@@ -1020,10 +1021,11 @@ final class AppState {
         // 安全闸门：critical findings 必须 bypass 才能继续。UI 应该已经禁推，这里再兜底。
         guard pre.canPushDirectly else { return }
 
-        // 切到 running 状态
+        // 切到 running —— 鸽子起飞瞬间播"信件出发"音
         var s = session
         s.state = .running(.init(remote: pre.remote))
         pushSession = s
+        soundPlayer.play(.pushInFlight)
 
         let report = await pushExecutor.push(
             repoURL: URL(fileURLWithPath: pre.repoPath),

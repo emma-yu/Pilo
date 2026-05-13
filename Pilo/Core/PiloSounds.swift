@@ -14,9 +14,12 @@ import AppKit
 ///   2. 重 build，loader 自动优先 bundle 内的 custom 文件
 ///   3. 找不到 custom 就 fallback 到 systemSoundName
 enum PiloSounds: String, CaseIterable, Sendable {
-    /// 推送成功 —— 「信件起飞」
+    /// 推送启程 —— 「信件起飞」。`.running` 状态进入时触发（用户已点最终推送）
+    /// 跟 FlyingPiloAnimation（鸽子真起飞）同步
+    case pushInFlight
+    /// 推送抵达 —— 「信件到了」。`.completed(success)` 时触发
     case pushSuccess
-    /// 每日 18:00 信件投递 —— 「鸽子咕咕」
+    /// 每日 18:00 信件投递 —— 「邮局魔法瞬间」
     case letterArrived
     /// 「新版已发车」推送到达 —— 「柜台铃叮」
     case updateArrived
@@ -27,7 +30,8 @@ enum PiloSounds: String, CaseIterable, Sendable {
     /// 路径 `/System/Library/Sounds/<name>.aiff` —— 每台 Mac 都有
     var systemSoundName: String {
         switch self {
-        case .pushSuccess:   return "Blow"       // 气流 whoosh —— 接近"起飞"语义
+        case .pushInFlight:  return "Funk"       // 合成 whoosh —— 接近"起飞"
+        case .pushSuccess:   return "Blow"       // 气流 whoosh —— 接近"抵达"
         case .letterArrived: return "Glass"      // 清亮 ping —— 接近"邮件到达"
         case .updateArrived: return "Submarine"  // 声纳 ping —— 接近"柜台铃"
         case .waxSealCrack:  return "Pop"        // 短促 pop —— 接近"封蜡碎"
