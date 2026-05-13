@@ -95,12 +95,13 @@ struct MainPanel: View {
         )) {
             PromptStampArchiveSheet()
         }
-        // Toast overlay —— 「✓ 邮票已盖章」短暂悬浮
-        .overlay(alignment: .top) {
+        // Toast overlay —— 「✓ 邮票已盖章」在便签卡片正上方（操作处附近，避免注意力跳跃）
+        .overlay(alignment: .bottomLeading) {
             if let msg = appState.stampToastMessage {
                 StampToastView(message: msg)
-                    .padding(.top, 30)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .padding(.leading, 24)
+                    .padding(.bottom, 240)   // 避开邮票本卡片，浮在 toolbar capsule 上方
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(100)
             }
         }

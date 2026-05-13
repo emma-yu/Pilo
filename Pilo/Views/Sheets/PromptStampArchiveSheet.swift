@@ -7,6 +7,7 @@ struct PromptStampArchiveSheet: View {
     private var lang: Language { appState.language }
 
     @State private var sortKey: SortKey = .recent
+    @State private var searchText: String = ""
 
     enum SortKey: String, CaseIterable {
         case useCount, recent, name
@@ -20,17 +21,25 @@ struct PromptStampArchiveSheet: View {
         }
     }
 
-    private var sortedStamps: [PromptStamp] {
+    /// 按 sort + search 双过滤后的 stamps
+    private var visibleStamps: [PromptStamp] {
         let s = appState.promptStampArchive.stamps
+        let sorted: [PromptStamp]
         switch sortKey {
         case .useCount:
-            return s.sorted { $0.useCount > $1.useCount }
+            sorted = s.sorted { $0.useCount > $1.useCount }
         case .recent:
-            return s.sorted { (a, b) in
+            sorted = s.sorted { (a, b) in
                 (a.lastUsedAt ?? a.createdAt) > (b.lastUsedAt ?? b.createdAt)
             }
         case .name:
-            return s.sorted { $0.title.localizedCompare($1.title) == .orderedAscending }
+            sorted = s.sorted { $0.title.localizedCompare($1.title) == .orderedAscending }
+        }
+        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return sorted }
+        return sorted.filter {
+            $0.title.localizedCaseInsensitiveContains(q)
+                || $0.body.localizedCaseInsensitiveContains(q)
         }
     }
 
@@ -43,19 +52,77 @@ struct PromptStampArchiveSheet: View {
             if appState.promptStampArchive.stamps.isEmpty {
                 emptyState
             } else {
-                ScrollView {
-                    VStack(spacing: 6) {
-                        ForEach(sortedStamps) { stamp in
-                            row(stamp)
+                searchBar
+                if visibleStamps.isEmpty {
+                    noMatchState
+                } else {
+                    ScrollView {
+                        VStack(spacing: 6) {
+                            ForEach(visibleStamps) { stamp in
+                                row(stamp)
+                            }
                         }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 14)
                 }
             }
         }
         .frame(width: 560, height: 640)
         .background(Color.piloPaper.opacity(0.95))
+    }
+
+    // MARK: - Search bar
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.inkTertiary)
+            TextField(Copy.Stamps.searchPlaceholder(lang), text: $searchText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .foregroundStyle(Color.inkPrimary)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Color.inkTertiary.opacity(0.7))
+                }
+                .buttonStyle(.plain)
+                .help(Copy.Stamps.searchClear(lang))
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.piloPaper.opacity(0.6))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.piloGold.opacity(0.3), lineWidth: 0.5)
+        )
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 4)
+    }
+
+    private var noMatchState: some View {
+        VStack(spacing: 10) {
+            Spacer()
+            Image(systemName: "doc.text.magnifyingglass")
+                .font(.system(size: 32))
+                .foregroundStyle(Color.piloGoldDark.opacity(0.45))
+            Text(Copy.Stamps.searchNoMatch(lang))
+                .font(.piloSerifCaption)
+                .italic()
+                .foregroundStyle(Color.inkSecondary)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Toolbar

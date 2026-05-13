@@ -1403,7 +1403,7 @@ enum Copy {
             lang == .zh ? "贴你的 prompt …" : "Paste your prompt…"
         }
         static func fieldPin(_ lang: Language) -> String {
-            lang == .zh ? "钉在邮票本（最多 5 张）" : "Pin to sidebar (max 5)"
+            lang == .zh ? "钉到 sidebar（最多显示 5 张）" : "Pin to sidebar (shows up to 5)"
         }
         static func saveAction(_ lang: Language) -> String {
             lang == .zh ? "盖章保存" : "Save"
@@ -1450,6 +1450,17 @@ enum Copy {
         /// "All stamps" 入口 hint
         static func allHint(_ lang: Language) -> String {
             lang == .zh ? "看全部" : "See all"
+        }
+
+        // MARK: - Archive search
+        static func searchPlaceholder(_ lang: Language) -> String {
+            lang == .zh ? "搜索标题或 prompt 内容…" : "Search title or prompt body…"
+        }
+        static func searchClear(_ lang: Language) -> String {
+            lang == .zh ? "清空" : "Clear"
+        }
+        static func searchNoMatch(_ lang: Language) -> String {
+            lang == .zh ? "没有匹配的邮票" : "No matching stamps"
         }
     }
 

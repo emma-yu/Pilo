@@ -231,15 +231,67 @@ private struct StampGridCell: View {
     @Environment(AppState.self) private var appState
     @State private var isHovered = false
     @State private var justPasted = false
+    @State private var sealRingScale: CGFloat = 0.6
+    @State private var sealRingOpacity: Double = 0
+
+    /// 24h 内用过 → 邮票上加金色 fresh dot
+    private var isFresh: Bool {
+        guard let last = stamp.lastUsedAt else { return false }
+        return Date().timeIntervalSince(last) < 24 * 3600
+    }
+
+    /// hover tooltip：body 前 80 字 preview，比 title 更有决策辅助价值
+    private var tooltip: String {
+        let body = stamp.body.trimmingCharacters(in: .whitespacesAndNewlines)
+        if body.isEmpty { return stamp.title }
+        let preview = body.prefix(80)
+        return body.count > 80 ? "\(preview)…" : String(preview)
+    }
 
     var body: some View {
         Button(action: paste) {
             VStack(spacing: 5) {
-                PromptStampChip(stamp: stamp, size: .grid, rotated: false)
-                    .scaleEffect(justPasted ? 1.15 : (isHovered ? 1.05 : 1.0))
-                    .rotationEffect(.degrees(justPasted ? 6 : (isHovered ? 0 : -3)))
+                ZStack {
+                    // 金色光环 ring —— paste 时 expand + fade，"盖章"力量感
+                    Circle()
+                        .stroke(Color.piloGoldDark.opacity(sealRingOpacity), lineWidth: 1.2)
+                        .frame(width: 60, height: 60)
+                        .scaleEffect(sealRingScale)
+                        .allowsHitTesting(false)
+
+                    PromptStampChip(stamp: stamp, size: .grid, rotated: false)
+                        .scaleEffect(justPasted ? 1.15 : (isHovered ? 1.05 : 1.0))
+                        .rotationEffect(.degrees(justPasted ? 6 : (isHovered ? 0 : -3)))
+
+                    // 右上角 fresh dot —— 24h 内用过
+                    if isFresh {
+                        Circle()
+                            .fill(Color.piloGold)
+                            .frame(width: 6, height: 6)
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.piloPaper, lineWidth: 1)
+                            )
+                            .offset(x: 22, y: -20)
+                            .allowsHitTesting(false)
+                    }
+
+                    // hover 右下角 ⋯ ghost icon —— 右键 affordance
+                    if isHovered {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Color.piloGoldDark.opacity(0.7))
+                            .padding(2)
+                            .background(Circle().fill(Color.piloPaper.opacity(0.85)))
+                            .offset(x: 20, y: 18)
+                            .transition(.opacity)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .frame(height: 50)
+
                 Text(stamp.title.isEmpty ? Copy.Stamps.emptyTitle(lang) : stamp.title)
-                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(Color.inkPrimary)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -253,7 +305,7 @@ private struct StampGridCell: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(stamp.title)
+        .help(tooltip)
         .onHover { hovering in
             withAnimation(.easeOut(duration: 0.12)) {
                 isHovered = hovering
@@ -283,8 +335,16 @@ private struct StampGridCell: View {
 
     private func paste() {
         appState.pasteStamp(stamp)
+        // chip 邮戳 spring 抖动
         withAnimation(.spring(response: 0.18, dampingFraction: 0.55)) {
             justPasted = true
+        }
+        // 金色光环 expand + fade —— 0.6x 起步、瞬间 fade-in 后 1.4x 慢扩散并 fade-out
+        sealRingScale = 0.6
+        sealRingOpacity = 0.85
+        withAnimation(.easeOut(duration: 0.55)) {
+            sealRingScale = 1.6
+            sealRingOpacity = 0
         }
         Task {
             try? await Task.sleep(nanoseconds: 280_000_000)
