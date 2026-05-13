@@ -13,6 +13,12 @@ struct ReleaseLetterReaderView: View {
     @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
+    /// 守门 —— SwiftUI 会在 sheet 重叠 / Stage Manager 切换 / 父 view 重渲染时
+    /// 多次 fire `onAppear`，没这个 guard 会反复重播 waxSealCrack。
+    /// `@State` 跟 view 实例 lifetime 绑定：sheet 关闭重开会 reset；同一次 sheet
+    /// 期间的多次 onAppear 都 guard 住，只播一次。
+    @State private var hasPlayedSeal = false
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -29,6 +35,8 @@ struct ReleaseLetterReaderView: View {
         .frame(width: 640, height: 720)
         .background(Color.piloPaper.opacity(0.95))
         .onAppear {
+            guard !hasPlayedSeal else { return }
+            hasPlayedSeal = true
             // 蜡封 crack —— 仅首次开启未读时响（已读再开静默）
             let wasUnread = letter.isUnread
             appState.markReleaseLetterRead(letter)

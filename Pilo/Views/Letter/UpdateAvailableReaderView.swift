@@ -15,6 +15,10 @@ struct UpdateAvailableReaderView: View {
     @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
+    /// 守门 —— SwiftUI 会在 sheet 重叠 / 窗口 active 切换 / 父 view 重渲染时
+    /// 多次 fire `onAppear`，没这个 guard 会反复重播 waxSealCrack。
+    @State private var hasPlayedSeal = false
+
     var body: some View {
         VStack(spacing: 0) {
             toolbar
@@ -31,6 +35,8 @@ struct UpdateAvailableReaderView: View {
         .frame(width: 640, height: 720)
         .background(Color.piloPaper.opacity(0.95))
         .onAppear {
+            guard !hasPlayedSeal else { return }
+            hasPlayedSeal = true
             // 蜡封 crack —— 仅首次开启未读时响
             let wasUnread = letter.isUnread
             appState.markUpdateLetterRead(letter)
