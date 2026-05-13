@@ -150,10 +150,13 @@ actor CommitNotifier {
         content.title = Self.titleText(count: commits.count, repoName: repoName)
         content.body = body
         // 不放 sound —— commit 频繁，叮咚太吵
-        // .timeSensitive 让通知不被 Focus Mode 静默；macOS banner 显示时长仍由用户在
-        // System Settings → Notifications → Pilo 选 Banner / Alert 决定（app 无法强制）
-        content.interruptionLevel = .timeSensitive
-        content.relevanceScore = 0.8
+        //
+        // **历史教训**：曾尝试 `interruptionLevel = .timeSensitive`，但这要求
+        // entitlement `com.apple.developer.usernotifications.time-sensitive`，
+        // Pilo.entitlements 没申请。没 entitlement 时部分 macOS 版本会让
+        // `add(request)` 直接抛错 → catch 块静默吞 → 通知**完全消失**。
+        // 默认 `.active` 即可（banner 行为跟系统设置 / 用户 Focus 模式联动）。
+        content.relevanceScore = 0.8   // 通知中心排序权重，安全 / 不要 entitlement
         content.userInfo = [
             "kind": "commit",
             "repoId": repoId.uuidString,
@@ -168,7 +171,8 @@ actor CommitNotifier {
         do {
             try await UNUserNotificationCenter.current().add(req)
         } catch {
-            // 系统拒投递（权限被撤 / 用户在勿扰）→ 静默
+            // 不再 silent —— 历史上有过 entitlement 引起的静默 swallow，让 console 留痕便于调试
+            print("[CommitNotifier] notification delivery failed: \(error.localizedDescription)")
         }
     }
 
