@@ -161,16 +161,23 @@ actor CommitNotifier {
         content.title = Self.titleText(count: commits.count, repoName: repoName)
         content.body = body
         //
-        // **历史教训（这次诊断对的版本）**：
-        //   - `.timeSensitive` 在 macOS 上**不需要** entitlement 就能设。
-        //     没 entitlement 只是不能突破 Focus mode；macOS 静默当 `.active` 处理。
-        //     **不抛错、不让 add() 失败**。
-        //   - 但设了 `.timeSensitive` 后，macOS 给通知更高的展示优先级 —— 即使
-        //     menu bar app 在背景时，banner 也更可能可见。
-        //   - 之前曾误删 `.timeSensitive` 导致 banner 不弹（仅音效响）；P17 恢复。
-        // 不放 `content.sound` —— macOS 系统"叮"跟邮局风格不搭，
-        // 我们在 add 成功后 Pilo 内部播 letterArrived 邮局音
-        content.interruptionLevel = .timeSensitive
+        // **真相 (P18)**: 不要设 `interruptionLevel`。
+        //
+        // macOS Sequoia (15.x) 对没有 `com.apple.developer.usernotifications.time-sensitive`
+        // entitlement 的 app 设 `.timeSensitive` 时，**静默降级到 `.passive`**
+        // （不是 .active！），结果是：通知只进 Notification Center，**banner 不弹**。
+        //
+        // 直接证据来自 usernoted log:
+        //   "Reducing interruption level from .timeSensitive
+        //    for notification from dev.pilo.Pilo - missing authorization"
+        //   ... canDisplayWhileCenterIsClosed: false
+        //   ... windowOnScreenRefresh, rootViewModel is empty
+        //
+        // 不设 `interruptionLevel` → 默认 `.active` → banner 正常弹。这是 P8
+        // 之前的最初行为（最初 commit b749c29 也没设）。
+        //
+        // 不放 `content.sound` —— macOS 系统"叮"跟邮局风格不搭，我们在 add 成功后
+        // Pilo 内部播 letterArrived 邮局音
         content.relevanceScore = 0.8
         content.userInfo = [
             "kind": "commit",
