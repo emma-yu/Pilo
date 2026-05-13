@@ -135,37 +135,13 @@ actor GitClient {
     /// Commit 通知：从 `from`（不含）到 `to`（含）之间的 commits，按时间倒序。
     /// from 失效 / 不在 history（rebase 重写过）→ 返回空数组，调用方应静默 reset baseline。
     func commitsBetween(repo: URL, from: String, to: String) async -> [CommitSummary] {
-        // 先确认 from 仍存在（rebase / squash 后 from 可能消失）
         guard let exists = await runGit(["rev-parse", "--verify", "--quiet", from], in: repo),
               exists.ok else { return [] }
-
-        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
-            ["log", "\(from)..\(to)", "--format=\(format)"],
+            ["log", "-z", "\(from)..\(to)", "--format=\(Self.commitFormatZ)"],
             in: repo
         ), r.ok else { return [] }
-
-        var out: [CommitSummary] = []
-        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
-            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            guard cols.count >= 4 else { continue }
-            guard let ts = TimeInterval(cols[2]) else { continue }
-            let author = cols[3]
-            let email = cols.count >= 5 ? cols[4] : nil
-            let likelihood = AICommitDetector.detect(
-                author: author, authorEmail: email,
-                subject: cols[1], changedFileCount: 0
-            )
-            out.append(CommitSummary(
-                hash: cols[0],
-                subject: cols[1],
-                date: Date(timeIntervalSince1970: ts),
-                author: author,
-                authorEmail: email,
-                aiLikelihood: likelihood
-            ))
-        }
-        return out
+        return Self.parseLogZ(r.stdout)
     }
 
     // MARK: - Push 相关查询
@@ -184,38 +160,63 @@ actor GitClient {
     /// 若 remote ref 不存在，返回空数组（调用方应改走"首次 push -u"路径）。
     func pendingPushCommits(repo: URL, branch: String, remote: String) async -> [CommitSummary] {
         let ref = "\(remote)/\(branch)"
-        // remote ref 不存在直接 short-circuit
         guard let exists = await runGit(["rev-parse", "--verify", "--quiet", ref], in: repo),
               exists.ok else { return [] }
-
-        // %x00 是 NUL 分隔符；%h short hash；%s subject；%ct epoch；%an author name；%ae author email
-        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
-            ["log", "\(ref)..HEAD", "--format=\(format)"],
+            ["log", "-z", "\(ref)..HEAD", "--format=\(Self.commitFormatZ)"],
             in: repo
         ), r.ok else { return [] }
+        return Self.parseLogZ(r.stdout)
+    }
+
+    // MARK: - Commit 解析 helpers（含 trailer 拉取）
+
+    /// 6 字段格式 + `-z` 用法：
+    ///   - `%h` short hash
+    ///   - `%s` subject（第一行）
+    ///   - `%ct` epoch
+    ///   - `%an` author name
+    ///   - `%ae` author email
+    ///   - `%(trailers:only=true,unfold=true)` body 末尾的 trailer 段
+    ///     （Claude Code 把 `Co-Authored-By: Claude … <noreply@anthropic.com>` 写这里）
+    /// 用 `-z` 让 commit 之间 NUL 分隔 —— trailer 内部可能有多行 \n，不能用换行做边界
+    fileprivate static let commitFormatZ =
+        "%h%x00%s%x00%ct%x00%an%x00%ae%x00%(trailers:only=true,unfold=true)"
+    fileprivate static let commitFieldsPerEntry = 6
+
+    /// 解析 `git log -z --format=commitFormatZ` 的输出。
+    /// 自动跑 AICommitDetector（含 trailer 信号），失败 / 空 → 返回 []。
+    fileprivate static func parseLogZ(_ stdout: String) -> [CommitSummary] {
+        // -z 让 commit 间 NUL 分隔，加上 format 里的 %x00 字段分隔 —— 输出整体就是
+        // 一串 NUL 间隔的字段流。-z 在末尾也补一个 NUL，所以 split 末元素可能空。
+        let parts = stdout.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
+        let cleaned: [String] = (parts.last == "" ? Array(parts.dropLast()) : parts)
 
         var out: [CommitSummary] = []
-        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
-            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            // 兼容老格式（4 列）和新格式（5 列含 author email）
-            guard cols.count >= 4 else { continue }
-            guard let ts = TimeInterval(cols[2]) else { continue }
-            let author = cols[3]
-            let email = cols.count >= 5 ? cols[4] : nil
-            // S1 AI Push Guard：启发式标记
+        var i = 0
+        while i + commitFieldsPerEntry <= cleaned.count {
+            let hash     = cleaned[i]
+            let subject  = cleaned[i + 1]
+            let ctStr    = cleaned[i + 2]
+            let author   = cleaned[i + 3]
+            let email    = cleaned[i + 4]
+            let trailers = cleaned[i + 5]
+            i += commitFieldsPerEntry
+
+            guard !hash.isEmpty, let ts = TimeInterval(ctStr) else { continue }
             let likelihood = AICommitDetector.detect(
                 author: author,
-                authorEmail: email,
-                subject: cols[1],
-                changedFileCount: 0   // 暂不每个 commit 都跑 git show，避免 N+1
+                authorEmail: email.isEmpty ? nil : email,
+                subject: subject,
+                trailers: trailers.isEmpty ? nil : trailers,
+                changedFileCount: 0   // 不跑 git show；避免 N+1
             )
             out.append(CommitSummary(
-                hash: cols[0],
-                subject: cols[1],
+                hash: hash,
+                subject: subject,
                 date: Date(timeIntervalSince1970: ts),
                 author: author,
-                authorEmail: email,
+                authorEmail: email.isEmpty ? nil : email,
                 aiLikelihood: likelihood
             ))
         }
@@ -264,33 +265,11 @@ actor GitClient {
     /// Resume Work：最近 N 个 commit（HEAD 倒推），用作"最近寄出过"展示。
     /// 跟 pendingPushCommits 不同：那个是相对 remote 的待推；这个是历史。
     func recentCommits(repo: URL, limit: Int = 5) async -> [CommitSummary] {
-        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
-            ["log", "-\(limit)", "--format=\(format)"],
+            ["log", "-z", "-\(limit)", "--format=\(Self.commitFormatZ)"],
             in: repo
         ), r.ok else { return [] }
-
-        var out: [CommitSummary] = []
-        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
-            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            guard cols.count >= 4 else { continue }
-            guard let ts = TimeInterval(cols[2]) else { continue }
-            let author = cols[3]
-            let email = cols.count >= 5 ? cols[4] : nil
-            let likelihood = AICommitDetector.detect(
-                author: author, authorEmail: email,
-                subject: cols[1], changedFileCount: 0
-            )
-            out.append(CommitSummary(
-                hash: cols[0],
-                subject: cols[1],
-                date: Date(timeIntervalSince1970: ts),
-                author: author,
-                authorEmail: email,
-                aiLikelihood: likelihood
-            ))
-        }
-        return out
+        return Self.parseLogZ(r.stdout)
     }
 
     /// S2 跨 Repo 工作日报：从某个时间点开始的 commits（HEAD 上）。
@@ -299,34 +278,11 @@ actor GitClient {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime]
         let isoSince = formatter.string(from: since)
-
-        let format = "%h%x00%s%x00%ct%x00%an%x00%ae"
         guard let r = await runGit(
-            ["log", "--since=\(isoSince)", "--format=\(format)"],
+            ["log", "-z", "--since=\(isoSince)", "--format=\(Self.commitFormatZ)"],
             in: repo
         ), r.ok else { return [] }
-
-        var out: [CommitSummary] = []
-        for line in r.stdout.split(separator: "\n", omittingEmptySubsequences: true) {
-            let cols = line.split(separator: "\0", omittingEmptySubsequences: false).map(String.init)
-            guard cols.count >= 4 else { continue }
-            guard let ts = TimeInterval(cols[2]) else { continue }
-            let author = cols[3]
-            let email = cols.count >= 5 ? cols[4] : nil
-            let likelihood = AICommitDetector.detect(
-                author: author, authorEmail: email,
-                subject: cols[1], changedFileCount: 0
-            )
-            out.append(CommitSummary(
-                hash: cols[0],
-                subject: cols[1],
-                date: Date(timeIntervalSince1970: ts),
-                author: author,
-                authorEmail: email,
-                aiLikelihood: likelihood
-            ))
-        }
-        return out
+        return Self.parseLogZ(r.stdout)
     }
 
     /// 读全局 git config user.name —— 用作信件称呼的兜底来源
