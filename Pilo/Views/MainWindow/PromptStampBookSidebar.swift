@@ -119,15 +119,23 @@ struct PromptStampBookSidebar: View {
     }
 
     // MARK: - Sticky note card（下方便签纸 —— 标题已上移到 toolbar，内部直接展 grid）
+    //
+    // **对齐策略**：
+    //   - 有邮票（stampsGrid）→ topLeading：邮票从左上开始贴，pin/unpin 不引起位置跳
+    //   - empty / 无 pinned 提示 → center：mascot + CTA 居中是"提示"语义，跟 placeholder UI 一致
+    //   - 这通过 inner VStack 顶部 + 底部 Spacer 实现 grid 模式靠顶；empty 模式整体居中
 
     private var stickyNoteCard: some View {
-        Group {
+        ZStack {
             if appState.totalStampCount == 0 {
-                emptyState
+                emptyState     // 整 frame 居中
             } else if appState.sidebarStamps.isEmpty {
-                noPinnedHint
+                noPinnedHint   // 整 frame 居中
             } else {
-                stampsGrid
+                VStack(spacing: 0) {
+                    stampsGrid
+                    Spacer(minLength: 0)   // 把 grid 顶到顶
+                }
             }
         }
         .padding(.horizontal, 12)
@@ -205,13 +213,15 @@ struct PromptStampBookSidebar: View {
 
     private var stampsGrid: some View {
         // 3 列 grid，矩形 illustration 邮票 + 1 行 caption。
+        // **alignment: .leading** —— 不满 row（如 2 张邮票占 col 1+2 留 col 3 空）
+        // cell 靠左排，不会居中漂在中间。pin/unpin 时位置稳定。
         // 高于 9 张（3 行）—— 卡片内部 ScrollView 防止挤死 repo list。
         let columns: [GridItem] = Array(
             repeating: GridItem(.flexible(), spacing: 8, alignment: .center),
             count: 3
         )
         let shouldScroll = appState.sidebarStamps.count > 9
-        let gridContent = LazyVGrid(columns: columns, alignment: .center, spacing: 14) {
+        let gridContent = LazyVGrid(columns: columns, alignment: .leading, spacing: 14) {
             ForEach(appState.sidebarStamps) { stamp in
                 StampGridCell(stamp: stamp, lang: lang)
             }
