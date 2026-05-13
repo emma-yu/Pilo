@@ -15,7 +15,8 @@ import UserNotifications
 /// 不做什么：
 ///   - 不做"推送提醒"（用户主动 push 不需要通知）
 ///   - 不做"远端有新 commit"（用户没拉，他不关心）
-///   - 不做 sound（commit 频繁，叮咚太吵）
+///   - 不放系统通知的 `content.sound`（macOS 默认"叮"跟邮局风格不搭）
+///     —— 改在投递时 Pilo 内部播 `letterArrived`（信件落地音），同期视觉/听觉反馈
 actor CommitNotifier {
 
     // MARK: - 状态
@@ -44,9 +45,19 @@ actor CommitNotifier {
     /// 测试用：拦截 deliverNow 实际发送的 payload，便于断言
     private(set) var deliveredForTest: [(repoId: UUID, body: String)] = []
 
+    /// 邮局音效播放器 —— 通知投递时同步播 letterArrived（跟信箱新信件同一个音）。
+    /// SoundPlayer 是 @MainActor，跨 actor 调用走 `await soundPlayer?.play(...)`
+    /// nil = 测试 / dryRun 时不传，无音
+    private weak var soundPlayer: SoundPlayer?
+
     init(coalesceWindow: TimeInterval = 60, dryRun: Bool = false) {
         self.coalesceWindow = coalesceWindow
         self.dryRun = dryRun
+    }
+
+    /// 注入 SoundPlayer —— AppState 初始化完两者后 wire 起来
+    func attachSoundPlayer(_ player: SoundPlayer) {
+        self.soundPlayer = player
     }
 
     // MARK: - 开关
@@ -170,6 +181,11 @@ actor CommitNotifier {
         )
         do {
             try await UNUserNotificationCenter.current().add(req)
+            // 投递成功 → Pilo 内部播 letterArrived（跟信箱新信件同一个音），
+            // 跟 macOS 通知 banner 同步，提供"邮局感"听觉反馈
+            if let player = soundPlayer {
+                await player.play(.letterArrived)
+            }
         } catch {
             // 不再 silent —— 历史上有过 entitlement 引起的静默 swallow，让 console 留痕便于调试
             print("[CommitNotifier] notification delivery failed: \(error.localizedDescription)")

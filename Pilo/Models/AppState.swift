@@ -340,6 +340,10 @@ final class AppState {
         let soundOn = UserDefaults.standard.bool(forKey: SettingsKey.enableSoundEffects.rawValue)
         self.enableSoundEffects = soundOn
         soundPlayer.enabled = soundOn
+        // 把 SoundPlayer 接到 CommitNotifier —— 通知投递成功时同步播 letterArrived
+        let notifier = commitNotifier
+        let player = soundPlayer
+        Task { await notifier.attachSoundPlayer(player) }
         loadToneFromDefaults()
         loadRepositoriesFromDisk()
         // 在 MainActor 的下一个 tick 启动后端检测和首扫；
