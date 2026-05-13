@@ -66,8 +66,11 @@ struct ResumeWorkCard: View {
                     .foregroundStyle(Color.inkPrimary)
             }
             let sub = Copy.Resume.subtitle(
+                uncommittedCount: repo.uncommittedCount,
+                pendingPushCount: repo.aheadCount,
                 daysSinceViewed: firstTime ? nil : days,
                 branch: repo.currentBranch,
+                tone,
                 lang
             )
             if !sub.isEmpty {
