@@ -160,27 +160,28 @@ actor CommitNotifier {
         let content = UNMutableNotificationContent()
         content.title = Self.titleText(count: commits.count, repoName: repoName)
         content.body = body
-        // 不放 sound —— commit 频繁，叮咚太吵
         //
-        // **历史教训**：曾尝试 `interruptionLevel = .timeSensitive`，但这要求
-        // entitlement `com.apple.developer.usernotifications.time-sensitive`，
-        // Pilo.entitlements 没申请。没 entitlement 时部分 macOS 版本会让
-        // `add(request)` 直接抛错 → catch 块静默吞 → 通知**完全消失**。
-        // 默认 `.active` 即可（banner 行为跟系统设置 / 用户 Focus 模式联动）。
-        content.relevanceScore = 0.8   // 通知中心排序权重，安全 / 不要 entitlement
+        // **历史教训（这次诊断对的版本）**：
+        //   - `.timeSensitive` 在 macOS 上**不需要** entitlement 就能设。
+        //     没 entitlement 只是不能突破 Focus mode；macOS 静默当 `.active` 处理。
+        //     **不抛错、不让 add() 失败**。
+        //   - 但设了 `.timeSensitive` 后，macOS 给通知更高的展示优先级 —— 即使
+        //     menu bar app 在背景时，banner 也更可能可见。
+        //   - 之前曾误删 `.timeSensitive` 导致 banner 不弹（仅音效响）；P17 恢复。
+        // 不放 `content.sound` —— macOS 系统"叮"跟邮局风格不搭，
+        // 我们在 add 成功后 Pilo 内部播 letterArrived 邮局音
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 0.8
         content.userInfo = [
             "kind": "commit",
             "repoId": repoId.uuidString,
             "commitCount": commits.count
         ]
-        // identifier 用 repoId —— 同一 repo 的新通知会"就地更新"（不重弹 banner）。
-        // 我们想要每个新 batch 都是 fresh banner，所以**先显式删旧的 delivered**
-        // 再 add 新的；这样 NC 仍只有一条（不堆几十条）+ banner 每次重新弹。
-        let identifier = "commit.\(repoId.uuidString)"
-        UNUserNotificationCenter.current()
-            .removeDeliveredNotifications(withIdentifiers: [identifier])
+        // identifier 用 repoId —— 同一 repo 的新通知会替换旧的（避免堆几十条）。
+        // **不要**在 add 前 removeDeliveredNotifications：P15 曾这么做，怀疑引入
+        // banner 抑制的副作用，P17 移除。让 macOS 自己处理替换语义。
         let req = UNNotificationRequest(
-            identifier: identifier,
+            identifier: "commit.\(repoId.uuidString)",
             content: content,
             trigger: nil    // 立即投递
         )
@@ -192,7 +193,7 @@ actor CommitNotifier {
                 await player.play(.letterArrived)
             }
         } catch {
-            // 不再 silent —— 历史上有过 entitlement 引起的静默 swallow，让 console 留痕便于调试
+            // 不 silent —— 留 console 痕迹便于调试（P12 引入）
             print("[CommitNotifier] notification delivery failed: \(error.localizedDescription)")
         }
     }

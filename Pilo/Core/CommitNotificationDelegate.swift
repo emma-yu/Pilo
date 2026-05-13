@@ -17,13 +17,16 @@ final class CommitNotificationDelegate: NSObject, UNUserNotificationCenterDelega
         self.onCommitTap = onCommitTap
     }
 
-    /// App 在前台时收到通知 —— 仍然弹 banner，避免"应用没开就没通知"造成困惑
+    /// App 在前台时收到通知 —— 仍然弹 banner，避免"应用没开就没通知"造成困惑。
+    /// 包含 `.list` 让通知也进入 Notification Center 历史，便于用户回看。
+    /// **背景态时本方法不 fire**，banner 行为完全由 macOS 系统设置 +
+    /// `content.interruptionLevel` 决定（`.timeSensitive` 强力推送）。
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.banner, .badge])
+        completionHandler([.banner, .list, .badge])
     }
 
     /// 用户点了通知（或点 action button）
