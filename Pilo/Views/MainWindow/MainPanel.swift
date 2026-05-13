@@ -95,7 +95,7 @@ struct MainPanel: View {
         )) {
             PromptStampArchiveSheet()
         }
-        // Toast overlay —— 「✓ 邮票已盖章」在便签卡片正上方（操作处附近，避免注意力跳跃）
+        // Toast overlay —— 「✓ 邮票已誊抄」在便签卡片正上方（操作处附近，避免注意力跳跃）
         .overlay(alignment: .bottomLeading) {
             if let msg = appState.stampToastMessage {
                 StampToastView(message: msg)
@@ -109,7 +109,7 @@ struct MainPanel: View {
     }
 }
 
-// MARK: - 邮票盖章 toast
+// MARK: - 邮票誊抄 toast
 
 private struct StampToastView: View {
     let message: String

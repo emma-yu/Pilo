@@ -239,7 +239,7 @@ final class AppState {
     var editingStamp: PromptStamp?
     /// 邮票全集 sheet 是否打开
     var isStampArchiveOpen: Bool = false
-    /// 邮戳 toast —— "已盖章" 提示。nil = 不显示；自动 1.5s 后清空
+    /// 邮戳 toast —— "已誊抄" 提示。nil = 不显示；自动 1.5s 后清空
     var stampToastMessage: String?
     private var stampToastTask: Task<Void, Never>?
 
@@ -1531,7 +1531,7 @@ final class AppState {
         // 3. 邮戳音
         soundPlayer.play(.waxSealCrack)
 
-        // 4. Toast「✓ 邮票已盖章」—— 1.5s 后自动消失
+        // 4. Toast「✓ 邮票已誊抄」—— 1.5s 后自动消失
         stampToastTask?.cancel()
         let msg = Copy.Stamps.toastCopied(stamp.title, language)
         stampToastMessage = msg

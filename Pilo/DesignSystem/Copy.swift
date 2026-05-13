@@ -1365,7 +1365,7 @@ enum Copy {
             lang == .zh ? "还没有邮票" : "No stamps yet"
         }
         static func emptyHint(_ lang: Language) -> String {
-            lang == .zh ? "盖第一张 prompt 邮票" : "Make your first stamp"
+            lang == .zh ? "做第一张 prompt 邮票" : "Make your first stamp"
         }
         /// Empty state explanation —— 告诉新用户这是干嘛的
         static func emptyExplanation(_ lang: Language) -> String {
@@ -1379,7 +1379,7 @@ enum Copy {
         }
         /// Tooltip on stamp hover
         static func hoverHint(_ lang: Language) -> String {
-            lang == .zh ? "点击复制到剪贴板" : "Click to copy"
+            lang == .zh ? "点击誊抄到剪贴板" : "Click to copy"
         }
 
         /// Editor sheet title
@@ -1412,7 +1412,7 @@ enum Copy {
             lang == .zh ? "钉到 sidebar（最多显示 5 张）" : "Pin to sidebar (shows up to 5)"
         }
         static func saveAction(_ lang: Language) -> String {
-            lang == .zh ? "盖章保存" : "Save"
+            lang == .zh ? "保存邮票" : "Save stamp"
         }
         static func cancelAction(_ lang: Language) -> String {
             lang == .zh ? "取消" : "Cancel"
@@ -1423,14 +1423,15 @@ enum Copy {
         static func menuPin(_ lang: Language) -> String { lang == .zh ? "钉住" : "Pin" }
         static func menuUnpin(_ lang: Language) -> String { lang == .zh ? "取消钉住" : "Unpin" }
         static func menuDelete(_ lang: Language) -> String { lang == .zh ? "删除" : "Delete" }
-        static func menuCopy(_ lang: Language) -> String { lang == .zh ? "复制" : "Copy" }
+        static func menuCopy(_ lang: Language) -> String { lang == .zh ? "誊抄" : "Copy" }
 
-        /// Toast 文案：「✓ 「重构这段」已盖章到剪贴板」
+        /// Toast 文案：「✓ 「重构这段」已誊抄」
+        /// 跟文档复制保持同一 vocabulary（「誊抄」）；视觉/音效继续保留邮戳力量感
         static func toastCopied(_ title: String, _ lang: Language) -> String {
             if title.isEmpty {
-                return lang == .zh ? "✓ 邮票已盖章" : "✓ Stamp copied"
+                return lang == .zh ? "✓ 邮票已誊抄" : "✓ Stamp copied"
             }
-            return lang == .zh ? "✓ 「\(title)」已盖章" : "✓ \"\(title)\" copied"
+            return lang == .zh ? "✓ 「\(title)」已誊抄" : "✓ \"\(title)\" copied"
         }
 
         /// Archive sheet 标题
@@ -1444,7 +1445,7 @@ enum Copy {
         static func sortByRecent(_ lang: Language) -> String { lang == .zh ? "按时间" : "Recent" }
         static func sortByName(_ lang: Language) -> String { lang == .zh ? "按字母" : "Alphabetical" }
         static func useCountLabel(_ count: Int, _ lang: Language) -> String {
-            lang == .zh ? "用过 \(count) 次" : "\(count) uses"
+            lang == .zh ? "誊过 \(count) 次" : "\(count) uses"
         }
         static func pinnedBadge(_ lang: Language) -> String {
             lang == .zh ? "钉" : "Pinned"

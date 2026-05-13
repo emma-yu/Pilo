@@ -20,36 +20,43 @@ struct PromptStampBookSidebar: View {
     private var lang: Language { appState.language }
 
     var body: some View {
-        VStack(spacing: 8) {
-            toolbarCapsule
+        VStack(spacing: 6) {
+            toolbarHeader
             stickyNoteCard
         }
         .padding(.horizontal, 12)
-        .padding(.top, 10)
+        .padding(.top, 6)
         .padding(.bottom, 4)
     }
 
-    // MARK: - Floating toolbar capsule（上方独立矩形）
+    // MARK: - Toolbar header（三段式：左 + / 中 标题 / 右 archive）
 
-    private var toolbarCapsule: some View {
-        HStack(spacing: 14) {
-            // + 新建邮票
+    /// 把"邮票本"标题嵌进 toolbar capsule 中间 —— 解决两按钮中间空、标题位置低的问题
+    private var toolbarHeader: some View {
+        HStack(spacing: 0) {
+            // 左：+ 新建邮票
             Button(action: { appState.openStampEditor() }) {
                 Image(systemName: "plus")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Color.piloGoldDark)
-                    .frame(width: 22, height: 22)
+                    .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .help(Copy.Stamps.addNewHint(lang))
 
-            // ⌀ 分隔点
-            Circle()
-                .fill(Color.piloGold.opacity(0.3))
-                .frame(width: 2, height: 2)
+            Spacer(minLength: 4)
 
-            // 📕 archive
+            // 中：邮票本 Songti italic gold
+            Text(Copy.Stamps.sectionTitle(lang))
+                .font(.custom("Songti SC", size: 14).italic())
+                .tracking(1.0)
+                .foregroundStyle(Color.piloGoldDark)
+                .fixedSize()
+
+            Spacer(minLength: 4)
+
+            // 右：📕 archive
             Button(action: { appState.openStampArchive() }) {
                 Image(systemName: "books.vertical")
                     .font(.system(size: 12, weight: .medium))
@@ -58,15 +65,15 @@ struct PromptStampBookSidebar: View {
                             ? Color.piloGoldDark.opacity(0.35)
                             : Color.piloGoldDark
                     )
-                    .frame(width: 22, height: 22)
+                    .frame(width: 24, height: 24)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .disabled(appState.totalStampCount == 0)
             .help(Copy.Stamps.allHint(lang))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
         .background(
             Capsule(style: .continuous)
                 .fill(Color.piloPaper.opacity(0.95))
@@ -78,54 +85,21 @@ struct PromptStampBookSidebar: View {
         .shadow(color: Color.black.opacity(0.06), radius: 3, x: 0, y: 1)
     }
 
-    // MARK: - Sticky note card（下方便签纸）
+    // MARK: - Sticky note card（下方便签纸 —— 标题已上移到 toolbar，内部直接展 grid）
 
     private var stickyNoteCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // 内部小标题
-            HStack(spacing: 4) {
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.piloGold.opacity(0), Color.piloGold.opacity(0.4)],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
-                    .frame(height: 0.5)
-                Text(Copy.Stamps.sectionTitle(lang))
-                    .font(.piloSerifLabel)
-                    .foregroundStyle(Color.piloGoldDark)
-                    .tracking(1.2)
-                    .fixedSize()
-                Rectangle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.piloGold.opacity(0.4), Color.piloGold.opacity(0)],
-                            startPoint: .leading, endPoint: .trailing
-                        )
-                    )
-                    .frame(height: 0.5)
-            }
-            .padding(.top, 2)
-
+        Group {
             if appState.totalStampCount == 0 {
                 emptyState
-                    .padding(.top, 4)
-                    .padding(.bottom, 8)
             } else if appState.sidebarStamps.isEmpty {
-                // 有邮票但都没钉
                 noPinnedHint
-                    .padding(.top, 6)
-                    .padding(.bottom, 8)
             } else {
                 stampsGrid
-                    .padding(.top, 4)
-                    .padding(.bottom, 4)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, minHeight: 230)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, minHeight: 210)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.piloPaper.opacity(0.85))
@@ -272,7 +246,7 @@ private struct StampGridCell: View {
         Button(action: paste) {
             VStack(spacing: 5) {
                 ZStack {
-                    // 金色光环 ring —— paste 时 expand + fade，"盖章"力量感
+                    // 金色光环 ring —— paste 时 expand + fade，邮戳力量感（视觉保留盖章感，文案用「誊抄」）
                     Circle()
                         .stroke(Color.piloGoldDark.opacity(sealRingOpacity), lineWidth: 1.2)
                         .frame(width: 60, height: 60)
