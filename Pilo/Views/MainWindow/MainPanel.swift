@@ -1026,9 +1026,10 @@ private struct SidebarRepoRow: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Color.piloBlue)
                 }
-                // hover-only ⋯ 按钮 —— 显式触发邮局风 popover，
-                // 给"我不喜欢系统右键 chrome"的用户一条 postal-aesthetic 替代路径
-                if isHovered {
+                // hover OR popover 打开期间都保留 ⋯ 按钮 —— 否则鼠标移动到 popover
+                // 上面时 isHovered → false → 按钮消失 → popover 跟着 dismiss，
+                // 用户根本点不到选项
+                if isHovered || isMenuOpen {
                     Button {
                         isMenuOpen = true
                     } label: {
