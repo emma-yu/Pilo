@@ -34,7 +34,7 @@ struct PiloApp: App {
         }
         .windowResizability(.contentSize)
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 560, height: 440)
+        .defaultSize(width: 560, height: 560)
 
         // 4. 设置（⌘+,）
         Settings {

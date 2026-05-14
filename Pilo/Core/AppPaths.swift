@@ -29,6 +29,11 @@ enum AppPaths {
         applicationSupport.appendingPathComponent("release-letters.json", isDirectory: false)
     }
 
+    /// 总局来信箱：新欣明德设计工作室经由 Pilo 投递的偶发信件（年报 / 姊妹作品引导）
+    static var studioLettersJSON: URL {
+        applicationSupport.appendingPathComponent("studio-letters.json", isDirectory: false)
+    }
+
     /// 「新版本已发车」推送信件：UpdateChecker 检测到新版本后投递
     static var updateAvailableJSON: URL {
         applicationSupport.appendingPathComponent("update-available.json", isDirectory: false)

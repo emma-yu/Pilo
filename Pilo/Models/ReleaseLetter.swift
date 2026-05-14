@@ -33,6 +33,8 @@ struct ReleaseLetter: Codable, Sendable, Identifiable, Hashable {
 enum InboxItem: Identifiable, Hashable, Sendable {
     case daily(DailyLetter)
     case release(ReleaseLetter)
+    /// 总局来信 —— 工作室年报 / 姊妹作品引导
+    case studio(StudioLetter)
     /// 「新版本已发车」推送信 —— 总排在信箱最顶（最重要的引导）
     case updateAvailable(UpdateAvailableLetter)
 
@@ -40,15 +42,17 @@ enum InboxItem: Identifiable, Hashable, Sendable {
         switch self {
         case .daily(let l):           return "d-\(l.id.uuidString)"
         case .release(let l):         return "r-\(l.id.uuidString)"
+        case .studio(let l):          return "s-\(l.id)"
         case .updateAvailable(let l): return "u-\(l.id.uuidString)"
         }
     }
 
-    /// 排序键 —— release 用 releaseDate，daily 用 date，update 用 detectedAt
+    /// 排序键 —— release 用 releaseDate，daily 用 date，studio 用 sentDate，update 用 detectedAt
     var sortDate: Date {
         switch self {
         case .daily(let l):           return l.date
         case .release(let l):         return l.releaseDate
+        case .studio(let l):          return l.sentDate
         case .updateAvailable(let l): return l.detectedAt
         }
     }
@@ -57,6 +61,7 @@ enum InboxItem: Identifiable, Hashable, Sendable {
         switch self {
         case .daily(let l):           return l.isUnread
         case .release(let l):         return l.isUnread
+        case .studio(let l):          return l.isUnread
         case .updateAvailable(let l): return l.isUnread
         }
     }

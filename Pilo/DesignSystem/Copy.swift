@@ -221,30 +221,95 @@ enum Copy {
                 en: "About privacy — let me be upfront"
             ).text(lang)
         }
+        /// 旧整段 body —— 已被 multi-Text 视觉层级取代（2026-05-14），保留供未迁移调用方
         static func privacyBody(_ lang: Language = .zh) -> String {
             Loc(
                 zh: """
-                ✅ 代码、commit、diff 都只在你的电脑上分析
-                ✅ 不调用任何 LLM 或云端 API
-                ✅ 唯一的网络行为是：
-                   • 后台定期 git fetch（和你平时用 git 一样）
-                   • 你主动触发的 git push
-                   • 可选的 GitHub API 调用（仅检测仓库可见性）
+                你的代码，不离开这台 Mac。
+                不传 AI · 不传云端 · 不收集数据。
 
-                👀 想看 Pilo 做过什么？设置 → 关于 → 操作日志
+                网络只用在 3 件事：
+                · git fetch / push（你平时也在用）
+                · 查仓库是公开还是私有（避免误推）
+                · 每 24 小时查一次 Pilo 新版本
+
+                Pilo 开源 —— 你可以读源码自己验证。
                 """,
                 en: """
-                ✅ Your code, commits, and diffs are analyzed only on your Mac
-                ✅ No LLM calls, no cloud APIs
-                ✅ The only network activity is:
-                   • Background git fetch (same as plain git)
-                   • git push when you choose to
-                   • Optional GitHub API (only to detect repo visibility)
+                Your code never leaves this Mac.
+                No AI · No cloud · No tracking.
 
-                👀 Want to see everything I've done? Settings → About → Activity log
+                Network is used for only 3 things:
+                · git fetch / push (your usual git)
+                · Check if a repo is public or private (prevents accidents)
+                · Check for a new Pilo version every 24 hours
+
+                Pilo is open source — read the code to verify.
                 """
             ).text(lang)
         }
+
+        // MARK: - Privacy body 视觉层级（multi-Text，2026-05-14 重设计）
+        //
+        // 7 段独立 Copy 键，对应 OnboardingPrivacyView 里 7 段 Text，每段独立字号 / 颜色。
+        // 修了「SwiftUI 把单 Text 静默 truncate」+「wall-of-text 没视觉锚点」两个 UX 问题。
+
+        /// 头声承诺——加重强调的一句话
+        static func privacyHeadline(_ lang: Language) -> String {
+            Loc(
+                zh: "你的代码，不离开这台 Mac。",
+                en: "Your code never leaves this Mac."
+            ).text(lang)
+        }
+
+        /// 三段并列承诺
+        static func privacyPromise(_ lang: Language) -> String {
+            Loc(
+                zh: "不传 AI · 不传云端 · 不收集数据。",
+                en: "No AI · No cloud · No tracking."
+            ).text(lang)
+        }
+
+        /// 例外段 label —— 给 SectionDivider 用，不带冒号（视觉本身已暗示列表跟随）
+        static func privacyExceptionsLabel(_ lang: Language) -> String {
+            Loc(
+                zh: "网络只用在 3 件事",
+                en: "Network is used for only 3 things"
+            ).text(lang)
+        }
+
+        /// 例外 1—— git 协议（不带 · 前缀，bullet 由 view 独立渲染为 goldDark 粗体）
+        static func privacyBulletGit(_ lang: Language) -> String {
+            Loc(
+                zh: "git fetch / push（你平时也在用）",
+                en: "git fetch / push (your usual git)"
+            ).text(lang)
+        }
+
+        /// 例外 2 —— GitHub visibility check
+        static func privacyBulletVisibility(_ lang: Language) -> String {
+            Loc(
+                zh: "查仓库是公开还是私有（避免误推）",
+                en: "Check if a repo is public or private (prevents accidents)"
+            ).text(lang)
+        }
+
+        /// 例外 3 —— UpdateChecker
+        static func privacyBulletUpdate(_ lang: Language) -> String {
+            Loc(
+                zh: "每 24 小时查一次 Pilo 新版本",
+                en: "Check for a new Pilo version every 24 hours"
+            ).text(lang)
+        }
+
+        /// 开源验证渠道——最强信任信号（取代不存在的"操作日志"）
+        static func privacyOpenSource(_ lang: Language) -> String {
+            Loc(
+                zh: "Pilo 开源 —— 你可以读源码自己验证。",
+                en: "Pilo is open source — read the code to verify."
+            ).text(lang)
+        }
+
         static func privacyAck(_ lang: Language = .zh) -> String {
             Loc(zh: "我了解了", en: "Got it").text(lang)
         }
@@ -1224,6 +1289,23 @@ enum Copy {
             lang == .zh ? "— 这次寄了什么 —" : "— What's in this letter —"
         }
 
+        // MARK: - 总局来信（StudioLetter）
+
+        /// 信箱行的标题，"总局来信"
+        static func studioRowHeader(_ lang: Language) -> String {
+            lang == .zh ? "总局来信" : "From the studio"
+        }
+
+        /// Reader 大标题
+        static func studioLetterHeader(_ lang: Language) -> String {
+            lang == .zh ? "总局来信" : "A letter from the studio"
+        }
+
+        /// Reader 落款 —— 中式「敬上」收信
+        static func studioLetterSignature(_ lang: Language) -> String {
+            lang == .zh ? "新欣明德设计工作室 敬上" : "— xinxinmingde studio"
+        }
+
         // MARK: - 「新版本已发车」UpdateAvailableLetter
 
         /// 信箱行 header，"v0.5 · 新版已发车"
@@ -1580,6 +1662,10 @@ enum Copy {
         static func updateLetterBannerBody(version: String, _ lang: Language) -> String {
             lang == .zh ? "v\(version) · 新版已发车" : "v\(version) · New version available"
         }
+        /// 总局来信 banner body
+        static func studioLetterBannerBody(title: String, _ lang: Language) -> String {
+            lang == .zh ? "总局来信 · \(title)" : "From the studio · \(title)"
+        }
     }
 
     // MARK: - S1 AI Push Guard
@@ -1763,6 +1849,60 @@ enum Copy {
         }
         static func errorEmptyBody(_ lang: Language) -> String {
             lang == .zh ? "里面什么都没有，是占位文件。" : "Nothing inside. Looks like a placeholder."
+        }
+    }
+
+    // MARK: - 工作室署名 / 跨产品（新欣明德 · UVPeek）
+    //
+    // ⚠️ 文案诚信红线 ⚠️
+    //   ✓ 可用：「新欣明德设计工作室出品」/「UVPeek —— 紫外线指数小工具」/ 可验证平台事实
+    //   ✗ 禁用：「最棒/最好/优秀」/ 不可验证社交证明 /「AI 驱动」/ 医疗暗示（「保护皮肤」「防晒伤」）/
+    //          「随时随地」「轻松搞定」等填充语
+    // 改这块前请先读 [[project-studio-brand]] 和 plan 文件里的"文案诚信红线"段。
+    enum Studio {
+        /// 工作室纯名字——不带「出品」「by」尾缀
+        static func studioName(_ lang: Language) -> String {
+            lang == .zh ? "新欣明德设计工作室" : "xinxinmingde studio"
+        }
+
+        /// 简短署名——onboarding 完成页底部 fine-print
+        static func attributionShort(_ lang: Language) -> String {
+            lang == .zh ? "新欣明德设计工作室 · 出品" : "made by xinxinmingde studio"
+        }
+
+        /// 信件末尾 colophon——金线下方那行
+        static func letterColophon(_ lang: Language) -> String {
+            lang == .zh ? "新欣明德设计工作室 · 邮政总局" : "xinxinmingde studio · the post office"
+        }
+
+        /// UVPeek 一句话事实描述——用在邮局便条 / 总局年报正文。
+        /// TODO(emma): 定稿。⚠️ 红线：不能写最高级 / 不可验证社交证明 / 医疗暗示。
+        static func uvpeekOneLiner(_ lang: Language) -> String {
+            lang == .zh
+                ? "天气类紫外线指数小工具，出门前看一眼"
+                : "A UV-index utility for a quick check before heading out"
+        }
+
+        /// 「访问官网」按钮——邮局便条卡用
+        static func visitSite(_ lang: Language) -> String {
+            lang == .zh ? "访问官网" : "Visit site"
+        }
+
+        // MARK: - 关于页 fine-print 三行（重设计后克制版，2026-05-14）
+
+        /// 关于页第一行——"由 新欣明德设计工作室 出品"
+        static func aboutMadeBy(_ lang: Language) -> String {
+            lang == .zh ? "由 新欣明德设计工作室 出品" : "Made by xinxinmingde studio"
+        }
+
+        /// 关于页第二行——"同门 · UVPeek 紫外线小工具"
+        static func aboutSisterLine(_ lang: Language) -> String {
+            lang == .zh ? "同门 · UVPeek 紫外线小工具" : "Also from us · UVPeek (UV index tool)"
+        }
+
+        /// 关于页第三行——访问链接（直接写出 URL，最透明，避免"看不见的去向"）
+        static func aboutVisitLink(_ lang: Language) -> String {
+            lang == .zh ? "访问 xinxinmingde.com" : "Visit xinxinmingde.com"
         }
     }
 }

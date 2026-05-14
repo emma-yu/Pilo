@@ -29,10 +29,16 @@ struct LetterArchiveView: View {
                                 letterRow(l)
                             case .release(let r):
                                 releaseRow(r)
+                            case .studio(let s):
+                                studioRow(s)
                             case .updateAvailable(let u):
                                 updateRow(u)
                             }
                         }
+
+                        // 信件列表底部「邮局便条」—— 只在有信件时出现
+                        StudioInsertCard()
+                            .padding(.top, 16)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 14)
@@ -217,6 +223,51 @@ struct LetterArchiveView: View {
         }
         .buttonStyle(.plain)
         .hoverable(highlight: Color.piloBlue.opacity(0.08), cornerRadius: 7)
+    }
+
+    /// 总局来信行 —— 跟 release 行视觉差异化：
+    ///   - building.columns.fill 金色集团徽 icon（区分 release 红蜡封）
+    ///   - 标题 "总局来信" Songti 衬线
+    ///   - 未读底色用 piloGold 淡淡感（区分 release 的 piloAccent）
+    private func studioRow(_ letter: StudioLetter) -> some View {
+        Button {
+            appState.openStudioLetter(letter)
+        } label: {
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: "building.columns.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(letter.isUnread ? Color.piloGoldDark : Color.piloGoldDark.opacity(0.45))
+                    .frame(width: 14)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(spacing: 8) {
+                        Text(Copy.Letter.studioRowHeader(lang))
+                            .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
+                            .foregroundStyle(Color.inkPrimary)
+                        Spacer()
+                        Text(Self.relativeFormatter.localizedString(for: letter.sentDate, relativeTo: Date()))
+                            .font(.piloSerifCaption)
+                            .italic()
+                            .foregroundStyle(Color.inkTertiary)
+                    }
+                    Text(letter.title)
+                        .font(.piloSerifCaption)
+                        .italic()
+                        .foregroundStyle(Color.inkSecondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(letter.isUnread ? Color.piloGold.opacity(0.10) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 7)
     }
 
     private func summary(for letter: DailyLetter) -> Text {

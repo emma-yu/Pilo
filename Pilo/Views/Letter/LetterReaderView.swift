@@ -144,6 +144,8 @@ struct LetterReaderView: View {
                 Text(Copy.Letter.signature(lang))
                     .font(.custom("Songti SC", size: 22).italic())
                     .foregroundStyle(Color.piloGoldDark)
+                ColophonAttribution { appState.openAboutSettings() }
+                    .padding(.top, 10)
             }
         }
     }

@@ -155,6 +155,103 @@ extension View {
     }
 }
 
+// MARK: - Postal Datestamp（圆形日戳：POST + MM.dd）
+
+/// 双圈金边圆戳 + 「POST」+ MM.dd 日期。
+/// 用在收件箱便条卡右上角等需要「今日邮戳」语义的位置。
+struct PostalDatestamp: View {
+    let date: Date
+
+    private static let formatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MM.dd"
+        return f
+    }()
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.piloGoldDark.opacity(0.6), lineWidth: 0.8)
+            Circle()
+                .stroke(Color.piloGoldDark.opacity(0.32), lineWidth: 0.45)
+                .scaleEffect(0.75)
+            VStack(spacing: 1) {
+                Text("POST")
+                    .font(.system(size: 5, weight: .semibold))
+                    .foregroundStyle(Color.piloGoldDark.opacity(0.72))
+                    .tracking(0.6)
+                Text(Self.formatter.string(from: date))
+                    .font(.custom("Songti SC", size: 7.5).weight(.medium))
+                    .foregroundStyle(Color.piloGoldDark)
+            }
+        }
+        .frame(width: 30, height: 30)
+        .rotationEffect(.degrees(-8))
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Postal Spot Mark（圆形单字戳，方位 / 类型标记）
+
+/// 双圈金边小圆戳 + 中心 1-2 个字符（如 "↗" / "★" / "18"）。
+/// 比 PostalDatestamp 简洁——用在 onboarding 完成页"位置地图"等。
+struct PostalSpotMark: View {
+    let glyph: String
+    var size: CGFloat = 22
+    var rotation: Double = -6
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(Color.piloGoldDark.opacity(0.6), lineWidth: 0.7)
+            Circle()
+                .stroke(Color.piloGoldDark.opacity(0.32), lineWidth: 0.4)
+                .scaleEffect(0.7)
+            Text(glyph)
+                .font(.system(size: size * 0.38, weight: .semibold))
+                .foregroundStyle(Color.piloGoldDark)
+        }
+        .frame(width: size, height: size)
+        .rotationEffect(.degrees(rotation))
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Perforation Line（邮票齿孔装饰线）
+
+/// 横向一段邮票齿孔——一排空心小圆，金色细描边。
+/// 用作署名 / 撕边类视觉分隔，立刻读作"邮政"语言而非"网页 footer 装饰"。
+struct PerforationLine: View {
+    var width: CGFloat = 64
+    var dotCount: Int = 9
+    var dotSize: CGFloat = 3
+    var tint: Color = .piloGold
+    var opacity: Double = 0.42
+
+    var body: some View {
+        Canvas { ctx, size in
+            let radius = dotSize / 2
+            let usableWidth = max(0, size.width - dotSize)
+            let spacing = usableWidth / CGFloat(max(1, dotCount - 1))
+            let y = size.height / 2
+            for i in 0..<dotCount {
+                let cx = radius + CGFloat(i) * spacing
+                let rect = CGRect(
+                    x: cx - radius, y: y - radius,
+                    width: dotSize, height: dotSize
+                )
+                ctx.stroke(
+                    Path(ellipseIn: rect),
+                    with: .color(tint.opacity(opacity)),
+                    lineWidth: 0.7
+                )
+            }
+        }
+        .frame(width: width, height: dotSize + 1)
+        .accessibilityHidden(true)
+    }
+}
+
 #Preview("Postal Ornaments") {
     VStack(spacing: 24) {
         OrnamentDivider(width: 240)
@@ -163,6 +260,7 @@ extension View {
             RotatedStamp(text: "已沉睡 30 天", tint: .stampRed, rotation: 6)
             RotatedStamp(text: "已寄出 · 2026.05.11", tint: .stampMint, rotation: -3, dashStyle: false)
         }
+        PerforationLine()
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text("8a3f2c1").font(.piloMono).foregroundStyle(.orange)

@@ -48,6 +48,16 @@ struct OnboardingCompleteView: View {
                     .foregroundStyle(Color.inkTertiary)
             }
 
+            // 工作室署名（cross-promo step 1）——金线齿孔 + Songti 10pt 灰署名。
+            // 这是 brand 署名而不是 feature checklist，保留。
+            VStack(spacing: 5) {
+                PerforationLine(width: 64)
+                Text(Copy.Studio.attributionShort(lang))
+                    .font(.custom("Songti SC", size: 10).italic())
+                    .foregroundStyle(Color.inkTertiary.opacity(0.45))
+                    .tracking(0.5)
+            }
+
             Spacer(minLength: 10)
         }
         .padding(30)

@@ -41,7 +41,9 @@ struct OnboardingFlow: View {
             PiloProgressBar(totalSteps: Step.allCases.count, currentStep: step.rawValue)
                 .padding(.bottom, PiloSpacing.l)
         }
-        .frame(width: 560, height: 480)
+        // 560×560：比原 560×480 略高 80pt，容纳 Complete 屏底部工作室署名
+        // （cross-promo step 1 的小金线 + Songti 署名）。其他屏天然装下。
+        .frame(width: 560, height: 560)
         .onAppear {
             // 切换到 .regular 让 Onboarding 窗口出现在 Dock 和 App Switcher
             NSApp.setActivationPolicy(.regular)

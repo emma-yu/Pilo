@@ -74,6 +74,13 @@ struct MainPanel: View {
         )) { letter in
             ReleaseLetterReaderView(letter: letter)
         }
+        // 总局来信 reader sheet（跟 release reader 平行）
+        .sheet(item: Binding(
+            get: { appState.readingStudioLetter },
+            set: { if $0 == nil { appState.closeReadingStudioLetter() } }
+        )) { letter in
+            StudioLetterReaderView(letter: letter)
+        }
         // 「新版本已发车」推送 reader sheet
         .sheet(item: Binding(
             get: { appState.readingUpdateLetter },

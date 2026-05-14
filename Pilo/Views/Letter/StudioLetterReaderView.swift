@@ -1,23 +1,21 @@
 import SwiftUI
 
-/// 版本通告信 reader —— 跟 LetterReaderView 平级，视觉差异化：
-///   - 标题用「邮局通告」+ 版本号；Songti SC 32pt 加大隆重感
-///   - 信纸顶部右上角红蜡封 + scroll icon（仪式感）
-///   - 内容结构：标题 → 亮点 bullets → 长段落 body → 落款"Pilo 邮局总局"
-///   - 跟 DailyLetter 同一 cream paper 信纸基底，保持邮局美学一致
-struct ReleaseLetterReaderView: View {
+/// 总局来信 reader —— 跟 ReleaseLetterReaderView 平级，视觉差异化：
+///   - 标题「总局来信」（不是「邮局通告」）
+///   - toolbar / header 用 `building.columns.fill` + piloGoldDark（金色集团徽，
+///     跟 release letter 的红蜡封形成「同形不同色」视觉家族）
+///   - 落款 "新欣明德设计工作室 敬上"
+///   - 可选 CTA 按钮（如「去看看 UVPeek」）夹在 body 和落款之间
+///
+/// 跟 release reader 一样，开启 view 即标已读 + 持久化。
+struct StudioLetterReaderView: View {
 
-    let letter: ReleaseLetter
+    let letter: StudioLetter
 
     @Environment(AppState.self) private var appState
-    @Environment(\.tone) private var tone
     private var lang: Language { appState.language }
 
-    /// 守门 —— SwiftUI 会在 sheet 重叠 / Stage Manager 切换 / 父 view 重渲染时
-    /// 多次 fire `onAppear`，没这个 guard 会反复重播 waxSealCrack。
-    /// `@State` 跟 view 实例 lifetime 绑定：sheet 关闭重开会 reset；同一次 sheet
-    /// 期间的多次 onAppear 都 guard 住，只播一次。
-    @State private var hasPlayedSeal = false
+    @State private var hasMarkedRead = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -35,12 +33,9 @@ struct ReleaseLetterReaderView: View {
         .frame(width: 640, height: 720)
         .background(Color.piloPaper.opacity(0.95))
         .onAppear {
-            guard !hasPlayedSeal else { return }
-            hasPlayedSeal = true
-            // 蜡封 crack —— 仅首次开启未读时响（已读再开静默）
-            let wasUnread = letter.isUnread
-            appState.markReleaseLetterRead(letter)
-            if wasUnread { appState.soundPlayer.play(.waxSealCrack) }
+            guard !hasMarkedRead else { return }
+            hasMarkedRead = true
+            appState.markStudioLetterRead(letter)
         }
     }
 
@@ -48,26 +43,26 @@ struct ReleaseLetterReaderView: View {
 
     private var toolbar: some View {
         HStack(spacing: 10) {
-            Image(systemName: "scroll.fill")
+            Image(systemName: "building.columns.fill")
                 .font(.system(size: 14))
-                .foregroundStyle(Color.stampRed)
-            Text("v\(letter.version)")
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .foregroundStyle(Color.piloGoldDark)
+            Text(Copy.Letter.studioRowHeader(lang))
+                .font(.piloSerifCaption)
                 .foregroundStyle(Color.inkPrimary)
             if letter.isUnread {
                 Text(Copy.Letter.unreadBadge(lang))
                     .font(.piloSerifCaption)
                     .italic()
-                    .foregroundStyle(Color.stampRed)
+                    .foregroundStyle(Color.piloGoldDark)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
                     .overlay(
                         RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .stroke(Color.stampRed.opacity(0.5), lineWidth: 0.5)
+                            .stroke(Color.piloGoldDark.opacity(0.5), lineWidth: 0.5)
                     )
             }
             Spacer()
-            Button(action: { appState.closeReadingReleaseLetter() }) {
+            Button(action: { appState.closeReadingStudioLetter() }) {
                 Image(systemName: "xmark")
                     .font(.system(size: 12, weight: .medium))
                     .foregroundStyle(Color.inkSecondary)
@@ -86,41 +81,37 @@ struct ReleaseLetterReaderView: View {
     @ViewBuilder
     private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
-            // Header —— "邮局通告" 大标题 + 右上 PostalDial 邮戳水印
+            // Header
             HStack(alignment: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(Copy.Letter.releaseLetterHeader(lang))
+                    Text(Copy.Letter.studioLetterHeader(lang))
                         .font(.custom("Songti SC", size: 30).weight(.medium))
                         .foregroundStyle(Color.inkPrimary)
                     OrnamentDivider(width: 180)
                 }
                 Spacer()
-                // 用 WaxSealPilo 而不是 PostalDial —— 通告比日报更"正式"，蜡封感更隆重
-                Image("WaxSealPilo")
-                    .resizable()
-                    .interpolation(.high)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 76, height: 76)
+                // 金色集团徽（SF Symbol，跟 release 的 WaxSealPilo asset 区分）
+                Image(systemName: "building.columns.fill")
+                    .font(.system(size: 52, weight: .light))
+                    .foregroundStyle(Color.piloGoldDark.opacity(0.78))
                     .rotationEffect(.degrees(-6))
-                    .opacity(0.82)
-                    .blendMode(.multiply)
-                    .offset(y: -6)
+                    .offset(y: 2)
             }
             .padding(.bottom, 4)
 
-            // 副标题（letter.title） + 版本日期
+            // Subtitle: title + sent date
             VStack(alignment: .leading, spacing: 4) {
                 Text(letter.title)
                     .font(.custom("Songti SC", size: 20).weight(.medium))
                     .foregroundStyle(Color.inkPrimary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(Self.dateFormatter.string(from: letter.releaseDate) + " · v\(letter.version)")
+                Text(Self.dateFormatter.string(from: letter.sentDate))
                     .font(.piloSerifCaption)
                     .italic()
                     .foregroundStyle(Color.inkSecondary)
             }
 
-            // Highlights —— bullet 列表
+            // Highlights
             if !letter.highlights.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(Copy.Letter.releaseHighlightsLabel(lang))
@@ -147,7 +138,7 @@ struct ReleaseLetterReaderView: View {
                 }
             }
 
-            // Body 段落
+            // Body
             if !letter.bodyParagraphs.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
                     ForEach(Array(letter.bodyParagraphs.enumerated()), id: \.offset) { _, para in
@@ -161,12 +152,43 @@ struct ReleaseLetterReaderView: View {
                 .padding(.top, 10)
             }
 
-            // 落款
+            // 可选 CTA（如指向 UVPeek 官网）
+            if let cta = letter.cta {
+                HStack {
+                    Button {
+                        NSWorkspace.shared.open(cta.url)
+                    } label: {
+                        HStack(spacing: 5) {
+                            Text(cta.label)
+                                .font(.piloSection)
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                    }
+                    .buttonStyle(.piloSecondary)
+                    Spacer()
+                }
+                .padding(.top, 12)
+            }
+
+            // 落款 + 装饰金线
             VStack(alignment: .leading, spacing: 10) {
-                Text(Copy.Letter.releaseLetterSignature(lang))
+                Text(Copy.Letter.studioLetterSignature(lang))
                     .font(.custom("Songti SC", size: 18).italic())
                     .foregroundStyle(Color.piloGoldDark)
-                ColophonAttribution { appState.openAboutSettings() }
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.piloGold.opacity(0),
+                                Color.piloGold.opacity(0.5),
+                                Color.piloGold.opacity(0),
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 90, height: 0.6)
             }
             .padding(.top, 12)
         }

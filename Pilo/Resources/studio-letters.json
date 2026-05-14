@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "__notes": [
+    "Emma: 这是「总局来信」的 bundled 数据。当年内有信要发时，把它加到 letters[] 数组里。",
+    "Schema: { id (stable string), sentDate (yyyy-MM-dd), title, highlights[], body[], cta?: { label, url } }",
+    "id 要稳定：改 id = 重投一封新信。同 id 投过就再也不会投。",
+    "频率上限：自然年内只投 1 封（AppState.injectNewStudioLettersIfNeeded 强制）。",
+    "文案诚信红线：见 Copy.Studio 顶部 MARK 注释 + /Users/yuqianyu/.claude/plans/validated-wobbling-quail.md。",
+    "__notes 字段会被 Codable 静默忽略，是给 reviewer 看的。",
+    "目前 letters 为空 —— 等 Emma 定稿首封年报内容再添加，避免投递 TODO 占位文案到用户。"
+  ],
+  "letters": []
+}

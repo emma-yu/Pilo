@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// Settings 哪个 tab。模块级 enum 是为了让 AppState.requestedSettingsTab
+/// 能跨 view 通信（colophon 点击 → openAboutSettings() → 这里 onChange）。
+enum SettingsTab: String, Hashable, Sendable {
+    case general, scan, security, hidden, about
+}
+
 /// v3.7 邮局风 Settings：每个 tab 顶部加 SettingsTabHeader（衬线 + 斜体宋体 + 金色 hairline）；
 /// scan / hidden 行用 cream paper card；about 已在 v3.3 做过。
 struct SettingsView: View {
@@ -8,23 +14,40 @@ struct SettingsView: View {
     @Environment(\.openWindow) private var openWindow
     @State private var pasteText: String = ""
     @State private var pasteError: String? = nil
+    @State private var selectedTab: SettingsTab = .general
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             generalTab
                 .tabItem { Label(lang == .zh ? "通用" : "General", systemImage: "gearshape") }
+                .tag(SettingsTab.general)
             scanTab
                 .tabItem { Label(lang == .zh ? "扫描" : "Scan", systemImage: "folder") }
+                .tag(SettingsTab.scan)
             securityTab
                 .tabItem { Label(lang == .zh ? "安全" : "Security", systemImage: "shield") }
+                .tag(SettingsTab.security)
             hiddenReposTab
                 .tabItem { Label(lang == .zh ? "已隐藏" : "Hidden", systemImage: "eye.slash") }
                 .badge(appState.hiddenRepos.count)
+                .tag(SettingsTab.hidden)
             aboutTab
                 .tabItem { Label(lang == .zh ? "关于" : "About", systemImage: "info.circle") }
+                .tag(SettingsTab.about)
         }
         .frame(width: 600, height: 540)
         .background(Color.creamBg)
+        .onAppear { consumeRequestedTab() }
+        .onChange(of: appState.requestedSettingsTab) { consumeRequestedTab() }
+    }
+
+    /// 把 AppState 暂存的"要切到哪个 tab"消费掉。
+    /// 冷启动（Settings 没开过）走 onAppear；热切换走 onChange。
+    private func consumeRequestedTab() {
+        if let requested = appState.requestedSettingsTab {
+            selectedTab = requested
+            appState.requestedSettingsTab = nil
+        }
     }
 
     private var lang: Language { appState.language }
@@ -694,68 +717,71 @@ struct SettingsView: View {
         ZStack {
             Color.piloCream.opacity(0.5)
                 .ignoresSafeArea()
-            VStack(spacing: PiloSpacing.l) {
-                OrnamentDivider(width: 220)
-                    .padding(.top, PiloSpacing.s)
+            ScrollView {
+                VStack(spacing: PiloSpacing.l) {
+                    OrnamentDivider(width: 220)
+                        .padding(.top, PiloSpacing.s)
 
-                ZStack(alignment: .topTrailing) {
-                    PiloMascot(mood: .happy, size: 110, breathing: true)
-                    WaxSeal(size: 40)
-                        .offset(x: 8, y: -2)
-                }
-
-                VStack(spacing: PiloSpacing.s) {
-                    Text(lang == .zh ? "Pilo 邮局" : "Pilo Post Office")
-                        .font(.piloSerifHero)
-                        .tracking(1.0)
-                        .foregroundStyle(Color.inkPrimary)
-                    Text(lang == .zh ? "— 一只帮你安全送代码的小信鸽 —"
-                                      : "— a little pigeon delivering your code —")
-                        .font(.piloSerifSubtitle)
-                        .foregroundStyle(Color.inkSecondary)
-                    HandDrawnUnderline(width: 60, color: .piloAccent)
-                    Text("v0.1.0 · MIT License")
-                        .font(.piloCaption)
-                        .foregroundStyle(Color.inkSecondary)
-                    Text("Made with 🕊️ by Emma")
-                        .font(.piloSerifSubtitle)
-                        .foregroundStyle(Color.inkSecondary)
-                }
-
-                if let v = appState.gitVersion, let p = appState.gitExecutablePath {
-                    Divider().padding(.horizontal, PiloSpacing.xxl)
-                    VStack(spacing: PiloSpacing.xs) {
-                        Text(lang == .zh ? "找到 \(v)" : "Found \(v)")
-                            .font(.piloSerifCaption)
-                            .foregroundStyle(Color.inkSecondary)
-                        Text(p)
-                            .font(.piloMono)
-                            .foregroundStyle(Color.inkSecondary)
-                            .textSelection(.enabled)
+                    ZStack(alignment: .topTrailing) {
+                        PiloMascot(mood: .happy, size: 110, breathing: true)
+                        WaxSeal(size: 40)
+                            .offset(x: 8, y: -2)
                     }
-                }
 
-                // 「再看一次新手引导」入口 —— 用户可以随时重看 4 屏引导
-                Button {
-                    UserDefaults.standard.set(false, forKey: SettingsKey.hasCompletedOnboarding.rawValue)
-                    UserDefaults.standard.synchronize()
-                    openWindow(id: "onboarding")
-                } label: {
-                    HStack(spacing: 5) {
-                        Image(systemName: "arrow.counterclockwise.circle")
-                            .font(.system(size: 11))
-                        Text(Copy.About.reopenOnboarding(lang))
-                            .font(.piloSerifCaption)
+                    VStack(spacing: PiloSpacing.s) {
+                        Text(lang == .zh ? "Pilo 邮局" : "Pilo Post Office")
+                            .font(.piloSerifHero)
+                            .tracking(1.0)
+                            .foregroundStyle(Color.inkPrimary)
+                        Text(lang == .zh ? "— 一只帮你安全送代码的小信鸽 —"
+                                          : "— a little pigeon delivering your code —")
+                            .font(.piloSerifSubtitle)
+                            .foregroundStyle(Color.inkSecondary)
+                        HandDrawnUnderline(width: 60, color: .piloAccent)
+                        Text("v0.1.0 · MIT License")
+                            .font(.piloCaption)
+                            .foregroundStyle(Color.inkSecondary)
+                        Text("Made with 🕊️ by Emma")
+                            .font(.piloSerifSubtitle)
+                            .foregroundStyle(Color.inkSecondary)
                     }
-                    .foregroundStyle(Color.piloGoldDark)
-                }
-                .buttonStyle(.plain)
-                .help(Copy.About.reopenOnboardingHint(lang))
 
-                Spacer(minLength: 0)
+                    if let v = appState.gitVersion, let p = appState.gitExecutablePath {
+                        Divider().padding(.horizontal, PiloSpacing.xxl)
+                        VStack(spacing: PiloSpacing.xs) {
+                            Text(lang == .zh ? "找到 \(v)" : "Found \(v)")
+                                .font(.piloSerifCaption)
+                                .foregroundStyle(Color.inkSecondary)
+                            Text(p)
+                                .font(.piloMono)
+                                .foregroundStyle(Color.inkSecondary)
+                                .textSelection(.enabled)
+                        }
+                    }
+
+                    // 「再看一次新手引导」入口 —— 用户可以随时重看 4 屏引导
+                    Button {
+                        UserDefaults.standard.set(false, forKey: SettingsKey.hasCompletedOnboarding.rawValue)
+                        UserDefaults.standard.synchronize()
+                        openWindow(id: "onboarding")
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: "arrow.counterclockwise.circle")
+                                .font(.system(size: 11))
+                            Text(Copy.About.reopenOnboarding(lang))
+                                .font(.piloSerifCaption)
+                        }
+                        .foregroundStyle(Color.piloGoldDark)
+                    }
+                    .buttonStyle(.plain)
+                    .help(Copy.About.reopenOnboardingHint(lang))
+
+                    AboutStudioBlock()
+                        .padding(.top, PiloSpacing.s)
+                }
+                .padding(PiloSpacing.xl)
+                .frame(maxWidth: .infinity)
             }
-            .padding(PiloSpacing.xl)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

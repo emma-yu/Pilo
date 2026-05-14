@@ -220,11 +220,23 @@ final class AppState {
     var isArchiveSheetOpen: Bool = false
     private var composeTask: Task<Void, Never>?
 
+    // === Settings 跨 view 跳转 ===
+    /// 外部触发"打开 Settings 并停在某 tab"的中转。
+    /// SettingsView.onAppear / onChange 消费后置 nil。
+    /// 当前唯一触发：信件 colophon 点击 → openAboutSettings()。
+    var requestedSettingsTab: SettingsTab? = nil
+
     // === 版本通告信（独立持久化，跟 DailyLetter 互不干扰）===
     /// release-letters.json 归档
     var releaseLetterArchive: ReleaseLetterArchive = .empty
     /// 当前正在阅读的版本通告（reader sheet binding）
     var readingReleaseLetter: ReleaseLetter?
+
+    // === 总局来信（新欣明德设计工作室经由 Pilo 投递；自然年限流 ≤ 1 封）===
+    /// studio-letters.json 归档
+    var studioLetterArchive: StudioLetterArchive = .empty
+    /// 当前正在阅读的总局来信（reader sheet binding）
+    var readingStudioLetter: StudioLetter?
 
     // === 「新版本已发车」推送信 ===
     /// 当前已知可下载的新版本通告（至多 1 封；nil = 没新版本/未检查）
@@ -272,8 +284,9 @@ final class AppState {
     var inboxUnreadCount: Int {
         let daily = letterArchive.unreadCount
         let release = releaseLetterArchive.letters.filter(\.isUnread).count
+        let studio = studioLetterArchive.letters.filter(\.isUnread).count
         let update = (updateAvailableArchive.current?.isUnread ?? false) ? 1 : 0
-        return daily + release + update
+        return daily + release + studio + update
     }
     var inboxHasUnread: Bool { inboxUnreadCount > 0 }
 
@@ -282,7 +295,8 @@ final class AppState {
     var inboxItems: [InboxItem] {
         let daily = letterArchive.letters.map { InboxItem.daily($0) }
         let release = releaseLetterArchive.letters.map { InboxItem.release($0) }
-        let sorted = (daily + release).sorted { $0.sortDate > $1.sortDate }
+        let studio = studioLetterArchive.letters.map { InboxItem.studio($0) }
+        let sorted = (daily + release + studio).sorted { $0.sortDate > $1.sortDate }
         if let update = updateAvailableArchive.current {
             return [.updateAvailable(update)] + sorted
         }
@@ -333,6 +347,7 @@ final class AppState {
         self.identityPool = IdentityPool.load()
         self.letterArchive = LetterStore.load()
         self.releaseLetterArchive = ReleaseLetterStore.load()
+        self.studioLetterArchive = StudioLetterStore.load()
         self.updateAvailableArchive = UpdateAvailableStore.load()
         self.promptStampArchive = PromptStampStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
@@ -379,6 +394,9 @@ final class AppState {
 
         // 版本通告信投递 —— 在 watch dirs / repo scan 之前跑，让用户一打开就看到
         injectNewReleaseLettersIfNeeded()
+
+        // 总局来信投递 —— 按自然年限流，跟 release 信平行（≤ 1 封/年）
+        injectNewStudioLettersIfNeeded()
 
         // 「新版本已发车」推送检查 —— 异步 fire-and-forget，不阻塞 bootstrap
         // 24h 频控由 UpdateChecker 自己管，频繁启动 app 不会重复 GET
@@ -749,6 +767,75 @@ final class AppState {
         readingReleaseLetter = nil
     }
 
+    // MARK: - 总局来信
+
+    /// 启动时调用：从 bundled studio-letters.json 找未投递的，按自然年限流投递最多 1 封。
+    /// 年限流：若 archive 里有任一封 deliveredAt 落在今年 → 跳过本次启动所有候选。
+    /// 内容寻址去重：候选 id 已在 archive 里 → 跳过该候选。
+    private func injectNewStudioLettersIfNeeded() {
+        let bundled = StudioLettersLoader.bundledLetters()
+        guard !bundled.isEmpty else { return }
+
+        // 年限流
+        let calendar = Calendar(identifier: .gregorian)
+        let thisYear = calendar.component(.year, from: Date())
+        let alreadyDeliveredThisYear = studioLetterArchive.letters.contains { letter in
+            calendar.component(.year, from: letter.deliveredAt) == thisYear
+        }
+        if alreadyDeliveredThisYear { return }
+
+        // 内容寻址去重
+        let deliveredIds = Set(studioLetterArchive.letters.map(\.id))
+        let candidates = bundled
+            .filter { !deliveredIds.contains($0.id) }
+            .sorted { $0.sentDate < $1.sentDate }
+
+        // 取最早一封投递；年内多余候选自然等明年
+        guard let next = candidates.first else { return }
+
+        let now = Date()
+        let letter = StudioLetter(
+            id: next.id,
+            sentDate: next.sentDate,
+            deliveredAt: now,
+            readAt: nil,
+            title: next.title,
+            highlights: next.highlights,
+            bodyParagraphs: next.body,
+            cta: next.cta.map { StudioLetterCTA(label: $0.label, url: $0.url) }
+        )
+        studioLetterArchive.letters.insert(letter, at: 0)
+        StudioLetterStore.save(studioLetterArchive)
+
+        emitLetterBanner(
+            body: Copy.Notification.studioLetterBannerBody(title: letter.title, language),
+            kind: "studioLetter",
+            itemId: letter.id
+        )
+    }
+
+    /// 用户从信箱点总局来信 → 进入 reader
+    func openStudioLetter(_ letter: StudioLetter) {
+        isArchiveSheetOpen = false
+        readingStudioLetter = letter
+    }
+
+    /// 关闭总局来信 reader → 标记已读
+    func closeReadingStudioLetter() {
+        if let letter = readingStudioLetter {
+            markStudioLetterRead(letter)
+        }
+        readingStudioLetter = nil
+    }
+
+    /// 把指定总局来信标记为已读 + 持久化
+    func markStudioLetterRead(_ letter: StudioLetter) {
+        guard let idx = studioLetterArchive.letters.firstIndex(where: { $0.id == letter.id }) else { return }
+        guard studioLetterArchive.letters[idx].readAt == nil else { return }
+        studioLetterArchive.letters[idx].readAt = Date()
+        StudioLetterStore.save(studioLetterArchive)
+    }
+
     /// 把指定信件标记为已读 + 持久化
     func markLetterRead(_ letter: DailyLetter) {
         guard let idx = letterArchive.letters.firstIndex(where: { $0.id == letter.id }) else { return }
@@ -785,6 +872,22 @@ final class AppState {
             markLetterRead(letter)
         }
         readingLetter = nil
+    }
+
+    // MARK: - Settings 跳转
+
+    /// 把 Settings 窗口打开并停在「关于」tab。
+    /// 触发链：信件 colophon 点击 → 这里 → SettingsView.onAppear/onChange 消费 requestedSettingsTab。
+    /// 先关掉可能正打开的 letter sheet，避免遮挡 Settings 窗口。
+    func openAboutSettings() {
+        closeReadingLetter()
+        closeReadingReleaseLetter()
+
+        requestedSettingsTab = .about
+
+        // macOS 14+ 标准做法：触发 Settings scene 出现/聚焦。
+        // 等同于 SettingsLink 内部调用。从 main actor 调用安全。
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     // MARK: - Tone
