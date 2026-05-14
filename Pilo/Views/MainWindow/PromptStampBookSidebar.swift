@@ -132,15 +132,12 @@ struct PromptStampBookSidebar: View {
             } else if appState.sidebarStamps.isEmpty {
                 noPinnedHint   // 整 frame 居中
             } else {
-                VStack(spacing: 0) {
-                    stampsGrid
-                    Spacer(minLength: 0)   // 把 grid 顶到顶
-                }
+                stampsGrid
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: 210)
+        .frame(maxWidth: .infinity, minHeight: 60)
         .background(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color.piloPaper.opacity(0.85))
