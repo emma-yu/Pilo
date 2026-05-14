@@ -125,6 +125,9 @@ enum AITool: String, CaseIterable, Codable, Sendable, Hashable, Identifiable {
         var error: NSDictionary?
         if let appleScript = NSAppleScript(source: script) {
             appleScript.executeAndReturnError(&error)
+            #if DEBUG
+            if let err = error { print("[AITool] AppleScript error:", err) }
+            #endif
         }
     }
 }
