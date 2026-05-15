@@ -36,3 +36,9 @@ Pods/
 .idea/
 *.swp
 *~
+
+# Internal-only docs & scripts —— 保留在本地，不上传公开 repo
+# 维护者笔记 / AI 开发指南 / 个人 release 流脚本
+IMPLEMENTATION.md
+CLAUDE.md
+scripts/
