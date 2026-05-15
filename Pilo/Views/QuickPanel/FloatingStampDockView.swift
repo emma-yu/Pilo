@@ -158,11 +158,11 @@ struct FloatingStampDockView: View {
             ForEach(Array(stamps.enumerated()), id: \.element.id) { i, stamp in
                 stampOrb(stamp)
                     .position(orbPosition(for: i, total: stamps.count + 1))
-                    .transition(.scale(scale: 0.4).combined(with: .opacity))
+                    .transition(orbTransition(index: i, total: stamps.count + 1))
             }
             moreOrb
                 .position(orbPosition(for: stamps.count, total: stamps.count + 1))
-                .transition(.scale(scale: 0.4).combined(with: .opacity))
+                .transition(orbTransition(index: stamps.count, total: stamps.count + 1))
 
             if stamps.isEmpty {
                 let geom = viewBox.fanOutGeometry
@@ -281,6 +281,42 @@ struct FloatingStampDockView: View {
         onFanOutChanged(false)
     }
 
+    // MARK: - 入/出场动效（"letters tumbling out of mailbox"）
+    //
+    // **入场**（fan-out 展开）：
+    //   - 起点：从 icon 中心冒出 → scale 0.25 + opacity 0 + ±6° 旋转（错位翻滚）
+    //   - 终点：orbPosition + scale 1 + opacity 1 + 0° rotation
+    //   - 曲线：spring(0.45, 0.72) —— 微弹邀请感，不过冲
+    //   - Stagger：每 orb +0.04s，按 12 点钟顺时针铺开
+    //
+    // **出场**（fan-out 收起）：
+    //   - 起点：当前位置 → 终点 scale 0.4 + opacity 0（保留视觉余像，不归零）
+    //   - 曲线：easeIn(0.18s) —— 干脆收尾，无 bounce（用户已决定，让路）
+    //   - 反向 stagger：(total-1-i) × 0.025s，"信件次第回邮筒"
+    //   - 总时长 ~0.2s + 8 × 0.025 ≈ 0.4s 末端 orb 完全收完
+    //
+    // Asymmetric in/out 符合 Apple HIG + Material Design 共识："退场快于入场"。
+
+    private func orbTransition(index i: Int, total: Int) -> AnyTransition {
+        let entryStagger = Double(i) * 0.04
+        let exitStagger = Double(max(0, total - 1 - i)) * 0.025
+        // 翻滚方向交替：偶数 -6°、奇数 +6°——视觉随机感不机械
+        let tumbleRotation: Double = (i % 2 == 0) ? -6 : 6
+
+        return .asymmetric(
+            insertion: .modifier(
+                active: OrbAppearModifier(scale: 0.25, opacity: 0, rotation: tumbleRotation),
+                identity: OrbAppearModifier(scale: 1, opacity: 1, rotation: 0)
+            )
+            .animation(.spring(response: 0.45, dampingFraction: 0.72).delay(entryStagger)),
+            removal: .modifier(
+                active: OrbAppearModifier(scale: 0.4, opacity: 0, rotation: 0),
+                identity: OrbAppearModifier(scale: 1, opacity: 1, rotation: 0)
+            )
+            .animation(.easeIn(duration: 0.18).delay(exitStagger))
+        )
+    }
+
     // MARK: - 径向位置计算（自适应 360°/180°）
 
     private func orbPosition(for index: Int, total: Int) -> CGPoint {
@@ -305,5 +341,24 @@ struct FloatingStampDockView: View {
         let dx = radius * cos(radians)
         let dy = radius * sin(radians)
         return CGPoint(x: iconCenter.x + dx, y: iconCenter.y + dy)
+    }
+}
+
+// MARK: - Orb 出/入场 ViewModifier
+//
+// 三个变换合并（scale + opacity + rotation）放在一个 modifier 里——SwiftUI
+// AnyTransition 不能直接组合 rotation，只能借 `.modifier(active:identity:)`
+// 自定义。Active = "未出现" 状态；Identity = "已出现" 状态。
+
+private struct OrbAppearModifier: ViewModifier {
+    let scale: CGFloat
+    let opacity: Double
+    let rotation: Double
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(scale, anchor: .center)
+            .opacity(opacity)
+            .rotationEffect(.degrees(rotation))
     }
 }
