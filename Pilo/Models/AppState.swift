@@ -686,41 +686,41 @@ final class AppState {
 
     /// 启动时调用：对比 release-notes.json 跟用户上次见到的版本，
     /// 把所有「未见过」的版本生成 ReleaseLetter 写入信箱。幂等：同版本不重投。
+    ///
+    /// **Fresh-install 守门（v0.5）**：`lastSeenReleaseVersion` 从没存过
+    /// 说明是新用户首次启动——用当前 bundle 最新版本 seed 这个 key，**不投递
+    /// 历史通告**。新用户收件箱 stay empty，下次 18:00 才有 daily 信。否则
+    /// 默认 "0.0.0" 会让所有 bundled releases 都被判为"新"→ inbox flood。
     private func injectNewReleaseLettersIfNeeded() {
         let bundled = ReleaseNotesLoader.bundledReleases()
         guard !bundled.isEmpty else { return }
 
         let lastSeenKey = "lastSeenReleaseVersion"
-        let lastSeen = UserDefaults.standard.string(forKey: lastSeenKey) ?? "0.0.0"
-
-        // 找出比 lastSeen 新的所有版本
-        let newReleases = bundled.filter {
-            Semver.compare($0.version, lastSeen) == .orderedDescending
-        }
-        guard !newReleases.isEmpty else { return }
-
-        // 防御：archive 里如果已经有这个 version 的信，跳过（极端 case 防双发）
+        let storedLastSeen = UserDefaults.standard.string(forKey: lastSeenKey)
         let existingVersions = Set(releaseLetterArchive.letters.map(\.version))
 
+        let plan = Self.planReleaseInjection(
+            bundled: bundled,
+            lastSeen: storedLastSeen,
+            existingVersions: existingVersions,
+            now: Date()
+        )
+
+        // 即使没新信也可能要 seed lastSeen（首装路径）
+        if let newLastSeen = plan.updatedLastSeen {
+            UserDefaults.standard.set(newLastSeen, forKey: lastSeenKey)
+        }
+
+        guard !plan.lettersToInsert.isEmpty else { return }
+
         var archive = releaseLetterArchive
-        let now = Date()
-        var newLetterEntries: [ReleaseLetter] = []
-        for release in newReleases where !existingVersions.contains(release.version) {
-            let letter = ReleaseLetter(
-                id: UUID(),
-                version: release.version,
-                releaseDate: release.releaseDate,
-                deliveredAt: now,
-                readAt: nil,
-                title: release.title,
-                highlights: release.highlights,
-                bodyParagraphs: release.body
-            )
+        for letter in plan.lettersToInsert {
             archive.letters.insert(letter, at: 0)
-            newLetterEntries.append(letter)
         }
         releaseLetterArchive = archive
         ReleaseLetterStore.save(archive)
+
+        let newLetterEntries = plan.lettersToInsert
 
         // 📬 macOS banner —— 每封新 release letter 一条（典型场景只有 0 或 1 封）
         for letter in newLetterEntries {
@@ -734,11 +734,66 @@ final class AppState {
                 itemId: letter.id.uuidString
             )
         }
+        // lastSeen 已在函数开头 plan.updatedLastSeen 路径写过（涵盖首装 seed +
+        // 升级两种情况），这里不再重复 set
+    }
 
-        // 把"已见过"标记推到最新（即便有信延迟读，下次启动也不会再投）
-        if let latest = bundled.max(by: { Semver.compare($0.version, $1.version) == .orderedAscending }) {
-            UserDefaults.standard.set(latest.version, forKey: lastSeenKey)
+    // MARK: - 纯函数 helper（可单测试，不依赖 UserDefaults / 实例状态）
+
+    /// Release letter 投递计划——纯函数，输入完整状态决定输出。
+    /// 由 `injectNewReleaseLettersIfNeeded` 调用。
+    ///
+    /// **行为**：
+    /// - `lastSeen == nil`：fresh install → 不投递任何信，`updatedLastSeen` 返回
+    ///   bundle 中最大版本（用于 seed UserDefaults，避免下次启动错把全部当新版）
+    /// - `lastSeen != nil`：投递所有 `> lastSeen` 且不在 `existingVersions` 内的
+    ///   bundled releases；`updatedLastSeen` 推到 bundle 最大版本
+    /// - `bundled.isEmpty`：什么都不做（updatedLastSeen=nil）
+    struct ReleaseInjectionPlan: Equatable {
+        let lettersToInsert: [ReleaseLetter]
+        let updatedLastSeen: String?
+    }
+
+    nonisolated static func planReleaseInjection(
+        bundled: [BundledRelease],
+        lastSeen: String?,
+        existingVersions: Set<String>,
+        now: Date
+    ) -> ReleaseInjectionPlan {
+        guard !bundled.isEmpty else {
+            return ReleaseInjectionPlan(lettersToInsert: [], updatedLastSeen: nil)
         }
+        let latestVersion = bundled
+            .max(by: { Semver.compare($0.version, $1.version) == .orderedAscending })?
+            .version
+
+        // Fresh install: seed lastSeen 到最新版，不投递任何历史通告
+        if lastSeen == nil {
+            return ReleaseInjectionPlan(lettersToInsert: [], updatedLastSeen: latestVersion)
+        }
+
+        let cutoff = lastSeen ?? "0.0.0"
+        let newReleases = bundled
+            .filter { Semver.compare($0.version, cutoff) == .orderedDescending }
+            .filter { !existingVersions.contains($0.version) }
+
+        let letters = newReleases.map { release in
+            ReleaseLetter(
+                id: UUID(),
+                version: release.version,
+                releaseDate: release.releaseDate,
+                deliveredAt: now,
+                readAt: nil,
+                title: release.title,
+                highlights: release.highlights,
+                bodyParagraphs: release.body
+            )
+        }
+
+        return ReleaseInjectionPlan(
+            lettersToInsert: letters,
+            updatedLastSeen: latestVersion
+        )
     }
 
     // MARK: - 「新版本已发车」推送

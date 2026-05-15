@@ -170,4 +170,83 @@ final class ReleaseLetterTests: XCTestCase {
         // Info.plist 应该有 CFBundleShortVersionString
         XCTAssertNotNil(ReleaseNotesLoader.currentAppVersion())
     }
+
+    // MARK: - planReleaseInjection（v0.5 fresh-install seed 守门）
+
+    private func makeBundled(_ versions: [String]) -> [BundledRelease] {
+        versions.map { v in
+            BundledRelease(
+                version: v,
+                releaseDate: Date(timeIntervalSince1970: 1_700_000_000),
+                title: "v\(v) 通告",
+                highlights: ["highlight"],
+                body: ["paragraph"]
+            )
+        }
+    }
+
+    /// 🔴 关键：fresh install（lastSeen == nil）必须 **不投递任何信** +
+    /// seed lastSeen 到最新版本。否则新用户首次启动 inbox 会被历史通告灌满。
+    func testFreshInstallSeedsLastSeenWithoutInjecting() {
+        let plan = AppState.planReleaseInjection(
+            bundled: makeBundled(["0.3.0", "0.4.0", "0.5.0"]),
+            lastSeen: nil,
+            existingVersions: [],
+            now: Date()
+        )
+        XCTAssertEqual(plan.lettersToInsert.count, 0,
+                       "fresh install 不应投递任何历史通告")
+        XCTAssertEqual(plan.updatedLastSeen, "0.5.0",
+                       "首装应 seed lastSeen 到 bundle 最新，避免下次启动重新被判为新")
+    }
+
+    /// 升级路径：lastSeen=0.3.0，bundle 有 0.3/0.4/0.5 → 投 0.4 + 0.5 两封
+    func testUpgradeFromOldVersionInjectsOnlyNewer() {
+        let plan = AppState.planReleaseInjection(
+            bundled: makeBundled(["0.3.0", "0.4.0", "0.5.0"]),
+            lastSeen: "0.3.0",
+            existingVersions: [],
+            now: Date()
+        )
+        XCTAssertEqual(plan.lettersToInsert.count, 2)
+        XCTAssertEqual(Set(plan.lettersToInsert.map(\.version)), ["0.4.0", "0.5.0"])
+        XCTAssertEqual(plan.updatedLastSeen, "0.5.0")
+    }
+
+    /// 同版本启动：lastSeen=0.4.0，bundle 也只有 0.4.0 → 不投
+    func testSameVersionRestartInjectsNothing() {
+        let plan = AppState.planReleaseInjection(
+            bundled: makeBundled(["0.4.0"]),
+            lastSeen: "0.4.0",
+            existingVersions: [],
+            now: Date()
+        )
+        XCTAssertEqual(plan.lettersToInsert.count, 0)
+        XCTAssertEqual(plan.updatedLastSeen, "0.4.0")
+    }
+
+    /// 幂等：archive 里已有 0.5.0 letter → 即便 lastSeen 比 0.5.0 老也不重投
+    func testIdempotentSkipsExistingVersions() {
+        let plan = AppState.planReleaseInjection(
+            bundled: makeBundled(["0.4.0", "0.5.0"]),
+            lastSeen: "0.3.0",
+            existingVersions: ["0.5.0"],
+            now: Date()
+        )
+        XCTAssertEqual(plan.lettersToInsert.count, 1)
+        XCTAssertEqual(plan.lettersToInsert.first?.version, "0.4.0",
+                       "0.5.0 已在 archive，应跳过；0.4.0 仍要投")
+    }
+
+    /// 空 bundle（理论上不该发生）→ 什么都不做，不写 lastSeen
+    func testEmptyBundleIsNoop() {
+        let plan = AppState.planReleaseInjection(
+            bundled: [],
+            lastSeen: nil,
+            existingVersions: [],
+            now: Date()
+        )
+        XCTAssertEqual(plan.lettersToInsert.count, 0)
+        XCTAssertNil(plan.updatedLastSeen)
+    }
 }
