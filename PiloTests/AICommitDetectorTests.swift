@@ -41,7 +41,7 @@ final class AICommitDetectorTests: XCTestCase {
         // author = Emma；body trailer = "Co-Authored-By: Claude … <noreply@anthropic.com>"
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "feat: add new flow",
             trailers: "Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
             changedFileCount: 3
@@ -53,7 +53,7 @@ final class AICommitDetectorTests: XCTestCase {
         // trailer 里只有 email 没有 "Co-Authored-By" 关键字也应该被捕获
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "ship feature",
             trailers: "Generated alongside <noreply@anthropic.com>",
             changedFileCount: 2
@@ -64,7 +64,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testTrailerCoAuthoredByCursor() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "feat: x",
             trailers: "Co-Authored-By: Cursor",
             changedFileCount: 2
@@ -75,7 +75,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testTrailerCoAuthoredByCodex() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "feat: x",
             trailers: "Co-Authored-By: Codex CLI <noreply@openai.com>",
             changedFileCount: 2
@@ -86,7 +86,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testTrailerCoAuthoredByAider() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "refactor: x",
             trailers: "Co-Authored-By: Aider",
             changedFileCount: 2
@@ -97,7 +97,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testTrailerCoAuthoredByCopilot() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "wip: x",
             trailers: "Co-Authored-By: GitHub Copilot",
             changedFileCount: 2
@@ -109,7 +109,7 @@ final class AICommitDetectorTests: XCTestCase {
         // 不传 trailer 时不该崩
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "fix race condition properly",
             trailers: nil,
             changedFileCount: 3
@@ -120,7 +120,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testEmptyTrailerStillWorks() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "fix race condition properly",
             trailers: "",
             changedFileCount: 3
@@ -181,7 +181,7 @@ final class AICommitDetectorTests: XCTestCase {
         // 两个弱信号也升级
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "updated files",
             changedFileCount: 25
         )
@@ -203,7 +203,7 @@ final class AICommitDetectorTests: XCTestCase {
     func testHumanCommitIsUnknown() {
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "fix race condition in token refresh",
             changedFileCount: 3
         )
@@ -214,7 +214,7 @@ final class AICommitDetectorTests: XCTestCase {
         // 14 文件刚好低于阈值 + specific subject
         let r = AICommitDetector.detect(
             author: "Emma",
-            authorEmail: "emma@gmail.com",
+            authorEmail: "test@example.com",
             subject: "Migrate from old auth API to new session-based flow",
             changedFileCount: 14
         )

@@ -1934,7 +1934,7 @@ enum Copy {
         }
 
         /// UVPeek 一句话事实描述——用在邮局便条 / 总局年报正文。
-        /// TODO(emma): 定稿。⚠️ 红线：不能写最高级 / 不可验证社交证明 / 医疗暗示。
+        /// TODO: 定稿。⚠️ 红线：不能写最高级 / 不可验证社交证明 / 医疗暗示。
         static func uvpeekOneLiner(_ lang: Language) -> String {
             lang == .zh
                 ? "天气类紫外线指数小工具，出门前看一眼"
