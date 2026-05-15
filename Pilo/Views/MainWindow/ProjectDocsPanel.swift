@@ -222,7 +222,7 @@ private struct DocRow: View {
         }
     }
 
-    /// PostalContextMenu items —— 跟之前 .contextMenu 语义 1:1 对齐
+    /// PostalContextMenu items
     private var menuItems: [PostalContextMenu.Item] {
         [
             .init(icon: "envelope.open",
@@ -237,12 +237,24 @@ private struct DocRow: View {
                   label: Copy.Docs.showInFinder(lang),
                   isDestructive: false,
                   action: { closeAnd { showInFinder() } }),
+            .init(icon: "doc.on.doc",
+                  label: lang == .zh ? "复制路径" : "Copy path",
+                  isDestructive: false,
+                  action: { closeAnd { copyDocPath() } }),
             .separator(),
             .init(icon: "archivebox",
                   label: Copy.Docs.hideAction(lang),
                   isDestructive: false,  // "收进抽屉"是可逆 archive，不是 destructive 红
                   action: { closeAnd { hideThis() } }),
         ]
+    }
+
+    /// 复制文件完整路径——复用 appState.copyRepoPath 统一通道
+    /// （NSPasteboard + 邮戳音 .waxSealCrack + stampToastMessage "✓ 路径已复制"）
+    private func copyDocPath() {
+        let fullPath = URL(fileURLWithPath: repoPath)
+            .appendingPathComponent(doc.relativePath).path
+        appState.copyRepoPath(fullPath)
     }
 
     private func closeAnd(_ action: () -> Void) {
