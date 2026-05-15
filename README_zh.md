@@ -12,7 +12,7 @@
 
 <br>
 
-[English](./README.md) · [架构记录](./IMPLEMENTATION.md) · [License](./LICENSE)
+[English](./README.md) · [License](./LICENSE)
 
 </div>
 
@@ -117,7 +117,7 @@ Pilo 把你的代码和工作模式默认当成私有的。
 
 ## 设计系统
 
-21 个色彩 token、12 个字号（SF Pro Rounded + Songti SC）、3 档 piloBlue 暖蓝阴影、12 张插画邮票资产 + 鸽子吉祥物。完整文档见 [IMPLEMENTATION.md §7](./IMPLEMENTATION.md#7-设计系统)。
+21 个色彩 token、12 个字号（SF Pro Rounded + Songti SC）、3 档 piloBlue 暖蓝阴影、12 张插画邮票资产 + 鸽子吉祥物。
 
 ## 技术栈
 
@@ -128,8 +128,6 @@ Pilo 把你的代码和工作模式默认当成私有的。
 - AppKit `NSEvent.mouseLocation` 驱动浮动 dock 拖动（跳出 SwiftUI window-coord 的局限）
 - App Sandbox **关**（git 子进程要任意路径访问），Hardened Runtime **开**
 - ~14 kLoC Swift，263 测试分布在 23 套件
-
-完整架构见 [IMPLEMENTATION.md](./IMPLEMENTATION.md)——数据模型、actor API、持久化 schema、Copy 矩阵、commit-by-commit 演进。
 
 ## 发布机制
 

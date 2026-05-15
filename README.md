@@ -12,7 +12,7 @@
 
 <br>
 
-[简体中文](./README_zh.md) · [Architecture record](./IMPLEMENTATION.md) · [License](./LICENSE)
+[简体中文](./README_zh.md) · [License](./LICENSE)
 
 </div>
 
@@ -117,7 +117,7 @@ No analytics. No crash reports. No user accounts. Source code below is the autho
 
 ## Design system
 
-Twenty-one color tokens, twelve font sizes across SF Pro Rounded and Songti SC, three elevation tiers using piloBlue-tinted shadows, postal asset library (12 illustrated stamps + mascot). Documented in [IMPLEMENTATION.md §7](./IMPLEMENTATION.md#7-设计系统).
+Twenty-one color tokens, twelve font sizes across SF Pro Rounded and Songti SC, three elevation tiers using piloBlue-tinted shadows, postal asset library (12 illustrated stamps + mascot).
 
 ## Tech
 
@@ -128,8 +128,6 @@ Twenty-one color tokens, twelve font sizes across SF Pro Rounded and Songti SC, 
 - AppKit-level `NSEvent.mouseLocation` for floating dock drag (escapes SwiftUI's window-coord limitation)
 - App Sandbox **off** (git subprocess needs arbitrary path access), Hardened Runtime **on**
 - ~14 kLoC Swift, 263 tests across 23 suites
-
-See [IMPLEMENTATION.md](./IMPLEMENTATION.md) for the full architecture record — data models, every actor's API, persistence schema, copy-string matrix, commit-by-commit evolution.
 
 ## Releases
 
