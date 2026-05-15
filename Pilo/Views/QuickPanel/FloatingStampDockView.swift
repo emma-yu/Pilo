@@ -6,8 +6,9 @@ import SwiftUI
 ///   - **完全移除 SwiftUI `DragGesture`** —— drag 现在由 `FloatingDockHostingView`
 ///     在 AppKit 层用 `NSEvent.mouseLocation` 屏幕坐标驱动。SwiftUI 在
 ///     window-self-moving 场景下坐标系不可靠（v1-v5 反复修不好的根因）。
-///   - **Icon 永远在 panel 正中**（110, 110）—— fan-out 方向通过
-///     `viewBox.fanOutOpensLeft` 动态切换，不再绑死 edge。
+///   - **Icon 永远在 panel 正中**（110, 110）—— fan-out 几何（centerAngle + arcDegrees）
+///     通过 `viewBox.fanOutGeometry` 动态计算：icon 四向都有空间→全圆 360°；
+///     贴边→半圆 180° 朝屏幕内侧。最大邮票数也随之自适应（全圆 8 / 半圆 5）。
 ///   - **Tap 触发分两路**：
 ///       - fan-out OFF 时：AppKit hostingView 截 mouseDown → onIconTapped 回调
 ///         → controller → viewBox.requestToggle → 这里的 toggleFanOut
@@ -25,30 +26,41 @@ struct FloatingStampDockView: View {
     @State private var showCopiedToast = false
     @State private var toastTask: Task<Void, Never>?
 
-    private var stamps: [PromptStamp] { Array(appState.sidebarStamps.prefix(6)) }
+    /// Fan-out 最大邮票数——根据几何模式自适应。
+    ///
+    /// **Why 自适应**：orb 视觉直径 36pt，半径 75pt 下不重叠的最小角间隔 ≈ 27.5°。
+    ///   - 全圆 360°：360÷27.5 ≈ 13 上限；用 **8 邮票 + 1 "…" = 9 orbs**（40° 间距，疏朗）
+    ///   - 半圆 180°：180÷27.5 ≈ 6 上限；用 **5 邮票 + 1 "…" = 6 orbs**（36° 间距，临界 OK）
+    /// 用户把 icon 拖到屏幕中央可"解锁"更多 stamps。
+    private var maxStampCount: Int {
+        viewBox.fanOutGeometry.isFullCircle ? 8 : 5
+    }
+
+    private var stamps: [PromptStamp] {
+        Array(appState.sidebarStamps.prefix(maxStampCount))
+    }
 
     /// Icon 永远在 panel 正中（v6）
     private var iconCenter: CGPoint {
         CGPoint(x: 110, y: 110)
     }
 
-    /// Toast 位置（v8.2 修裁剪）：朝**屏幕内侧**放，不是朝 fan-out 反方向。
-    ///
-    /// 原 v6 逻辑朝 fan-out 反方向 → 当 icon 拖到屏幕边缘时 toast 顶到 panel
-    /// 边界被裁。Toast 出现时 fan-out 已收起，根本不会重叠，所以 toast 应朝
-    /// 屏幕内侧（有空间那侧）放才对。
-    ///
-    /// - `fanOutOpensLeft=true`（icon 在右半屏）→ toast 在 icon 左侧（朝屏幕内）
-    /// - `fanOutOpensLeft=false`（icon 在左半屏）→ toast 在 icon 右侧（朝屏幕内）
-    ///
-    /// offset 60pt：toast ~70pt 宽，半宽 ~35pt，60+35=95 < panel 半宽 110pt
-    /// → 留 15pt 安全 margin，再也不被 panel 边界裁。
+    /// Toast 位置：
+    ///   - 全圆模式：icon 上方 12 点钟外侧（offset 95，刚跳出 75pt orb 圈，不撞 orbs）
+    ///   - 半圆模式：fan-out 反方向（朝屏幕内）—— 不挨 panel 边裁切
     private var toastPosition: CGPoint {
-        let offset: CGFloat = 60
-        return CGPoint(
-            x: iconCenter.x + (viewBox.fanOutOpensLeft ? -offset : offset),
-            y: iconCenter.y
-        )
+        let geom = viewBox.fanOutGeometry
+        if geom.isFullCircle {
+            let offset: CGFloat = 95
+            return CGPoint(x: iconCenter.x, y: iconCenter.y - offset)
+        } else {
+            let offset: CGFloat = 60
+            let radians = (geom.centerAngle + 180) * .pi / 180
+            return CGPoint(
+                x: iconCenter.x + offset * cos(radians),
+                y: iconCenter.y + offset * sin(radians)
+            )
+        }
     }
 
     var body: some View {
@@ -153,16 +165,26 @@ struct FloatingStampDockView: View {
                 .transition(.scale(scale: 0.4).combined(with: .opacity))
 
             if stamps.isEmpty {
+                let geom = viewBox.fanOutGeometry
+                // 全圆：hint 放 icon 下方；半圆：放 fan-out 反方向
+                let hintPos: CGPoint = {
+                    if geom.isFullCircle {
+                        return CGPoint(x: iconCenter.x, y: iconCenter.y + 90)
+                    } else {
+                        let radians = (geom.centerAngle + 180) * .pi / 180
+                        return CGPoint(
+                            x: iconCenter.x + 90 * cos(radians),
+                            y: iconCenter.y + 90 * sin(radians)
+                        )
+                    }
+                }()
                 Text(Copy.Stamps.quickPanelEmpty(appState.language))
                     .font(.piloSerifCaption)
                     .italic()
                     .foregroundStyle(Color.inkSecondary)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: 140)
-                    .position(
-                        x: iconCenter.x + (viewBox.fanOutOpensLeft ? -90 : 90),
-                        y: iconCenter.y
-                    )
+                    .position(hintPos)
             }
         }
     }
@@ -259,21 +281,23 @@ struct FloatingStampDockView: View {
         onFanOutChanged(false)
     }
 
-    // MARK: - 径向位置计算（方向跟随 viewBox.fanOutOpensLeft）
+    // MARK: - 径向位置计算（自适应 360°/180°）
 
     private func orbPosition(for index: Int, total: Int) -> CGPoint {
         let radius: CGFloat = 75
-        let arcDegrees: CGFloat = 150
-        // fan-out 向左 → centerAngle 180（向 -x 方向）；向右 → 0
-        let centerAngle: CGFloat = viewBox.fanOutOpensLeft ? 180 : 0
-
-        let startAngle = centerAngle - arcDegrees / 2
-
+        let geom = viewBox.fanOutGeometry
         let angle: CGFloat
-        if total <= 1 {
-            angle = centerAngle
+
+        if geom.isFullCircle {
+            // 全圆：360° ÷ total 均分，从 -90°（12 点钟）顺时针铺
+            let angleStep = 360.0 / CGFloat(total)
+            angle = -90 + CGFloat(index) * angleStep
+        } else if total <= 1 {
+            angle = geom.centerAngle
         } else {
-            let angleStep = arcDegrees / CGFloat(total - 1)
+            // 弧：endpoint 对齐，间距 arc / (total - 1)
+            let startAngle = geom.centerAngle - geom.arcDegrees / 2
+            let angleStep = geom.arcDegrees / CGFloat(total - 1)
             angle = startAngle + CGFloat(index) * angleStep
         }
 

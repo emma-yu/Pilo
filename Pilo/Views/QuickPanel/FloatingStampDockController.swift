@@ -96,7 +96,7 @@ final class FloatingStampDockController {
         // **v8 无 snap**：icon 在 onDragChanged 期间已 clamp 到屏幕合法范围，
         // mouseUp 时位置就是最终位置。仅持久化 + 同步 fan-out 方向。
         persistPosition(panel: panel, screen: screen)
-        dockViewBox?.updateFanOutDirection(computeFanOutOpensLeft(panel: panel, screen: screen))
+        dockViewBox?.updateFanOutGeometry(computeFanOutGeometry(panel: panel, screen: screen))
     }
 
     /// 拖动期间 clamp panel 位置：保证 icon 边缘不超出 visibleFrame
@@ -144,8 +144,7 @@ final class FloatingStampDockController {
         p.animationBehavior = .utilityWindow
 
         let viewBox = FloatingDockViewBox()
-        let initialOpensLeft = readSavedFanOutOpensLeft()
-        viewBox.fanOutOpensLeft = initialOpensLeft
+        // 初始 geometry 用默认 360°——positionPanelFromSavedState 会马上根据 saved 位置 update
 
         let content = FloatingStampDockView(
             appState: appState,
@@ -188,7 +187,7 @@ final class FloatingStampDockController {
     private func positionPanelFromSavedState(_ panel: FloatingStampPanel) {
         guard let screen = NSScreen.main else { return }
         panel.setFrameOrigin(computePanelOrigin(screen: screen))
-        dockViewBox?.updateFanOutDirection(computeFanOutOpensLeft(panel: panel, screen: screen))
+        dockViewBox?.updateFanOutGeometry(computeFanOutGeometry(panel: panel, screen: screen))
     }
 
     private func computePanelOrigin(screen: NSScreen) -> NSPoint {
@@ -244,19 +243,42 @@ final class FloatingStampDockController {
         return CGFloat(UserDefaults.standard.double(forKey: SettingsKey.floatingStampDockYRatio.rawValue))
     }
 
-    private func readSavedFanOutOpensLeft() -> Bool {
-        // 没存过 → 默认右边缘 → 向左展开
-        if UserDefaults.standard.object(forKey: SettingsKey.floatingStampDockXRatio.rawValue) == nil {
-            return true
-        }
-        return readXRatio() > 0.5
-    }
-
-    /// Icon 中心在屏幕右半 → 向左展开（朝屏幕内侧）；左半 → 向右展开
-    private func computeFanOutOpensLeft(panel: NSWindow, screen: NSScreen) -> Bool {
+    /// Fan-out 几何——根据 icon 与屏幕四边的距离自适应。
+    ///
+    /// **规则**（orbReach = radius 75 + orb 半径 20 = **95pt** 安全距离）：
+    ///   1. icon 距四边都 ≥ orbReach → **全圆 360°**（centerAngle 不重要）
+    ///   2. 否则 → **半圆 180°**，centerAngle 指向"最近边的反方向"
+    ///
+    /// 这样 icon 拖到屏幕中央会得到完整 360° 邮票环；贴边时降级到半圆朝屏幕内侧。
+    private func computeFanOutGeometry(panel: NSWindow, screen: NSScreen) -> FanOutGeometry {
         let frame = screen.visibleFrame
         let iconX = panel.frame.origin.x + Self.iconCenterInPanelOffset
-        return iconX > frame.midX
+        let iconY = panel.frame.origin.y + Self.iconCenterInPanelOffset
+        let orbReach: CGFloat = 95
+
+        let distLeft = iconX - frame.minX
+        let distRight = frame.maxX - iconX
+        let distBottom = iconY - frame.minY      // AppKit Y bottom-origin
+        let distTop = frame.maxY - iconY         // distTop 大 = icon 离屏幕顶远
+
+        let minDist = min(distLeft, distRight, distTop, distBottom)
+        if minDist >= orbReach {
+            return FanOutGeometry(centerAngle: 0, arcDegrees: 360)
+        }
+
+        // 找最近的边 → 朝反方向开。坐标系约定（跟 orbPosition 一致）：
+        // 0°=右，90°=下（SwiftUI Y+），180°=左，270°=上（SwiftUI Y-）
+        let centerAngle: CGFloat
+        if minDist == distLeft {
+            centerAngle = 0      // 最近左边 → 朝右开
+        } else if minDist == distRight {
+            centerAngle = 180    // 最近右边 → 朝左开
+        } else if minDist == distTop {
+            centerAngle = 90     // 最近顶边 → 朝下开（SwiftUI Y+ = 屏幕下）
+        } else {
+            centerAngle = 270    // 最近底边 → 朝上开
+        }
+        return FanOutGeometry(centerAngle: centerAngle, arcDegrees: 180)
     }
 
     // MARK: - Outside click monitor
@@ -418,23 +440,38 @@ final class FloatingDockHostingView<Content: View>: NSHostingView<Content> {
     }
 }
 
+// MARK: - Fan-out 几何（自适应 360°/180°）
+
+/// Fan-out 弧形几何配置。Controller 根据 icon 屏幕位置算出来交给 view 用。
+///
+/// - `arcDegrees == 360`：全圆模式，orbs 在 360° 上均分（angleStep = 360/total）
+/// - `arcDegrees < 360`：弧模式，orbs 在 [center - arc/2, center + arc/2] 上 endpoint 对齐
+/// - `centerAngle` 坐标约定（与 `orbPosition` 一致）：
+///   - 0° = 右（cos+），90° = 下（SwiftUI Y+），180° = 左，270° = 上
+struct FanOutGeometry: Equatable {
+    var centerAngle: CGFloat = 0
+    var arcDegrees: CGFloat = 360
+
+    var isFullCircle: Bool { arcDegrees >= 360 }
+}
+
 // MARK: - View-Controller 通信 Box
 
 /// View 暴露给 Controller 的指令通道。
 /// - `requestCollapse`：关 fan-out（点 panel 外 / 拖动开始 / 隐藏 dock）
 /// - `requestToggle`：切换 fan-out（icon 被 AppKit-level click 命中）
-/// - `fanOutOpensLeft` / `updateFanOutDirection`：fan-out 方向 hint
+/// - `fanOutGeometry` / `updateFanOutGeometry`：fan-out 弧形几何
 @MainActor
 final class FloatingDockViewBox: ObservableObject {
     var collapseRequested: (() -> Void)?
     var toggleRequested: (() -> Void)?
-    @Published var fanOutOpensLeft: Bool = true
+    @Published var fanOutGeometry = FanOutGeometry()
 
     func requestCollapse() { collapseRequested?() }
     func requestToggle() { toggleRequested?() }
-    func updateFanOutDirection(_ opensLeft: Bool) {
-        if fanOutOpensLeft != opensLeft {
-            fanOutOpensLeft = opensLeft
+    func updateFanOutGeometry(_ geom: FanOutGeometry) {
+        if fanOutGeometry != geom {
+            fanOutGeometry = geom
         }
     }
 }
