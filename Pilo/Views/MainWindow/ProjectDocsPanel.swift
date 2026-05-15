@@ -122,6 +122,7 @@ private struct DocRow: View {
     @State private var isHovered = false
     /// 复制全文后短暂显示 ✓，1.5s 后回到 doc.on.doc icon
     @State private var justCopied = false
+    @State private var isMenuOpen = false
 
     var body: some View {
         // 主行 = 预览 sheet；hover 时右侧出现 ↗ + ⋯ 副按钮
@@ -212,34 +213,41 @@ private struct DocRow: View {
             withAnimation(.easeInOut(duration: 0.15)) { isHovered = hovered }
         }
         .help(Copy.Docs.rowHint(lang))
-        .contextMenu { rowMenuContent }
+        // 右键 → 邮局风 PostalContextMenu（替代系统 NSMenu chrome）。
+        // .overlay 不是 .background ——AppKit hitTest 从前到后，catcher 必须放
+        // Button 前面才能先 claim 右键（否则 SwiftUI Button 截胡触发 presentPreview）
+        .overlay(RightClickCatcher { isMenuOpen = true })
+        .popover(isPresented: $isMenuOpen, arrowEdge: .top) {
+            PostalContextMenu(items: menuItems)
+        }
     }
 
-    /// 右键 menu 内容（也用在 ⋯ button 上，避免重复）
-    @ViewBuilder
-    private var rowMenuContent: some View {
-        Button {
-            presentPreview()
-        } label: {
-            Label(lang == .zh ? "在 Pilo 里预览" : "Preview in Pilo",
-                  systemImage: "envelope.open")
-        }
-        Button {
-            openInDefaultApp()
-        } label: {
-            Label(Copy.Preview.openInEditor(lang), systemImage: "arrow.up.right.square")
-        }
-        Button {
-            showInFinder()
-        } label: {
-            Label(Copy.Docs.showInFinder(lang), systemImage: "folder")
-        }
-        Divider()
-        Button {
-            hideThis()
-        } label: {
-            Label(Copy.Docs.hideAction(lang), systemImage: "archivebox")
-        }
+    /// PostalContextMenu items —— 跟之前 .contextMenu 语义 1:1 对齐
+    private var menuItems: [PostalContextMenu.Item] {
+        [
+            .init(icon: "envelope.open",
+                  label: lang == .zh ? "在 Pilo 里预览" : "Preview in Pilo",
+                  isDestructive: false,
+                  action: { closeAnd { presentPreview() } }),
+            .init(icon: "arrow.up.right.square",
+                  label: Copy.Preview.openInEditor(lang),
+                  isDestructive: false,
+                  action: { closeAnd { openInDefaultApp() } }),
+            .init(icon: "folder",
+                  label: Copy.Docs.showInFinder(lang),
+                  isDestructive: false,
+                  action: { closeAnd { showInFinder() } }),
+            .separator(),
+            .init(icon: "archivebox",
+                  label: Copy.Docs.hideAction(lang),
+                  isDestructive: false,  // "收进抽屉"是可逆 archive，不是 destructive 红
+                  action: { closeAnd { hideThis() } }),
+        ]
+    }
+
+    private func closeAnd(_ action: () -> Void) {
+        isMenuOpen = false
+        action()
     }
 
     private func presentPreview() {
