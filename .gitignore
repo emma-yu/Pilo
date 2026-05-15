@@ -42,3 +42,7 @@ Pods/
 IMPLEMENTATION.md
 CLAUDE.md
 scripts/
+
+# Release artifacts —— release.sh 打的 zip 不上传 repo（用 GitHub Release 上传）
+Pilo-v*.zip
+*.dmg
