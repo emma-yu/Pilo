@@ -30,6 +30,10 @@ struct FloatingStampDockView: View {
     @State private var orbVisibility: [Bool] = []
     @State private var fanOutAnimationTask: Task<Void, Never>?
 
+    /// macOS "减弱动态效果"无障碍偏好。开启时跳过 stagger / spring / 旋转 / 缩放，
+    /// 改成单帧 fade（WCAG 2.2.3 + Apple HIG 硬要求，对前庭敏感用户友好）。
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     /// Fan-out 最大邮票数——根据几何模式自适应。
     ///
     /// **Why 自适应**：orb 视觉直径 36pt，半径 75pt 下不重叠的最小角间隔 ≈ 27.5°。
@@ -300,6 +304,24 @@ struct FloatingStampDockView: View {
     private func scheduleFanOutAnimation(show: Bool) {
         let total = stamps.count + 1
         fanOutAnimationTask?.cancel()
+
+        // **Reduce-motion 分支**：一次性 fade，无 stagger / 无旋转 / 无缩放。
+        // OrbAppearModifier 自己也读 environment，会在 RM 下只 apply opacity。
+        if reduceMotion {
+            if show {
+                orbVisibility = Array(repeating: false, count: total)
+                withAnimation(.easeOut(duration: 0.18)) {
+                    orbVisibility = Array(repeating: true, count: total)
+                }
+            } else {
+                withAnimation(.easeIn(duration: 0.15)) {
+                    orbVisibility = Array(repeating: false, count: orbVisibility.count)
+                }
+            }
+            return
+        }
+
+        // 正常路径：Task + sleep 真 stagger + spring + rotation
         fanOutAnimationTask = Task { @MainActor in
             if show {
                 // 入场：reset 全 false → 每 60ms 翻一个 true（顺时针铺开）
@@ -370,9 +392,9 @@ struct FloatingStampDockView: View {
 
 // MARK: - Orb 出/入场 ViewModifier
 //
-// **State-driven**：`visible: Bool` 决定显示/隐藏，三个变换合并：
-//   - visible=true：scale 1，opacity 1，rotation 0
-//   - visible=false：scale 0.25，opacity 0，rotation ±tumbleRotation
+// **State-driven**：`visible: Bool` 决定显示/隐藏。
+//   - 正常模式：scale 0.25→1 + opacity 0→1 + rotation ±tumble→0（三轴齐动）
+//   - **Reduce-motion 模式**：仅 opacity 0→1（跳过 scale / rotation，前庭友好）
 //
 // 配合 `withAnimation` 包裹 `orbVisibility[i] = ...` 的翻转，SwiftUI 自动驱动
 // 这些值的过渡。比 `.transition()` 可靠——bool 是单点状态，stagger 由 Task 调度。
@@ -381,10 +403,16 @@ private struct OrbAppearModifier: ViewModifier {
     let visible: Bool
     let tumbleRotation: Double
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     func body(content: Content) -> some View {
-        content
-            .scaleEffect(visible ? 1.0 : 0.25, anchor: .center)
-            .opacity(visible ? 1.0 : 0.0)
-            .rotationEffect(.degrees(visible ? 0 : tumbleRotation))
+        if reduceMotion {
+            content.opacity(visible ? 1.0 : 0.0)
+        } else {
+            content
+                .scaleEffect(visible ? 1.0 : 0.25, anchor: .center)
+                .opacity(visible ? 1.0 : 0.0)
+                .rotationEffect(.degrees(visible ? 0 : tumbleRotation))
+        }
     }
 }
