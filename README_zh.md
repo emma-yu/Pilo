@@ -12,7 +12,7 @@
 
 <br>
 
-[English](./README.md) · [License](./LICENSE)
+[English](./README.md) · [官网](https://xinxinmingde.com/pilo.html) · [License](./LICENSE)
 
 </div>
 
@@ -150,6 +150,12 @@ Pilo 用两套机制分发，**都是纯本地**，不依赖 Sparkle，不依赖
 - Prompt 邮票本、浮动 dock 自适应 fan-out、钉到首位 ✦
 
 后续候选：离线 push 队列、开机自启、签名 .dmg、多显示器浮动 dock。
+
+## Links
+
+- 📮 **[Pilo 官网](https://xinxinmingde.com/pilo.html)** —— 故事、截图、设计灵感
+- 🐦 **[GitHub Releases](https://github.com/emma-yu/Pilo/releases)** —— 下载最新 `.zip`
+- 📜 **[LICENSE](./LICENSE)** —— MIT
 
 ## 贡献
 

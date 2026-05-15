@@ -12,7 +12,7 @@
 
 <br>
 
-[简体中文](./README_zh.md) · [License](./LICENSE)
+[简体中文](./README_zh.md) · [官网 / Site](https://xinxinmingde.com/pilo.html) · [License](./LICENSE)
 
 </div>
 
@@ -150,6 +150,12 @@ Fresh installs get an empty inbox — historical release letters aren't replayed
 - Prompt Stamp book, floating dock with adaptive fan-out, pin-to-top ✦
 
 Roadmap candidates: offline push queue, launch-at-login, signed .dmg, multi-monitor floating dock.
+
+## Links
+
+- 📮 **[Pilo 官网 / Site](https://xinxinmingde.com/pilo.html)** — story, screenshots, design intent
+- 🐦 **[GitHub Releases](https://github.com/emma-yu/Pilo/releases)** — download the latest `.zip`
+- 📜 **[LICENSE](./LICENSE)** — MIT
 
 ## Contributing
 
