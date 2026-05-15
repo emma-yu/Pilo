@@ -282,6 +282,7 @@ private struct StampGridCell: View {
     @State private var justPasted = false
     @State private var sealRingScale: CGFloat = 0.6
     @State private var sealRingOpacity: Double = 0
+    @State private var isMenuOpen = false
 
     /// 24h 内用过 → 邮票上加金色 fresh dot
     private var isFresh: Bool {
@@ -325,6 +326,18 @@ private struct StampGridCell: View {
                             .allowsHitTesting(false)
                     }
 
+                    // 左上角 ✦ "加急邮戳"——topPinned 永远在 sidebar 首位
+                    if stamp.topPinned {
+                        Text("✦")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(Color.piloGoldDark)
+                            .shadow(color: Color.piloPaper, radius: 0.5, x: 0, y: 0)
+                            .shadow(color: Color.piloPaper, radius: 0.5, x: 0, y: 0)
+                            .offset(x: -22, y: -20)
+                            .help(Copy.Stamps.topPinnedBadgeTooltip(lang))
+                            .allowsHitTesting(false)
+                    }
+
                     // hover 右下角 ⋯ ghost icon —— 右键 affordance
                     if isHovered {
                         Image(systemName: "ellipsis")
@@ -341,7 +354,11 @@ private struct StampGridCell: View {
 
                 Text(stamp.title.isEmpty ? Copy.Stamps.emptyTitle(lang) : stamp.title)
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.inkPrimary)
+                    // 默认 inkSecondary 灰——邮票本是 sidebar 装饰，安静；
+                    // hover 或菜单开时升到 inkPrimary 提亮（"被关注"信号）
+                    .foregroundStyle((isHovered || isMenuOpen) ? Color.inkPrimary : Color.inkSecondary)
+                    .animation(.easeOut(duration: 0.15), value: isHovered)
+                    .animation(.easeOut(duration: 0.15), value: isMenuOpen)
                     .lineLimit(1)
                     .truncationMode(.tail)
             }
@@ -360,26 +377,53 @@ private struct StampGridCell: View {
                 isHovered = hovering
             }
         }
-        .contextMenu {
-            Button { appState.openStampEditor(stamp) } label: {
-                Label(Copy.Stamps.menuEdit(lang), systemImage: "pencil")
-            }
-            Button { appState.togglePinStamp(stamp.id) } label: {
-                Label(
-                    stamp.pinned ? Copy.Stamps.menuUnpin(lang) : Copy.Stamps.menuPin(lang),
-                    systemImage: stamp.pinned ? "pin.slash" : "pin"
-                )
-            }
-            Button { appState.pasteStamp(stamp) } label: {
-                Label(Copy.Stamps.menuCopy(lang), systemImage: "doc.on.doc")
-            }
-            Divider()
-            Button(role: .destructive) {
-                appState.deletePromptStamp(stamp.id)
-            } label: {
-                Label(Copy.Stamps.menuDelete(lang), systemImage: "trash")
-            }
+        // 右键 → 邮局风自定义菜单。
+        // **关键**：用 `.overlay` 不用 `.background`——AppKit hitTest 是从前到后查询的，
+        // 必须把 catcher 放在 Button **前面**才能先 claim 右键事件。放后面会被 SwiftUI
+        // Button 截胡吞掉右键 → 触发 paste 而不是开菜单。
+        // catcher 的 hitTest 只在 rightMouseDown 时返回 self，左键 return nil 穿透给 Button。
+        .overlay(RightClickCatcher { isMenuOpen = true })
+        .popover(isPresented: $isMenuOpen, arrowEdge: .top) {
+            PostalContextMenu(items: menuItems)
         }
+    }
+
+    /// PostalContextMenu items。
+    ///
+    /// **Toggle 项采用 NSMenu `.on` 约定**：稳定 label + `isActive` 切——
+    /// "钉住" 始终是"钉住"，左侧 ✓ 表示当前是否激活。点击就 toggle，符合
+    /// macOS 心智模型。**不**用"钉住"/"取消钉住"flipped label——跟 ✓ 会信息冗余。
+    private var menuItems: [PostalContextMenu.Item] {
+        [
+            .init(icon: "pencil",
+                  label: Copy.Stamps.menuEdit(lang),
+                  isDestructive: false,
+                  action: { closeAnd { appState.openStampEditor(stamp) } }),
+            .init(icon: "pin",
+                  label: Copy.Stamps.menuPin(lang),
+                  isDestructive: false,
+                  isActive: stamp.pinned,
+                  action: { closeAnd { appState.togglePinStamp(stamp.id) } }),
+            .init(icon: "star.fill",
+                  label: Copy.Stamps.pinToTop(lang),
+                  isDestructive: false,
+                  isActive: stamp.topPinned,
+                  action: { closeAnd { appState.toggleStampTopPinned(stamp.id) } }),
+            .init(icon: "doc.on.doc",
+                  label: Copy.Stamps.menuCopy(lang),
+                  isDestructive: false,
+                  action: { closeAnd { appState.pasteStamp(stamp) } }),
+            .separator(),
+            .init(icon: "trash",
+                  label: Copy.Stamps.menuDelete(lang),
+                  isDestructive: true,
+                  action: { closeAnd { appState.deletePromptStamp(stamp.id) } }),
+        ]
+    }
+
+    private func closeAnd(_ action: () -> Void) {
+        isMenuOpen = false
+        action()
     }
 
     private func paste() {

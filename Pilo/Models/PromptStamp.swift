@@ -21,7 +21,7 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
     var emoji: String
     /// 邮票底色（6 选 1）
     var tint: StampTint
-    /// 是否钉在 sidebar 顶部 —— sidebar 只展示前 5 张钉住的邮票
+    /// 是否钉在 sidebar 顶部 —— sidebar 只展示钉住的邮票
     var pinned: Bool
     let createdAt: Date
     /// 上次 click 复制的时间 —— 用于 sidebar 排序
@@ -31,6 +31,10 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
     /// 邮票视觉 design —— 7 张 illustration preset。
     /// nil = 旧数据，chip 自动 fallback 到 emoji + tint 圆盘视觉（向后兼容）
     var design: StampDesign?
+    /// **Top-pinned ✦**——pin within pin："加急邮戳"语义。
+    /// true 的邮票永远排在普通 pinned 之前（不被 recency 算法挤下去）。
+    /// 用户在邮票本 sidebar 右键 → "钉到首位 ✦" toggle。
+    var topPinned: Bool
 
     init(
         id: UUID = UUID(),
@@ -42,7 +46,8 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
         createdAt: Date = Date(),
         lastUsedAt: Date? = nil,
         useCount: Int = 0,
-        design: StampDesign? = nil
+        design: StampDesign? = nil,
+        topPinned: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -54,6 +59,28 @@ struct PromptStamp: Codable, Identifiable, Hashable, Sendable {
         self.lastUsedAt = lastUsedAt
         self.useCount = useCount
         self.design = design
+        self.topPinned = topPinned
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, title, body, emoji, tint, pinned, createdAt, lastUsedAt, useCount, design, topPinned
+    }
+
+    /// 自定义 decoder——`topPinned` 用 `decodeIfPresent ?? false` 保证旧持久化
+    /// 数据（v0.4 之前）不带 topPinned 字段时也能解码。CLAUDE.md house rule。
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try c.decode(UUID.self, forKey: .id)
+        self.title = try c.decode(String.self, forKey: .title)
+        self.body = try c.decode(String.self, forKey: .body)
+        self.emoji = try c.decode(String.self, forKey: .emoji)
+        self.tint = try c.decode(StampTint.self, forKey: .tint)
+        self.pinned = try c.decode(Bool.self, forKey: .pinned)
+        self.createdAt = try c.decode(Date.self, forKey: .createdAt)
+        self.lastUsedAt = try c.decodeIfPresent(Date.self, forKey: .lastUsedAt)
+        self.useCount = try c.decode(Int.self, forKey: .useCount)
+        self.design = try c.decodeIfPresent(StampDesign.self, forKey: .design)
+        self.topPinned = try c.decodeIfPresent(Bool.self, forKey: .topPinned) ?? false
     }
 
     /// 邮票底色 —— 6 个跟 Pilo 设计系统对齐的可选色

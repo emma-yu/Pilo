@@ -11,6 +11,11 @@ import Observation
 @Observable
 final class AppState {
 
+    // MARK: - 全局共享（仅供 AppDelegate 等 OS-level 对象拿到 AppState）
+    /// AppDelegate 在 hotkey 触发时通过 `AppState.shared` 拿到当前活跃实例。
+    /// 用 weak 避免循环引用；AppState 由 SwiftUI @State 持有，生命周期跟 PiloApp 一致。
+    nonisolated(unsafe) static weak var shared: AppState?
+
     // MARK: - 后端
 
     let gitClient: GitClient
@@ -204,6 +209,10 @@ final class AppState {
         didSet { soundPlayer.enabled = enableSoundEffects }
     }
 
+    /// 浮动邮票 dock icon 是否显示。默认 OFF —— opt-in。
+    /// AppDelegate 监听 .floatingStampDockToggled 通知做 show/hide。
+    var floatingStampDockVisible: Bool = false
+
     /// 通知点击 delegate（强引用 —— UN center.delegate 是 weak）
     private var notificationDelegate: CommitNotificationDelegate?
 
@@ -263,13 +272,18 @@ final class AppState {
         }
     }
 
-    /// Sidebar 展示用：所有钉住的邮票（按 lastUsedAt 倒序，未使用按 createdAt）。
-    /// **不再硬限制 N 张** —— 用户 pin 多少都显示；grid 超 9 张时 sticky note 卡片内部 ScrollView 滑动。
+    /// Sidebar 展示用：所有钉住的邮票。
+    /// **排序规则**：
+    ///   1. `topPinned` 邮票永远在最前（用户加了"✦ 钉到首位"标记的）
+    ///   2. 同组内按 `lastUsedAt ?? createdAt` 倒序（最近用过的更前）
+    ///
+    /// 不硬限制 N 张——用户 pin 多少都显示；grid 超 9 张时 sticky note 内部 ScrollView 滑动。
     var sidebarStamps: [PromptStamp] {
         promptStampArchive.stamps
             .filter { $0.pinned }
             .sorted { a, b in
-                (a.lastUsedAt ?? a.createdAt) > (b.lastUsedAt ?? b.createdAt)
+                if a.topPinned != b.topPinned { return a.topPinned }
+                return (a.lastUsedAt ?? a.createdAt) > (b.lastUsedAt ?? b.createdAt)
             }
     }
 
@@ -306,6 +320,15 @@ final class AppState {
     // MARK: - 启动
 
     init() {
+        AppState.shared = nil  // 旧实例（hot-reload 等）让 weak ref 自动释放
+        defer {
+            AppState.shared = self
+            // 告知 AppDelegate 恢复上次会话的 dock visibility（startup sync）
+            NotificationCenter.default.post(
+                name: .floatingStampDockToggled,
+                object: self.floatingStampDockVisible
+            )
+        }
         let git = GitClient()
         self.gitClient = git
         self.scanner = RepoScanner(gitClient: git)
@@ -351,6 +374,8 @@ final class AppState {
         self.updateAvailableArchive = UpdateAvailableStore.load()
         self.promptStampArchive = PromptStampStore.load()
         self.userDisplayName = UserDefaults.standard.string(forKey: SettingsKey.userDisplayName.rawValue) ?? ""
+        // 浮动邮票 dock 可见性（默认 false，opt-in）
+        self.floatingStampDockVisible = UserDefaults.standard.bool(forKey: SettingsKey.floatingStampDockVisible.rawValue)
         // 邮局音效开关（默认 false）
         let soundOn = UserDefaults.standard.bool(forKey: SettingsKey.enableSoundEffects.rawValue)
         self.enableSoundEffects = soundOn
@@ -483,6 +508,37 @@ final class AppState {
             self.enableCommitNotifications = false
             UserDefaults.standard.set(false, forKey: SettingsKey.enableCommitNotifications.rawValue)
         }
+    }
+
+    /// 复制 repo 绝对路径到剪贴板 + 弹"路径已复制"toast + 邮戳音。
+    /// PanelDetail 头部和 sidebar 右键 "复制路径" 共用这一处实现。
+    /// 复用 stampToastMessage 通道（同一个 toast 槽，统一视觉反馈）。
+    /// 复用 .waxSealCrack 音效（跟邮票誊抄同一个声——语义统一：复制成功 = 邮戳盖下）。
+    func copyRepoPath(_ path: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(path, forType: .string)
+
+        // 邮戳音——跟 PromptStamp 誊抄共享同一音效
+        soundPlayer.play(.waxSealCrack)
+
+        stampToastTask?.cancel()
+        let msg = Copy.RepoMeta.copyPathToast(language)
+        stampToastMessage = msg
+        stampToastTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            await MainActor.run {
+                guard let self else { return }
+                if self.stampToastMessage == msg { self.stampToastMessage = nil }
+            }
+        }
+    }
+
+    /// 切换浮动邮票 dock 可见性（菜单栏「邮票本召唤」行 / icon 右键「隐藏」/ Settings 都可调）。
+    /// 写 UserDefaults + post .floatingStampDockToggled（AppDelegate 监听做 show/hide）。
+    func setFloatingStampDockVisible(_ visible: Bool) {
+        floatingStampDockVisible = visible
+        UserDefaults.standard.set(visible, forKey: SettingsKey.floatingStampDockVisible.rawValue)
+        NotificationCenter.default.post(name: .floatingStampDockToggled, object: visible)
     }
 
     /// 用户在 Settings 切音效 toggle 时调用
@@ -1687,12 +1743,33 @@ final class AppState {
         guard let idx = promptStampArchive.stamps.firstIndex(where: { $0.id == id }) else { return }
         var archive = promptStampArchive
         archive.stamps[idx].pinned.toggle()
+        // 取消普通 pin 时，"加急 ✦"也一并取消（语义包含：被取消 pin 的邮票当然也不在首位）
+        if !archive.stamps[idx].pinned {
+            archive.stamps[idx].topPinned = false
+        }
+        promptStampArchive = archive
+        PromptStampStore.save(archive)
+    }
+
+    /// 切换"加急 ✦"——pin within pin。
+    /// 仅对已经 pinned 的邮票有意义；如果调到未 pin 的邮票上自动连带 pin 起来。
+    func toggleStampTopPinned(_ id: UUID) {
+        guard let idx = promptStampArchive.stamps.firstIndex(where: { $0.id == id }) else { return }
+        var archive = promptStampArchive
+        let newValue = !archive.stamps[idx].topPinned
+        archive.stamps[idx].topPinned = newValue
+        // 钉到首位的同时保证它在 sidebar 里可见
+        if newValue && !archive.stamps[idx].pinned {
+            archive.stamps[idx].pinned = true
+        }
         promptStampArchive = archive
         PromptStampStore.save(archive)
     }
 
     /// 用户点击邮票：复制 prompt 到剪贴板 + 更新 lastUsedAt / useCount + 播放音 + toast
-    func pasteStamp(_ stamp: PromptStamp) {
+    /// `emitToast: false` 给浮动 dock 用——它在 dock panel 内 icon 旁渲染自己的小 toast，
+    /// 不再用主窗口的 StampToastView（主窗口可能没开，用户看不到反馈）。
+    func pasteStamp(_ stamp: PromptStamp, emitToast: Bool = true) {
         // 1. 复制到剪贴板
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(stamp.body, forType: .string)
@@ -1709,6 +1786,8 @@ final class AppState {
         soundPlayer.play(.waxSealCrack)
 
         // 4. Toast「✓ 邮票已誊抄」—— 1.5s 后自动消失
+        //    floating dock 场景传 emitToast=false 跳过此步，自己在 panel 内渲染 toast
+        guard emitToast else { return }
         stampToastTask?.cancel()
         let msg = Copy.Stamps.toastCopied(stamp.title, language)
         stampToastMessage = msg

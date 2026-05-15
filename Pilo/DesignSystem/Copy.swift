@@ -111,6 +111,14 @@ enum Copy {
     static func menubarSettings(_ lang: Language = .zh) -> String {
         Loc(zh: "设置...", en: "Settings...").text(lang)
     }
+    /// 浮动 dock 显示时的菜单栏行——点击隐藏
+    static func menubarQuickStampsHide(_ lang: Language = .zh) -> String {
+        Loc(zh: "隐藏邮票本", en: "Hide stamps").text(lang)
+    }
+    /// 浮动 dock 隐藏时的菜单栏行——点击显示
+    static func menubarQuickStampsShow(_ lang: Language = .zh) -> String {
+        Loc(zh: "显示邮票本", en: "Show stamps").text(lang)
+    }
     static func menubarQuit(_ lang: Language = .zh) -> String {
         Loc(zh: "退出 Pilo", en: "Quit Pilo").text(lang)
     }
@@ -761,8 +769,8 @@ enum Copy {
         }
         static func settingsToggleDescription(_ lang: Language = .zh) -> String {
             Loc(
-                zh: "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。",
-                en: "Scans the diff before pushing for API keys / tokens / private keys. Uses Pilo's 25 hand-picked rules, fully local — nothing leaves your Mac."
+                zh: "推送前扫描 diff，发现 API key / token / 私钥等。覆盖 AWS / GitHub PAT / JWT / RSA / SSH 等 25 类常见 secret，纯本地匹配。组织专属规则可配合 git-secrets 或 pre-commit hook 使用。",
+                en: "Scans the diff before push for API keys / tokens / private keys. Covers AWS / GitHub PAT / JWT / RSA / SSH and 25 common secret types — fully local, nothing leaves your Mac. For org-specific rules, pair with git-secrets or a pre-commit hook."
             ).text(lang)
         }
         static func settingsKillSwitchTitle(_ lang: Language = .zh) -> String {
@@ -787,12 +795,26 @@ enum Copy {
         // 旧静态属性保留
         static let settingsSectionTitle = "安全检查"
         static let settingsToggleEnabled  = "启用敏感信息扫描"
-        static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。规则集来自 Pilo 内置的 25 条精挑模板，纯本地匹配。"
+        static let settingsToggleDescription = "推送前扫描 diff，发现 API key / token / 私钥等。覆盖 AWS / GitHub PAT / JWT / RSA / SSH 等 25 类常见 secret，纯本地匹配。组织专属规则可配合 git-secrets 或 pre-commit hook 使用。"
         static let settingsKillSwitchTitle = "紧急关闭安全检查"
         static let settingsKillSwitchDesc  = "暂时关闭所有安全扫描，让 push 可以无阻通过。24 小时后自动恢复——避免你忘了自己关过。"
         static let settingsKillSwitchActivateButton = "暂时关闭 24 小时"
         static let settingsKillSwitchActiveLabel  = "已关闭，%d 小时后恢复"
         static let settingsKillSwitchRestoreButton = "立即恢复"
+    }
+
+    // MARK: - Repo metadata（PanelDetail 头部路径行交互文案）
+
+    enum RepoMeta {
+        /// "复制完整路径" tooltip——hover 在 path 上时出现
+        static func copyPathTooltip(_ lang: Language) -> String {
+            Loc(zh: "复制完整路径", en: "Copy full path").text(lang)
+        }
+
+        /// 复制完成后的 toast——复用 stampToastMessage 通道
+        static func copyPathToast(_ lang: Language) -> String {
+            Loc(zh: "✓ 路径已复制", en: "✓ Path copied").text(lang)
+        }
     }
 
     // MARK: - 误提交防护（Phase 7）
@@ -1468,6 +1490,28 @@ enum Copy {
             lang == .zh ? "点击誊抄到剪贴板" : "Click to copy"
         }
 
+        /// Right-click 菜单：把邮票钉到 sidebar 首位（加急邮戳 ✦ 语义）
+        static func pinToTop(_ lang: Language) -> String {
+            lang == .zh ? "钉到首位 ✦" : "Pin to top ✦"
+        }
+        /// Right-click 菜单：取消"首位"标记
+        static func unpinFromTop(_ lang: Language) -> String {
+            lang == .zh ? "取消首位 ✦" : "Unpin from top ✦"
+        }
+        /// "首位 ✦" 邮票的 hover tooltip 附加说明
+        static func topPinnedBadgeTooltip(_ lang: Language) -> String {
+            lang == .zh ? "首位邮票（不被最近使用挤下去）" : "Top stamp (won't be bumped by recency)"
+        }
+
+        /// Archive sheet 底部安静提示——解释 ✦ 是什么（"how to 触发"现在有多入口，
+        /// inline 按钮 + sidebar 右键都行，所以提示只说"是什么、做什么"）。
+        /// 文案不含 ✦——`tipFooter` view 自己在左侧画 ✦ glyph，避免重复。
+        static func archiveTip(_ lang: Language) -> String {
+            lang == .zh
+                ? "钉到首位 · 让常用 prompt 永远排在邮票本最前面"
+                : "Pin to top · Keeps a prompt always first in the book"
+        }
+
         /// Editor sheet title
         static func editorNewTitle(_ lang: Language) -> String {
             lang == .zh ? "新邮票" : "New stamp"
@@ -1518,6 +1562,20 @@ enum Copy {
                 return lang == .zh ? "✓ 邮票已誊抄" : "✓ Stamp copied"
             }
             return lang == .zh ? "✓ 「\(title)」已誊抄" : "✓ \"\(title)\" copied"
+        }
+
+        // MARK: - 邮票本 quick panel（"更多"目的地——fan-out 通过 dock icon 调出）
+
+        /// Panel 顶部标题
+        static func quickPanelTitle(_ lang: Language) -> String {
+            lang == .zh ? "邮票本" : "Stamps"
+        }
+
+        /// Panel 空状态——没 pin 任何邮票时显示
+        static func quickPanelEmpty(_ lang: Language) -> String {
+            lang == .zh
+                ? "去主窗口 pin 几张常用 prompt，\n才能在这里快速召唤"
+                : "Pin some stamps in the main window first,\nthen summon them here"
         }
 
         /// Archive sheet 标题

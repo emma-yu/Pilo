@@ -235,6 +235,15 @@ struct MenuBarView: View {
                 shortcut: "⌘↑",
                 action: { openWindow(id: "main") }
             )
+            // 邮票本快速召唤——切换屏幕边缘 floating dock 显隐
+            MenuActionRow(
+                icon: "wand.and.stars",
+                title: appState.floatingStampDockVisible
+                    ? Copy.menubarQuickStampsHide(appState.language)
+                    : Copy.menubarQuickStampsShow(appState.language),
+                shortcut: nil,
+                action: { appState.setFloatingStampDockVisible(!appState.floatingStampDockVisible) }
+            )
             MenuActionRowWithSettingsLink(
                 icon: "gearshape",
                 title: Copy.menubarSettings(appState.language),

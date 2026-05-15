@@ -252,4 +252,98 @@ final class PromptStampTests: XCTestCase {
         }
         XCTAssertEqual(StampDesign.allCases.count, 7)
     }
+
+    // MARK: - topPinned ✦（v0.5 加急邮戳）
+
+    func testTopPinnedCodableRoundTrip() throws {
+        let stamp = PromptStamp(
+            title: "加急",
+            body: "...",
+            pinned: true,
+            topPinned: true
+        )
+        let data = try JSONEncoder.pilo.encode(stamp)
+        let decoded = try JSONDecoder.pilo.decode(PromptStamp.self, from: data)
+        XCTAssertTrue(decoded.topPinned)
+        XCTAssertTrue(decoded.pinned)
+    }
+
+    func testStampWithoutTopPinnedDecodes() throws {
+        // CLAUDE.md house rule: 新字段必须有"旧 JSON 没这字段也能解码"的回归测试。
+        // 用 encode-then-strip 模拟 v0.4 之前的持久化数据（无 topPinned key）。
+        let stamp = PromptStamp(
+            title: "old",
+            body: "x",
+            emoji: "🔧",
+            tint: .blue,
+            pinned: true
+        )
+        let data = try JSONEncoder.pilo.encode(stamp)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        json.removeValue(forKey: "topPinned")
+        let stripped = try JSONSerialization.data(withJSONObject: json)
+        let decoded = try JSONDecoder.pilo.decode(PromptStamp.self, from: stripped)
+        XCTAssertFalse(decoded.topPinned, "缺字段时应 decodeIfPresent ?? false")
+        XCTAssertTrue(decoded.pinned, "其他字段照常 decode")
+        XCTAssertEqual(decoded.tint, .blue)
+    }
+
+    @MainActor
+    func testSidebarSortsTopPinnedFirst() {
+        let state = AppState()
+        state.promptStampArchive = .empty
+        // Recent 普通 pin，最近用过
+        state.addPromptStamp(.init(
+            title: "Recent", body: "y", emoji: "✨", pinned: true,
+            createdAt: Date().addingTimeInterval(-7200),
+            lastUsedAt: Date(),
+            topPinned: false
+        ))
+        // TopOld 加急 ✦，但很久没用
+        state.addPromptStamp(.init(
+            title: "TopOld", body: "x", emoji: "📜", pinned: true,
+            createdAt: Date().addingTimeInterval(-7200),
+            lastUsedAt: Date().addingTimeInterval(-3600),
+            topPinned: true
+        ))
+        let titles = state.sidebarStamps.map(\.title)
+        XCTAssertEqual(titles.first, "TopOld", "topPinned 永远在前，不被 recency 挤")
+        XCTAssertEqual(titles.last, "Recent")
+
+        for stamp in state.promptStampArchive.stamps {
+            state.deletePromptStamp(stamp.id)
+        }
+    }
+
+    @MainActor
+    func testToggleStampTopPinnedAutoPins() {
+        let state = AppState()
+        state.promptStampArchive = .empty
+        state.addPromptStamp(.init(title: "T", body: "p", emoji: "🔧", pinned: false))
+        let id = state.promptStampArchive.stamps.first!.id
+
+        state.toggleStampTopPinned(id)
+        let after = state.promptStampArchive.stamps.first!
+        XCTAssertTrue(after.topPinned)
+        XCTAssertTrue(after.pinned, "未 pin 的邮票被 toggle topPinned 应自动 pin（用户语义：钉到首位的当然要可见）")
+
+        state.deletePromptStamp(id)
+    }
+
+    @MainActor
+    func testTogglePinClearsTopPinned() {
+        let state = AppState()
+        state.promptStampArchive = .empty
+        state.addPromptStamp(.init(
+            title: "T", body: "p", emoji: "🔧", pinned: true, topPinned: true
+        ))
+        let id = state.promptStampArchive.stamps.first!.id
+
+        state.togglePinStamp(id)
+        let after = state.promptStampArchive.stamps.first!
+        XCTAssertFalse(after.pinned)
+        XCTAssertFalse(after.topPinned, "取消 pin 时 topPinned 也清零")
+
+        state.deletePromptStamp(id)
+    }
 }

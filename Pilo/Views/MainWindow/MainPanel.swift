@@ -388,11 +388,14 @@ private struct PanelDetail: View {
                         PrivacyPill(repoId: repo.id)
                     }
 
-                    // mono 路径 + 分支
-                    Text(metaLine(for: repo))
-                        .font(.system(size: 13, design: .monospaced))
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 8)
+                    // mono 路径 + 分支 —— path 可点击复制（常驻极淡 icon，hover 高亮）
+                    RepoMetaLine(
+                        repoPath: repo.path,
+                        currentBranch: repo.currentBranch,
+                        tooltip: Copy.RepoMeta.copyPathTooltip(lang),
+                        onCopy: { appState.copyRepoPath(repo.path) }
+                    )
+                    .padding(.top, 8)
 
                     // 状态药丸
                     RepoStatusPill(repo: repo)
@@ -722,13 +725,6 @@ private struct PanelDetail: View {
         return appState.repositories.first(where: { $0.id == id })
     }
 
-    private func metaLine(for repo: Repository) -> String {
-        // 按设计稿：只显示 path · branch，时间挪到 commit 卡片或省略
-        var parts: [String] = [repo.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")]
-        if let b = repo.currentBranch { parts.append(b) }
-        return parts.joined(separator: " · ")
-    }
-
     @ViewBuilder
     private func commitsList(for repo: Repository) -> some View {
         if appState.currentCommits.isEmpty {
@@ -1002,40 +998,6 @@ private struct StampBadge: View {
     }
 }
 
-// MARK: - 右键拦截桥（NSView 接 rightMouseDown，避开 SwiftUI .contextMenu 系统 chrome）
-
-/// 用 NSView 做右键侦测 —— SwiftUI 原生没有 onRightClick gesture。
-/// 把它作为 `.background(...)` 挂在 row 上：左键被 SwiftUI Button 抢走，
-/// 右键穿透到这个 NSView 触发 callback。
-private struct RightClickCatcher: NSViewRepresentable {
-    let onRightClick: () -> Void
-
-    final class HitView: NSView {
-        var callback: () -> Void = {}
-        override func rightMouseDown(with event: NSEvent) {
-            callback()
-        }
-        // 不挡左键：让事件穿透给前面的 SwiftUI Button
-        override func hitTest(_ point: NSPoint) -> NSView? {
-            // 仅当 NSEvent 是右键时认领；其它情况返回 nil 让事件穿透
-            if let event = NSApp.currentEvent, event.type == .rightMouseDown {
-                return self
-            }
-            return nil
-        }
-    }
-
-    func makeNSView(context: Context) -> HitView {
-        let view = HitView()
-        view.callback = onRightClick
-        return view
-    }
-
-    func updateNSView(_ nsView: HitView, context: Context) {
-        nsView.callback = onRightClick
-    }
-}
-
 // MARK: - Sidebar Repo Row（独立子 view + 自带 hover/popover state）
 
 /// 单行 sidebar repo entry。把 hover + ⋯ popover state 隔离在这里，
@@ -1138,9 +1100,11 @@ private struct SidebarRepoRow: View {
                 .fill(isHovered && !isActive ? Color.piloBlue.opacity(0.06) : Color.clear)
                 .padding(.horizontal, 6)
         )
-        // 拦截右键 → 弹自定义邮局风 popover（不走系统 contextMenu）
-        // 通过 NSView background 接 rightMouseDown 事件；左键不被影响（仍 Button 处理）
-        .background(
+        // 拦截右键 → 弹自定义邮局风 popover（不走系统 contextMenu）。
+        // **`.overlay` 不是 `.background`**：AppKit hitTest 从前到后查询，必须放在 Button
+        // 前面才能先 claim 右键。catcher 的 hitTest 在非 rightMouseDown 时 return nil，
+        // 左键穿透给后面的 Button 正常 selectRepo。
+        .overlay(
             RightClickCatcher { isMenuOpen = true }
         )
     }
@@ -1177,8 +1141,7 @@ private struct SidebarRepoRow: View {
         )
     }
     private func copyPath() {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(repo.path, forType: .string)
+        appState.copyRepoPath(repo.path)
     }
     private func hideRepo() {
         appState.setHidden(true, repoId: repo.id)
@@ -1276,5 +1239,53 @@ private struct AILauncherButton: View {
         }
         .buttonStyle(.plain)
         .hoverable(highlight: Color.piloGold.opacity(0.08), cornerRadius: 6)
+    }
+}
+
+// MARK: - RepoMetaLine（PanelDetail 头部路径行）
+
+/// 显示 `path · branch`，path 可点击复制。
+///
+/// 视觉：常驻极淡 doc.on.doc icon（inkTertiary 0.38 opacity），hover 高亮到 0.85；
+/// 点击复制 **绝对路径**（用户拿到的可以直接粘到 Terminal），显示版本仍用 `~` 替换 home。
+///
+/// 复制走 AppState.copyRepoPath 统一通道——跟 sidebar 右键 "复制路径" 共用，
+/// 复用 stampToastMessage 弹"路径已复制"toast。
+private struct RepoMetaLine: View {
+    let repoPath: String
+    let currentBranch: String?
+    let tooltip: String
+    let onCopy: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button(action: onCopy) {
+                HStack(spacing: 5) {
+                    Text(displayedPath)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundStyle(Color.inkSecondary)
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color.inkTertiary.opacity(isHovered ? 0.85 : 0.38))
+                }
+            }
+            .buttonStyle(.plain)
+            .help(tooltip)
+            .onHover { isHovered = $0 }
+
+            if let b = currentBranch {
+                Text(" · \(b)")
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundStyle(Color.inkSecondary)
+            }
+        }
+    }
+
+    /// 显示用 path —— home 目录替换为 ~ 让视觉简短；
+    /// 复制时仍走绝对路径（onCopy 闭包外层持有原始 repoPath）。
+    private var displayedPath: String {
+        repoPath.replacingOccurrences(of: NSHomeDirectory(), with: "~")
     }
 }

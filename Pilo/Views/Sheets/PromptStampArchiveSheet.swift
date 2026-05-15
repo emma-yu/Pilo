@@ -66,6 +66,7 @@ struct PromptStampArchiveSheet: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 14)
                     }
+                    tipFooter
                 }
             }
         }
@@ -109,6 +110,26 @@ struct PromptStampArchiveSheet: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    // MARK: - Tip footer
+    //
+    // 安静提示——告诉用户 sidebar 邮票本可以右键"钉到首位 ✦"。位置在 ScrollView
+    // 下方，永远可见但不抢戏。设计要点：极淡 inkTertiary 灰 + Songti italic +
+    // 小金 ✦ 跟 row 上的 badge 视觉呼应；无背景无边框，纯文字漂在底部。
+    private var tipFooter: some View {
+        HStack(spacing: 5) {
+            Text("✦")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color.piloGoldDark.opacity(0.6))
+            Text(Copy.Stamps.archiveTip(lang))
+                .font(.piloSerifCaption)
+                .italic()
+                .foregroundStyle(Color.inkTertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.vertical, 9)
+        .padding(.horizontal, 16)
     }
 
     private var noMatchState: some View {
@@ -307,6 +328,18 @@ struct PromptStampArchiveSheet: View {
                                     .stroke(Color.piloGoldDark.opacity(0.5), lineWidth: 0.6)
                             )
                     }
+                    if stamp.topPinned {
+                        Text("✦")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color.piloGoldDark)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                    .stroke(Color.piloGoldDark.opacity(0.5), lineWidth: 0.6)
+                            )
+                            .help(Copy.Stamps.topPinnedBadgeTooltip(lang))
+                    }
                     Spacer()
                     Text(Copy.Stamps.useCountLabel(stamp.useCount, lang))
                         .font(.piloSerifCaption)
@@ -341,6 +374,16 @@ struct PromptStampArchiveSheet: View {
                         Label(
                             stamp.pinned ? Copy.Stamps.menuUnpin(lang) : Copy.Stamps.menuPin(lang),
                             systemImage: stamp.pinned ? "pin.slash" : "pin"
+                        )
+                        .font(.piloSerifCaption)
+                        .foregroundStyle(Color.piloGoldDark)
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: { appState.toggleStampTopPinned(stamp.id) }) {
+                        Label(
+                            stamp.topPinned ? Copy.Stamps.unpinFromTop(lang) : Copy.Stamps.pinToTop(lang),
+                            systemImage: stamp.topPinned ? "star.slash" : "star.fill"
                         )
                         .font(.piloSerifCaption)
                         .foregroundStyle(Color.piloGoldDark)

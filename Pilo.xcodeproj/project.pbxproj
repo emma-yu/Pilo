@@ -21,7 +21,9 @@
 		0C019E0732F579484DCB2999 /* PiloSounds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22B33530C2EE3B2C9D8F4B10 /* PiloSounds.swift */; };
 		0CDBA9D32DB787460576745D /* GitignoreActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */; };
 		0E1538465A5BD686A7C29164 /* Copy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5540EAC6848024D2E4873663 /* Copy.swift */; };
+		0E53FD2ADA975E5FC252A8F3 /* FloatingStampDockController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDAF36F78DE3CBF9E76B7F8F /* FloatingStampDockController.swift */; };
 		13F6E079D35DB79C26CC8184 /* RepoDocsIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 231AF0568E988D86699B2EE4 /* RepoDocsIndexer.swift */; };
+		16476DEE913181F946183C4B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA1ED698D392708C35C312AE /* AppDelegate.swift */; };
 		1764315DB68D498D0AA3C0B1 /* MarkdownTOCSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */; };
 		1920195755D48D7279684D3F /* PiloButtonStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B6081339F08C84BBD178F0 /* PiloButtonStyle.swift */; };
 		1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 707C36571A6F9C184754C4BB /* Assets.xcassets */; };
@@ -90,11 +92,14 @@
 		7B180D8FFFB124A3B3E5E934 /* UpdateCheckerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E5BD2CB439BDCF6A13B89BD /* UpdateCheckerTests.swift */; };
 		7B45AF54D2420D669C4482CE /* UncommittedFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA6E4E92B76ABE6E34A7E241 /* UncommittedFile.swift */; };
 		7CF42CECFBAB11B4517109FA /* PiloApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35D2150EBF5CAA277F01214 /* PiloApp.swift */; };
+		8091BDD7DB0D661BC5DCAC41 /* FloatingStampDockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F77F427F2F1730C43A8985B /* FloatingStampDockView.swift */; };
 		814E25FBBFDD654BEC52D1F2 /* DocReadingMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = D607F291980A6E4B49E06DBC /* DocReadingMemory.swift */; };
 		8224ADF91208A59054770174 /* CommitGuardScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E64E361A9FA9AB67869B9F4 /* CommitGuardScanner.swift */; };
 		831BE57054EC9C10B0B4A3D2 /* PushOutcomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63E19D8E16EFADA143E2C091 /* PushOutcomeTests.swift */; };
+		833E681B67985F80CCD7CD25 /* StampQuickPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43ACC24B07DBDB456520A4FE /* StampQuickPanelController.swift */; };
 		848AF0D3D47AB1E230A5E582 /* AICommitDetectorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F9D030355043420418DF14D /* AICommitDetectorTests.swift */; };
 		852093B3AEC0F83E17867DA2 /* CommitNotificationDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12CD1D7DED539597461A6D89 /* CommitNotificationDelegate.swift */; };
+		85ED708CE63D4ADEA7658A92 /* StampQuickPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15C78ADFF772DB0789F2AB8F /* StampQuickPanelView.swift */; };
 		86FEBAEA96BF374816E8B9B4 /* MarkdownRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 904EB76716C0484B1818DB33 /* MarkdownRenderer.swift */; };
 		89490FD77A8F0757455A9A90 /* ReleaseLetterReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10FD9EC9B0DF845E634994DF /* ReleaseLetterReaderView.swift */; };
 		899FC4F8FED55E28DE2BA83E /* FalsePositiveMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE5D85F98C2D52B4B9888F05 /* FalsePositiveMark.swift */; };
@@ -134,6 +139,7 @@
 		B46E8DDFA74F315E320FB0A1 /* GitignoreEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A00990925CEF1AE1105D3A /* GitignoreEditor.swift */; };
 		C3859CB4E160120E4CCC7113 /* StudioInsertCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58A7534C0EC39884B97882C0 /* StudioInsertCard.swift */; };
 		C442E986317C85AAE578D51C /* UpdateAvailableLetter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B766EF641B751FE50FD2983 /* UpdateAvailableLetter.swift */; };
+		C477ADE85A94E3BF926E6519 /* RightClickCatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9EC03CE4BF8F075BDD456A3 /* RightClickCatcher.swift */; };
 		C762ED20A4517607FD2CF595 /* CommitNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77583C577EC8611ED28B83C /* CommitNotifier.swift */; };
 		C91282FCBF371925561AE8AB /* RepoDocsIndexerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9066B30C3BA6E45C984CF14 /* RepoDocsIndexerTests.swift */; };
 		CBF60DDE945131CEA21D6E43 /* RepoStatePills.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */; };
@@ -188,6 +194,7 @@
 		10FD9EC9B0DF845E634994DF /* ReleaseLetterReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseLetterReaderView.swift; sourceTree = "<group>"; };
 		12738ED463FC35FD0587E770 /* DiffParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffParser.swift; sourceTree = "<group>"; };
 		12CD1D7DED539597461A6D89 /* CommitNotificationDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotificationDelegate.swift; sourceTree = "<group>"; };
+		15C78ADFF772DB0789F2AB8F /* StampQuickPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StampQuickPanelView.swift; sourceTree = "<group>"; };
 		15D634745F9A37CDB406ADC4 /* pushInFlight.caf */ = {isa = PBXFileReference; path = pushInFlight.caf; sourceTree = "<group>"; };
 		1894FF036FBFB212679A29AC /* SecretScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScannerTests.swift; sourceTree = "<group>"; };
 		18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdentityValidatorTests.swift; sourceTree = "<group>"; };
@@ -195,6 +202,7 @@
 		1E4E7FBA08BB71368F974118 /* AICompanionDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AICompanionDetector.swift; sourceTree = "<group>"; };
 		1E5A56B1B22A7465DD8ECBD5 /* ResumeSubtitleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeSubtitleTests.swift; sourceTree = "<group>"; };
 		1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoStatePills.swift; sourceTree = "<group>"; };
+		1F77F427F2F1730C43A8985B /* FloatingStampDockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingStampDockView.swift; sourceTree = "<group>"; };
 		20E05A4CA192EA6913C4E82F /* SecretScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScanner.swift; sourceTree = "<group>"; };
 		21E585BC45736BD031CCC12B /* DailyDigestServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyDigestServiceTests.swift; sourceTree = "<group>"; };
 		22B33530C2EE3B2C9D8F4B10 /* PiloSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloSounds.swift; sourceTree = "<group>"; };
@@ -226,6 +234,7 @@
 		3FA9B677085ED04CB7942D6D /* LetterArchiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterArchiveView.swift; sourceTree = "<group>"; };
 		3FD784BD14FE954D9E6A68CE /* AIToolRepoDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIToolRepoDetector.swift; sourceTree = "<group>"; };
 		40BB33759E101AF1B65B1883 /* PromptStampBookSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptStampBookSidebar.swift; sourceTree = "<group>"; };
+		43ACC24B07DBDB456520A4FE /* StampQuickPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StampQuickPanelController.swift; sourceTree = "<group>"; };
 		4579EF9A456B64AD951B1B6E /* MarkdownTOCSidebar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownTOCSidebar.swift; sourceTree = "<group>"; };
 		4995B80B410566214FB4ACE8 /* Language.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Language.swift; sourceTree = "<group>"; };
 		49D4B0350924B1B73E0796E9 /* Pilo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pilo.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -305,6 +314,7 @@
 		C35D2150EBF5CAA277F01214 /* PiloApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloApp.swift; sourceTree = "<group>"; };
 		C4A3F29AAD6917CE94CA37F5 /* AITool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AITool.swift; sourceTree = "<group>"; };
 		C579AA177A2337099DD1798F /* OnboardingDirectoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingDirectoriesView.swift; sourceTree = "<group>"; };
+		CA1ED698D392708C35C312AE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CA96DDB971AA6FC2B95B6C20 /* ColophonAttribution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColophonAttribution.swift; sourceTree = "<group>"; };
 		CCE88C8A171ED935AA6B683B /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
 		CDF889EAB5CEEAB9C513C1FB /* LetterComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LetterComposer.swift; sourceTree = "<group>"; };
@@ -329,11 +339,13 @@
 		E988AE0F12FE4AC61C8CBC82 /* updateArrived.caf */ = {isa = PBXFileReference; path = updateArrived.caf; sourceTree = "<group>"; };
 		EAA834330F2B12036ADEF865 /* RepoCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoCard.swift; sourceTree = "<group>"; };
 		ED602865C8E6B7BC5AEB009F /* MarkdownSearchEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownSearchEngine.swift; sourceTree = "<group>"; };
+		EDAF36F78DE3CBF9E76B7F8F /* FloatingStampDockController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingStampDockController.swift; sourceTree = "<group>"; };
 		F16B037F569F8B168CAFE426 /* PiloMascot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascot.swift; sourceTree = "<group>"; };
 		F67DC1463A93D6A38D78CB24 /* ResumeWorkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResumeWorkCard.swift; sourceTree = "<group>"; };
 		F77583C577EC8611ED28B83C /* CommitNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitNotifier.swift; sourceTree = "<group>"; };
 		F7E7C2F3DAF647204E79CD0F /* CopySweepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopySweepTests.swift; sourceTree = "<group>"; };
 		F80E248976BACEA9DB7267A3 /* PiloProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloProgressBar.swift; sourceTree = "<group>"; };
+		F9EC03CE4BF8F075BDD456A3 /* RightClickCatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RightClickCatcher.swift; sourceTree = "<group>"; };
 		FAAC6C4A090A413B9A2E12D5 /* AboutStudioBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutStudioBlock.swift; sourceTree = "<group>"; };
 		FBB9FEFC0473258F3D520F74 /* release-notes.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "release-notes.json"; sourceTree = "<group>"; };
 		FC91E39A53092AC90E49BC40 /* RepoDoc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDoc.swift; sourceTree = "<group>"; };
@@ -352,6 +364,7 @@
 				93197952F28259984E04A5F2 /* PromptStampChip.swift */,
 				EAA834330F2B12036ADEF865 /* RepoCard.swift */,
 				1E7E5C12598CF4B64CD00601 /* RepoStatePills.swift */,
+				F9EC03CE4BF8F075BDD456A3 /* RightClickCatcher.swift */,
 				796133FADA4A3765E8AE6859 /* SectionHeader.swift */,
 				2F1BF50B55825899755F5CF5 /* StatusBadge.swift */,
 			);
@@ -505,10 +518,30 @@
 				6AF4ED9EDFDA56AD16D72E33 /* Letter */,
 				353047D2205A5A9E8D45F688 /* MainWindow */,
 				F68AA1FA4F2B8FAC35FE2476 /* Onboarding */,
+				823D997FAFBA8C9CDE261679 /* QuickPanel */,
 				DEC3E1750C594E28E436EBE3 /* Settings */,
 				23C9655648EE5C46AF6C4A8A /* Sheets */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		7E5ECE3A2CB6D73CD5BB8641 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				CA1ED698D392708C35C312AE /* AppDelegate.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		823D997FAFBA8C9CDE261679 /* QuickPanel */ = {
+			isa = PBXGroup;
+			children = (
+				EDAF36F78DE3CBF9E76B7F8F /* FloatingStampDockController.swift */,
+				1F77F427F2F1730C43A8985B /* FloatingStampDockView.swift */,
+				43ACC24B07DBDB456520A4FE /* StampQuickPanelController.swift */,
+				15C78ADFF772DB0789F2AB8F /* StampQuickPanelView.swift */,
+			);
+			path = QuickPanel;
 			sourceTree = "<group>";
 		};
 		850A1849062627E097552C0B /* Resources */ = {
@@ -594,6 +627,7 @@
 			isa = PBXGroup;
 			children = (
 				C35D2150EBF5CAA277F01214 /* PiloApp.swift */,
+				7E5ECE3A2CB6D73CD5BB8641 /* App */,
 				48166F3FC0B6C070E8F31B8B /* Core */,
 				6175A7383FE1C7D081D4A43D /* DesignSystem */,
 				9C12770C713B7E32BFC95022 /* Models */,
@@ -781,6 +815,7 @@
 				F1946089AC4710D96CB0983B /* AIToolStamp.swift in Sources */,
 				EFD0BA76A5C93F7FFE532EF2 /* AboutStudioBlock.swift in Sources */,
 				591FFE9210B63BC604181E34 /* Animations.swift in Sources */,
+				16476DEE913181F946183C4B /* AppDelegate.swift in Sources */,
 				631B21574C12FE201AA08061 /* AppPaths.swift in Sources */,
 				8B9687A0BD09BAA48AAD15F0 /* AppSettings.swift in Sources */,
 				AF020D7964DD5C6F55221DBF /* AppState.swift in Sources */,
@@ -806,6 +841,8 @@
 				40D16D9960C3E8CCD44455C4 /* FSEventMonitor.swift in Sources */,
 				899FC4F8FED55E28DE2BA83E /* FalsePositiveMark.swift in Sources */,
 				202050590AC9FBB622874BD5 /* FalsePositiveScopeSheet.swift in Sources */,
+				0E53FD2ADA975E5FC252A8F3 /* FloatingStampDockController.swift in Sources */,
+				8091BDD7DB0D661BC5DCAC41 /* FloatingStampDockView.swift in Sources */,
 				E9CD0AAD574561F095D8946A /* GitClient.swift in Sources */,
 				2464CA64EFFC2136575BAC85 /* GitHubVisibility.swift in Sources */,
 				E3172A00AADF963ABAE28BC8 /* GitRemote.swift in Sources */,
@@ -872,6 +909,7 @@
 				CBF60DDE945131CEA21D6E43 /* RepoStatePills.swift in Sources */,
 				AFD93F351A2F97B8FCF58D51 /* Repository.swift in Sources */,
 				8CF12033FE476F193D4DEA31 /* ResumeWorkCard.swift in Sources */,
+				C477ADE85A94E3BF926E6519 /* RightClickCatcher.swift in Sources */,
 				24762692BDB1C4A02A5ABB3D /* ScanFinding.swift in Sources */,
 				21F287C9A3B20600E820A67F /* SecretRule.swift in Sources */,
 				21BBC4739E3E3DFB6BE862BE /* SecretScanner.swift in Sources */,
@@ -879,6 +917,8 @@
 				2D2BC2CEE9C30D627CBA98B3 /* SettingsTabHeader.swift in Sources */,
 				A6EE7099B697C9C834F71A3A /* SettingsView.swift in Sources */,
 				2B842E5F325574321C7C77B4 /* Spacing.swift in Sources */,
+				833E681B67985F80CCD7CD25 /* StampQuickPanelController.swift in Sources */,
+				85ED708CE63D4ADEA7658A92 /* StampQuickPanelView.swift in Sources */,
 				43D2AA0A1A5A2E84AD465A11 /* StatusBadge.swift in Sources */,
 				B077C94F192F9377563542D2 /* StudioBranding.swift in Sources */,
 				C3859CB4E160120E4CCC7113 /* StudioInsertCard.swift in Sources */,

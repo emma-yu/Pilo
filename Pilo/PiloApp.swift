@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct PiloApp: App {
 
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var appState = AppState()
 
     var body: some Scene {
