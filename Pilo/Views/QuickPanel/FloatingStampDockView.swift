@@ -25,6 +25,10 @@ struct FloatingStampDockView: View {
     @State private var justCopiedStampId: UUID?
     @State private var showCopiedToast = false
     @State private var toastTask: Task<Void, Never>?
+    /// **Stagger 真实驱动**：每个 orb 独立的可见 bool。Task 依次翻 true（入场）或 false（出场）。
+    /// 不走 SwiftUI `.transition()` 因为 `.animation().delay()` 在 macOS 上 stagger 不稳定。
+    @State private var orbVisibility: [Bool] = []
+    @State private var fanOutAnimationTask: Task<Void, Never>?
 
     /// Fan-out 最大邮票数——根据几何模式自适应。
     ///
@@ -151,18 +155,26 @@ struct FloatingStampDockView: View {
         appState.language == .zh ? "已誊抄" : "Copied"
     }
 
-    // MARK: - Fan-out content
+    // MARK: - Fan-out content（state-driven 动效，不走 SwiftUI .transition）
 
     private var fanOutContent: some View {
         ZStack {
             ForEach(Array(stamps.enumerated()), id: \.element.id) { i, stamp in
                 stampOrb(stamp)
                     .position(orbPosition(for: i, total: stamps.count + 1))
-                    .transition(orbTransition(index: i, total: stamps.count + 1))
+                    .modifier(OrbAppearModifier(
+                        visible: orbVisible(i),
+                        tumbleRotation: orbTumbleRotation(i)
+                    ))
+                    .allowsHitTesting(isFanOut && orbVisible(i))
             }
             moreOrb
                 .position(orbPosition(for: stamps.count, total: stamps.count + 1))
-                .transition(orbTransition(index: stamps.count, total: stamps.count + 1))
+                .modifier(OrbAppearModifier(
+                    visible: orbVisible(stamps.count),
+                    tumbleRotation: orbTumbleRotation(stamps.count)
+                ))
+                .allowsHitTesting(isFanOut && orbVisible(stamps.count))
 
             if stamps.isEmpty {
                 let geom = viewBox.fanOutGeometry
@@ -255,66 +267,76 @@ struct FloatingStampDockView: View {
         }
     }
 
-    // MARK: - 状态切换
+    // MARK: - 状态切换 + 真 stagger 动效调度
+    //
+    // **为什么不用 SwiftUI `.transition()`**：
+    //   先前用 `.transition(...).animation(.spring(...).delay(stagger))` 在 macOS 上
+    //   stagger 不稳定——`.delay()` 经常被 ambient `withAnimation` 上下文吞掉，或
+    //   SwiftUI 把整个 view tree 插入视为单一 transaction，所有 orb 同时入场。
+    //
+    // **真 stagger 方案**：
+    //   - 每个 orb 一个独立的 `orbVisibility[i]: Bool`（@State 数组）
+    //   - 用 `Task { await Task.sleep(...) }` 依次翻 bool，每次 `withAnimation` 包住
+    //   - 每个 bool 翻转独立触发 SwiftUI 动画——100% 物理可见的错峰
 
     private func toggleFanOut() {
         let newState = !isFanOut
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
-            isFanOut = newState
-        }
+        isFanOut = newState
         onFanOutChanged(newState)
+        scheduleFanOutAnimation(show: newState)
     }
 
     private func collapse() {
         guard isFanOut else { return }
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-            isFanOut = false
-        }
+        isFanOut = false
         onFanOutChanged(false)
+        scheduleFanOutAnimation(show: false)
     }
 
-    private func collapseRequest() {
-        guard isFanOut else { return }
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.75)) {
-            isFanOut = false
+    private func collapseRequest() { collapse() }
+
+    private func scheduleFanOutAnimation(show: Bool) {
+        let total = stamps.count + 1
+        fanOutAnimationTask?.cancel()
+        fanOutAnimationTask = Task { @MainActor in
+            if show {
+                // 入场：reset 全 false → 每 60ms 翻一个 true（顺时针铺开）
+                orbVisibility = Array(repeating: false, count: total)
+                for i in 0..<total {
+                    if Task.isCancelled { return }
+                    if i > 0 {
+                        try? await Task.sleep(nanoseconds: 60_000_000)  // 60ms
+                    }
+                    if Task.isCancelled { return }
+                    withAnimation(.spring(response: 0.42, dampingFraction: 0.72)) {
+                        if i < orbVisibility.count { orbVisibility[i] = true }
+                    }
+                }
+            } else {
+                // 出场：每 35ms 反向翻一个 false（"信件次第回邮筒"）
+                let currentCount = orbVisibility.count
+                for j in 0..<currentCount {
+                    if Task.isCancelled { return }
+                    if j > 0 {
+                        try? await Task.sleep(nanoseconds: 35_000_000)  // 35ms
+                    }
+                    if Task.isCancelled { return }
+                    let idx = currentCount - 1 - j
+                    withAnimation(.easeIn(duration: 0.18)) {
+                        if idx < orbVisibility.count { orbVisibility[idx] = false }
+                    }
+                }
+            }
         }
-        onFanOutChanged(false)
     }
 
-    // MARK: - 入/出场动效（"letters tumbling out of mailbox"）
-    //
-    // **入场**（fan-out 展开）：
-    //   - 起点：从 icon 中心冒出 → scale 0.25 + opacity 0 + ±6° 旋转（错位翻滚）
-    //   - 终点：orbPosition + scale 1 + opacity 1 + 0° rotation
-    //   - 曲线：spring(0.45, 0.72) —— 微弹邀请感，不过冲
-    //   - Stagger：每 orb +0.04s，按 12 点钟顺时针铺开
-    //
-    // **出场**（fan-out 收起）：
-    //   - 起点：当前位置 → 终点 scale 0.4 + opacity 0（保留视觉余像，不归零）
-    //   - 曲线：easeIn(0.18s) —— 干脆收尾，无 bounce（用户已决定，让路）
-    //   - 反向 stagger：(total-1-i) × 0.025s，"信件次第回邮筒"
-    //   - 总时长 ~0.2s + 8 × 0.025 ≈ 0.4s 末端 orb 完全收完
-    //
-    // Asymmetric in/out 符合 Apple HIG + Material Design 共识："退场快于入场"。
+    private func orbVisible(_ i: Int) -> Bool {
+        i < orbVisibility.count ? orbVisibility[i] : false
+    }
 
-    private func orbTransition(index i: Int, total: Int) -> AnyTransition {
-        let entryStagger = Double(i) * 0.04
-        let exitStagger = Double(max(0, total - 1 - i)) * 0.025
-        // 翻滚方向交替：偶数 -6°、奇数 +6°——视觉随机感不机械
-        let tumbleRotation: Double = (i % 2 == 0) ? -6 : 6
-
-        return .asymmetric(
-            insertion: .modifier(
-                active: OrbAppearModifier(scale: 0.25, opacity: 0, rotation: tumbleRotation),
-                identity: OrbAppearModifier(scale: 1, opacity: 1, rotation: 0)
-            )
-            .animation(.spring(response: 0.45, dampingFraction: 0.72).delay(entryStagger)),
-            removal: .modifier(
-                active: OrbAppearModifier(scale: 0.4, opacity: 0, rotation: 0),
-                identity: OrbAppearModifier(scale: 1, opacity: 1, rotation: 0)
-            )
-            .animation(.easeIn(duration: 0.18).delay(exitStagger))
-        )
+    /// 翻滚方向交替：偶数 -6°、奇数 +6°（"信件翻滚"语感，不机械）
+    private func orbTumbleRotation(_ i: Int) -> Double {
+        (i % 2 == 0) ? -6 : 6
     }
 
     // MARK: - 径向位置计算（自适应 360°/180°）
@@ -346,19 +368,21 @@ struct FloatingStampDockView: View {
 
 // MARK: - Orb 出/入场 ViewModifier
 //
-// 三个变换合并（scale + opacity + rotation）放在一个 modifier 里——SwiftUI
-// AnyTransition 不能直接组合 rotation，只能借 `.modifier(active:identity:)`
-// 自定义。Active = "未出现" 状态；Identity = "已出现" 状态。
+// **State-driven**：`visible: Bool` 决定显示/隐藏，三个变换合并：
+//   - visible=true：scale 1，opacity 1，rotation 0
+//   - visible=false：scale 0.25，opacity 0，rotation ±tumbleRotation
+//
+// 配合 `withAnimation` 包裹 `orbVisibility[i] = ...` 的翻转，SwiftUI 自动驱动
+// 这些值的过渡。比 `.transition()` 可靠——bool 是单点状态，stagger 由 Task 调度。
 
 private struct OrbAppearModifier: ViewModifier {
-    let scale: CGFloat
-    let opacity: Double
-    let rotation: Double
+    let visible: Bool
+    let tumbleRotation: Double
 
     func body(content: Content) -> some View {
         content
-            .scaleEffect(scale, anchor: .center)
-            .opacity(opacity)
-            .rotationEffect(.degrees(rotation))
+            .scaleEffect(visible ? 1.0 : 0.25, anchor: .center)
+            .opacity(visible ? 1.0 : 0.0)
+            .rotationEffect(.degrees(visible ? 0 : tumbleRotation))
     }
 }
