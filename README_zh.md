@@ -8,7 +8,7 @@
 
 <br>
 
-![Pilo 主界面](./docs/screenshots/main-panel.png)
+*截图与完整视觉故事 → [xinxinmingde.com/pilo.html](https://xinxinmingde.com/pilo.html)*
 
 <br>
 

@@ -8,7 +8,7 @@
 
 <br>
 
-![Pilo screenshot — main panel](./docs/screenshots/main-panel.png)
+*Screenshots & full visual story → [xinxinmingde.com/pilo.html](https://xinxinmingde.com/pilo.html)*
 
 <br>
 
