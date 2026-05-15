@@ -95,15 +95,15 @@ final class IdentityValidatorTests: XCTestCase {
             category: .work,
             identityPool: pool,
             commits: [
-                commit("personal@gmail.com"),
-                commit("personal@gmail.com"),
+                commit("personal@example.com"),
+                commit("personal@example.com"),
                 commit("work@company.com"),    // 这个 ok
             ],
-            currentLocalEmail: "personal@gmail.com"
+            currentLocalEmail: "personal@example.com"
         )
         XCTAssertNotNil(result)
         XCTAssertEqual(result?.expectedEmail, "work@company.com")
-        XCTAssertEqual(result?.actualEmail, "personal@gmail.com")
+        XCTAssertEqual(result?.actualEmail, "personal@example.com")
         XCTAssertEqual(result?.mismatchCount, 2)
     }
 
