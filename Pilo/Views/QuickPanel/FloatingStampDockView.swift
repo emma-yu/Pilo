@@ -41,7 +41,9 @@ struct FloatingStampDockView: View {
     }
 
     private var stamps: [PromptStamp] {
-        Array(appState.sidebarStamps.prefix(maxStampCount))
+        // 用 floatingDockStamps（稳定排序）不是 sidebarStamps（lastUsedAt 排序）——
+        // 桌面 dock 是空间记忆场景，paste 不应让邮票跳位置打乱用户肌肉记忆
+        Array(appState.floatingDockStamps.prefix(maxStampCount))
     }
 
     /// Icon 永远在 panel 正中（v6）

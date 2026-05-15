@@ -287,6 +287,24 @@ final class AppState {
             }
     }
 
+    /// 桌面浮动 dock 展示用——**与 sidebar 排序解耦**。
+    ///
+    /// **Why 不复用 sidebarStamps**：sidebar 用 `lastUsedAt` 表达"最近用过"，
+    /// 在 sidebar grid 里合理（用户扫一眼想看热门）。但浮动 dock fan-out 是
+    /// **空间记忆**场景——用户把邮票位置当成肌肉记忆，每次 paste 都让它跳到
+    /// 第一位会破坏 mental map。
+    ///
+    /// **稳定排序**：`topPinned` 优先 + `createdAt` 倒序——只在 add/unpin/标记
+    /// ✦ 时变化，paste 不影响。
+    var floatingDockStamps: [PromptStamp] {
+        promptStampArchive.stamps
+            .filter { $0.pinned }
+            .sorted { a, b in
+                if a.topPinned != b.topPinned { return a.topPinned }
+                return a.createdAt > b.createdAt
+            }
+    }
+
     /// 总邮票数（empty state 判断用）
     var totalStampCount: Int { promptStampArchive.stamps.count }
     /// 邮票本里还有多少张**未钉**的邮票 —— sidebar 不显示这部分，archive 才看得到
