@@ -2,63 +2,87 @@
 
 # Pilo · 邮局
 
-*一只住在菜单栏里的小信鸽，守着你 Mac 上所有 Git 仓库。*
+*衬线菜单栏小信鸽，看护你的 Git 仓库。*
 
-**慢工出细活。本地优先。**
-
-<br>
-
-![Pilo 主面板截图（待补）](./docs/screenshots/main-panel.png)
+**纯本地。AI 友好。像写信，不是仪表盘。**
 
 <br>
 
-[English](./README.md) · [实现记录](./IMPLEMENTATION.md) · [License](./LICENSE)
+![Pilo 主界面](./docs/screenshots/main-panel.png)
+
+<br>
+
+[English](./README.md) · [架构记录](./IMPLEMENTATION.md) · [License](./LICENSE)
 
 </div>
 
 ---
 
-## 这是什么
+## 这是啥
 
-Pilo 是一个常驻 macOS 菜单栏的小应用。它默默记着你这台机器上每一个 Git 仓库：
-哪些还没推送，哪些有未提交的草稿，哪些被遗忘在角落里。
+一只常驻 macOS 菜单栏的小信鸽，自动发现你电脑上所有 Git 仓库。
 
-当你真的要推送的时候，它会先帮你看一眼 —— 是不是有看起来像 API key 的字符串，
-是不是不小心把 `.env` 加进去了，是不是有个 50 MB 的二进制文件躺在 commit 里。
+它记得哪些还没 push、哪些有未提交的草稿、哪些自己窝在角落里。push 之前先仔细看一遍——把疑似泄露的 API key、`.env` 文件、50MB 大块头标出来。每天傍晚 6 点写一封关于今天 commit 的信，扔进信箱让你像翻真信一样翻看。
 
-没账户，没遥测，不上云。就一只信鸽。
+无账号、无埋点、无云端。唯一两个外发网络调用：一天一次的版本检查、看仓库 public/private 时的 GitHub 公共 API。
 
-## 为什么它长这样
+## 为啥长这样
 
-大多数开发者工具看起来像 Excel 表格 —— 密、方、没温度。
-Pilo 看起来像一封信 —— 宋体衬线标题、金色装饰线、信纸黄卡片、会呼吸的鸽子。
-灵感来自中式邮局里寄一封信那种小小的仪式感。
+主流开发者工具都长得像表格——密、方、中性。Pilo 长得像信——**衬线 Songti SC** 标题、**金色装饰线**、**奶油色卡纸**、会呼吸的鸽子吉祥物。灵感来自中式邮局寄一封信的小仪式感。
 
-它在"手感"上有自己的执念，因为**手感是让你愿意每天打开它的原因**。
+对"手感"有执念。因为只有手感会让一个工具被你留下来。
 
-## 它能做什么
+## 里面有啥
 
-- **多仓库总览** —— 一眼看清每个仓库 ahead / behind / 未提交 状态
-- **推送前扫描** —— 25 条敏感信息检测规则 + 6 大类误提交防护（.env / 私钥 / 超大文件）
-- **真实公开/私有指示** —— 走 GitHub 公共 API（无 token），24 小时缓存
-- **4 屏 Onboarding** —— 宋体 + 呼吸鸽子 + 4 段进度条
-- **中英文双语 + Friendly/Minimal 两种 tone** —— 4 个文案变体矩阵
-- **邮局风设置面板** —— 信纸卡片 picker，不用系统组件
-- **添加扫描目录两种方式** —— 文件选择器，或直接粘贴路径（支持 `~/Code`、引号、空格 trim）
-- **完全本地** —— 仓库元数据存 `~/Library/Application Support/Pilo/state.json`；唯一网络请求是查 GitHub 公开/私有
+### 🛡️ 安全
+- **Push 前扫描** —— 25 条敏感信息规则 + 6 类误提交（.env / 私钥 / 大文件）
+- **身份哨兵** —— 工作 / 个人 / 实验类仓库分别贴邮戳，commit 时 user.email 不匹配会被标出来
+- **真实公开/私有检测** —— 无 token GitHub 公共 API，24h 缓存
 
-## 截图
+### 📬 陪伴
+- **每日邮局信件** —— 18:00 自动写一封今日 commit + 草稿总结，归档在可翻的信箱
+- **版本通告信** —— 每次新版本随 app bundled，新功能 / 改动以信件形式送达
+- **Commit 通知** —— opt-in macOS 推送（60s 防扰窗口，默认关——你的注意力不是用来卖的）
+
+### ✉️ Prompt 邮票本
+- **邮票本** —— 把常用 AI prompt 存成插画邮票，一键复制到任何 AI 工具
+- **桌面浮动 dock** *(v0.5)* —— 屏幕边缘一枚小邮票，拖到任意位置记住；点击展开扇形菜单
+- **钉到首位 ✦** *(v0.5)* —— 二级 pin，让最常用 prompt 永远排在最前面
+- **邮局风右键菜单** —— 奶油卡纸 + 金线，告别系统蓝色 NSMenu
+
+### 🤖 AI 友好
+- **AI 工具邮戳** —— 仓库里有 `CLAUDE.md` / `.cursorrules` / `GEMINI.md` / `AGENTS.md` / `CONVENTIONS.md` 自动盖对应邮戳
+- **AI commit 探测** —— 启发式标记"这条 commit 可能是 AI 协作写的"（**仅你自己看，不外发不报告**）
+- **项目文档面板** —— 每个仓库的 README / AI 指南 / 架构文档分类展示，自带 Markdown 预览 + ⌘F 全文搜
+
+### 🌐 打磨
+- **双语切换** —— 中 ↔ 英 × 温和 ↔ 简洁 4 变体 Copy 矩阵
+- **减弱动态效果支持** —— fan-out / stagger 动画尊重 macOS 辅助功能偏好
+- **邮局风自定义控件** —— 卡片 picker 代替系统 form chrome
+
+## 视觉
 
 | | |
 |---|---|
 | ![菜单栏弹窗](./docs/screenshots/menubar.png) | ![主面板](./docs/screenshots/panel.png) |
-| ![Onboarding](./docs/screenshots/onboarding.png) | ![设置](./docs/screenshots/settings.png) |
+| ![每日信件](./docs/screenshots/letter.png) | ![邮票本](./docs/screenshots/stamps.png) |
 
-*（截图待补。目前可以从源码编译。）*
+*(截图随每个版本更新。)*
 
 ## 安装
 
-**从源码编译**（现阶段唯一方式）：
+### 预编译版本（推荐）
+
+从 [Releases](https://github.com/emma-yu/Pilo/releases/latest) 下载最新 `.zip`：
+
+1. 下载 `Pilo-v*.zip` 并解压
+2. 把 `Pilo.app` 拖到 `/应用程序`
+3. **首次启动**：Pilo 目前还没公证，Gatekeeper 会拦截。**右键 `Pilo.app` → 打开 → 确认**（一次性）。后续启动正常。
+4. 点菜单栏小鸽子。
+
+系统要求：**macOS 14.0+**（Sonoma）。
+
+### 从源码构建
 
 ```bash
 brew install xcodegen
@@ -68,44 +92,74 @@ xcodegen generate
 open Pilo.xcodeproj
 ```
 
-环境要求：macOS 14.0+、Xcode 16+、Swift 6.0+。
+环境：macOS 14.0+ · Xcode 16+ · Swift 6.0+。
 
-签名 `.dmg` 在 wishlist 上。Star 一下就来得快一点。
+## 隐私
+
+Pilo 把你的代码和工作模式默认当成私有的。
+
+### 留在本机的
+- **仓库元数据** —— `~/Library/Application Support/Pilo/state.json`
+- **每日信件归档** —— 同一目录的 `letters.json`
+- **版本通告归档** —— `release-letters.json`
+- **Prompt 邮票** —— `prompt-stamps.json`
+- **所有扫描结果** —— 永不持久化，每次启动重算
+
+### 离开本机的
+只有两个 HTTP GET 请求，都是公共端点，无认证、无 body、无埋点：
+
+| 时机 | URL | 用途 |
+|---|---|---|
+| 约每 24h | `https://raw.githubusercontent.com/emma-yu/Pilo/main/updates.json` | 检查 Pilo 新版本 |
+| 首次看到一个仓库时（24h 缓存）| `https://api.github.com/repos/{owner}/{name}` | 公开/私有标记 |
+
+无统计、无崩溃报告、无用户账号。下面的源码就是最权威的答案。
 
 ## 设计系统
 
-21 个命名色，12 个字号分布在 SF Pro Rounded（圆体）和 Songti SC（衬线）两套字体，
-3 档基于 PiloBlue 暖蓝阴影的 elevation（不用纯黑），4 个 animation preset
-包括 2.5 秒的 mascot 呼吸循环。
+21 个色彩 token、12 个字号（SF Pro Rounded + Songti SC）、3 档 piloBlue 暖蓝阴影、12 张插画邮票资产 + 鸽子吉祥物。完整文档见 [IMPLEMENTATION.md §7](./IMPLEMENTATION.md#7-设计系统)。
 
-完整 token 在 [IMPLEMENTATION.md §7](./IMPLEMENTATION.md#7--设计系统)。
-
-## 技术
+## 技术栈
 
 - Swift 6.0 严格并发
-- SwiftUI `MenuBarExtra` + `Window` + `Settings` scenes
-- `@MainActor @Observable` 全局 AppState + 8 个 actor 后台
-- `FSEventStream` 增量监听（用 `kFSEventStreamCreateFlagUseCFTypes` 避免崩溃）
-- App Sandbox 关闭，Hardened Runtime 开启（git 子进程需要任意路径访问）
-- 约 9 000 行 Swift，88 个测试分布在 9 个测试套件
+- SwiftUI `MenuBarExtra` + `Window` + `Settings`
+- `@MainActor @Observable` `AppState` + 10+ `actor` 服务
+- `FSEventStream` 增量发现仓库
+- AppKit `NSEvent.mouseLocation` 驱动浮动 dock 拖动（跳出 SwiftUI window-coord 的局限）
+- App Sandbox **关**（git 子进程要任意路径访问），Hardened Runtime **开**
+- ~14 kLoC Swift，263 测试分布在 23 套件
 
-完整架构记录见 [IMPLEMENTATION.md](./IMPLEMENTATION.md) —— 数据模型、每个
-actor 的 API、持久化 schema、文案矩阵、commit 演进树。
+完整架构见 [IMPLEMENTATION.md](./IMPLEMENTATION.md)——数据模型、actor API、持久化 schema、Copy 矩阵、commit-by-commit 演进。
+
+## 发布机制
+
+Pilo 用两套机制分发，**都是纯本地**，不依赖 Sparkle，不依赖自动安装：
+
+1. **App bundle 内的 release notes**（`Pilo/Resources/release-notes.json`）—— 已升级用户首次启动新版本时收到一封 "v0.X 邮局通告" 信，跟每日信件同一个信箱
+2. **远端更新清单**（`updates.json` 在仓库根，由 GitHub raw 提供）—— 还在旧版本的用户后台 `UpdateChecker` 每 24h 轮询，发现新版本就送一封 "v0.X · 新版已发车" 信
+
+新装用户首启信箱是空的——历史版本通告不会回放。
 
 ## 当前状态
 
-v3.8 —— 原 PRD 的 Phase 0 到 7 全部落地。多仓库发现、菜单栏总览、Onboarding、
-推送流程、敏感信息扫描、误提交防护、kill switch、中英文切换、真实
-GitHub 公开/私有检测都跑通了。Stash Inbox（Phase 8）和离线推送队列在 wishlist。
+**v0.5** —— Phase 0–7 + Phase B + Sprint S1–S4 已发：
+
+- 多仓库发现、push 流、敏感信息扫描、误提交防护
+- 4 屏 Onboarding、Kill Switch、国际化
+- 每日信件、Companion 簇、身份哨兵（S3）
+- AI commit 探测、AI 工具邮戳、commit 通知
+- 项目文档面板、Markdown 预览
+- Prompt 邮票本、浮动 dock 自适应 fan-out、钉到首位 ✦
+
+后续候选：离线 push 队列、开机自启、签名 .dmg、多显示器浮动 dock。
 
 ## 贡献
 
-欢迎 issue 和 PR。
+Issue / PR 都欢迎。
 
-加一条敏感信息检测规则：在 `Pilo/Resources/secret-rules.json` 里加一条，
-配套在 `PiloTests/SecretScannerTests.swift` 加一个测试用例。
-
-大改动请先开 issue 聊一下方向。
+- **加一条敏感信息规则**：`Pilo/Resources/secret-rules.json` 加一条 + `PiloTests/SecretScannerTests.swift` 加一个测试。格式在源文件里有
+- **大改**：先开 issue 聊聊，Pilo 对 UX 和品牌一致性有强约束，**聊比 PR review 快**
+- **不调用 LLM** 是硬产品 invariant，再诱人都不能加
 
 ## License
 
@@ -115,6 +169,6 @@ MIT —— 见 [LICENSE](./LICENSE)。
 
 <div align="center">
 
-*由 <a href="https://github.com/emma-yu">@emma-yu</a> 用宋体和耐心做的。*
+*衬线体 + 耐心打磨 · <a href="https://github.com/emma-yu">@emma-yu</a>*
 
 </div>
