@@ -350,6 +350,14 @@ final class FloatingDockHostingView<Content: View>: NSHostingView<Content> {
     /// Icon 被点击（mouseUp 时若未进入 drag 模式 且 mouseDown 在 iconRect）
     var onIconTapped: (() -> Void)?
 
+    /// 关键：panel 是 `.nonactivatingPanel`，长时间没用后会丢 key window 状态。
+    /// 默认 `acceptsFirstMouse = false` 会让首次 click 被 AppKit "吞掉"用来唤 panel
+    /// 成 key —— mouseDown 不 dispatch 给我们，icon tap 看起来没反应，用户被迫双击。
+    /// 返回 true 让 click 直接送达，单击即触发 fan-out。
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        return true
+    }
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         // Fan-out 状态：让 SwiftUI 内部正常处理（stamp button / 空白处 Color.clear tap）
         if fanOutActive {
