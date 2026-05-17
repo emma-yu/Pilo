@@ -30,6 +30,12 @@ struct FloatingStampDockView: View {
     @State private var orbVisibility: [Bool] = []
     @State private var fanOutAnimationTask: Task<Void, Never>?
 
+    /// Hover tooltip 状态：当前被 hover 的 orb 索引（stamps.count 表示 moreOrb）。
+    /// nil = 没 tooltip 显示。
+    @State private var hoveredOrbIndex: Int?
+    /// Hover 防抖 task。首次出现 250ms 延迟；orb-to-orb 切换无延迟；离场 50ms grace（防误抹）。
+    @State private var hoverTask: Task<Void, Never>?
+
     /// macOS "减弱动态效果"无障碍偏好。开启时跳过 stagger / spring / 旋转 / 缩放，
     /// 改成单帧 fade（WCAG 2.2.3 + Apple HIG 硬要求，对前庭敏感用户友好）。
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -50,9 +56,10 @@ struct FloatingStampDockView: View {
         Array(appState.floatingDockStamps.prefix(maxStampCount))
     }
 
-    /// Icon 永远在 panel 正中（v6）
+    /// Icon 永远在 panel 正中。**与 FloatingStampDockController.panelSize 保持一致**——
+    /// panel 320×320 时 icon 中心在 (160, 160)。orb radius 75 / tooltip radius 110 都基于这个原点。
     private var iconCenter: CGPoint {
-        CGPoint(x: 110, y: 110)
+        CGPoint(x: 160, y: 160)
     }
 
     /// Toast 位置：
@@ -97,7 +104,7 @@ struct FloatingStampDockView: View {
                     .allowsHitTesting(false)
             }
         }
-        .frame(width: 220, height: 220)
+        .frame(width: 320, height: 320)
         .contextMenu {
             Button {
                 appState.setFloatingStampDockVisible(false)
@@ -166,7 +173,7 @@ struct FloatingStampDockView: View {
     private var fanOutContent: some View {
         ZStack {
             ForEach(Array(stamps.enumerated()), id: \.element.id) { i, stamp in
-                stampOrb(stamp)
+                stampOrb(stamp, index: i)
                     .position(orbPosition(for: i, total: stamps.count + 1))
                     .modifier(OrbAppearModifier(
                         visible: orbVisible(i),
@@ -174,13 +181,22 @@ struct FloatingStampDockView: View {
                     ))
                     .allowsHitTesting(isFanOut && orbVisible(i))
             }
-            moreOrb
+            moreOrb(index: stamps.count)
                 .position(orbPosition(for: stamps.count, total: stamps.count + 1))
                 .modifier(OrbAppearModifier(
                     visible: orbVisible(stamps.count),
                     tumbleRotation: orbTumbleRotation(stamps.count)
                 ))
                 .allowsHitTesting(isFanOut && orbVisible(stamps.count))
+
+            // Hover tooltip —— 在 orb 外侧 radius 110 处弹出 cream paper 标签
+            if let idx = hoveredOrbIndex, idx <= stamps.count {
+                tooltipBubble(text: tooltipText(for: idx))
+                    .position(tooltipPosition(for: idx, total: stamps.count + 1))
+                    .allowsHitTesting(false)
+                    .id(idx)
+                    .transition(.opacity.combined(with: .scale(scale: 0.85)))
+            }
 
             if stamps.isEmpty {
                 let geom = viewBox.fanOutGeometry
@@ -207,7 +223,7 @@ struct FloatingStampDockView: View {
         }
     }
 
-    private func stampOrb(_ stamp: PromptStamp) -> some View {
+    private func stampOrb(_ stamp: PromptStamp, index: Int) -> some View {
         Button {
             handleStampClick(stamp)
         } label: {
@@ -219,12 +235,18 @@ struct FloatingStampDockView: View {
                         .foregroundStyle(Color.stampMint)
                 }
             }
+            // chip 自然尺寸 36×33 + 旋转 -3°，给规则 36×36 hit rect 与 moreOrb 对齐
+            .frame(width: 36, height: 36)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help(stamp.title.isEmpty ? String(stamp.body.prefix(60)) : stamp.title)
+        .accessibilityLabel(stamp.title.isEmpty ? String(stamp.body.prefix(60)) : stamp.title)
+        .onHover { hovering in
+            handleHover(showIndex: index, hovering: hovering)
+        }
     }
 
-    private var moreOrb: some View {
+    private func moreOrb(index: Int) -> some View {
         Button {
             collapse()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
@@ -241,9 +263,13 @@ struct FloatingStampDockView: View {
                     .foregroundStyle(Color.piloGoldDark)
             }
             .frame(width: 36, height: 36)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .help("更多 …")
+        .accessibilityLabel(appState.language == .zh ? "更多" : "More")
+        .onHover { hovering in
+            handleHover(showIndex: index, hovering: hovering)
+        }
     }
 
     // MARK: - 点击邮票 → 复制 + inline toast + 收拢
@@ -366,7 +392,15 @@ struct FloatingStampDockView: View {
     // MARK: - 径向位置计算（自适应 360°/180°）
 
     private func orbPosition(for index: Int, total: Int) -> CGPoint {
-        let radius: CGFloat = 75
+        polarPosition(for: index, total: total, radius: 75)
+    }
+
+    /// Tooltip 落在 orb 同角度、radius 110 处——orb 外缘 r=93，留 17pt 间距视觉分离。
+    private func tooltipPosition(for index: Int, total: Int) -> CGPoint {
+        polarPosition(for: index, total: total, radius: 110)
+    }
+
+    private func polarPosition(for index: Int, total: Int, radius: CGFloat) -> CGPoint {
         let geom = viewBox.fanOutGeometry
         let angle: CGFloat
 
@@ -387,6 +421,68 @@ struct FloatingStampDockView: View {
         let dx = radius * cos(radians)
         let dy = radius * sin(radians)
         return CGPoint(x: iconCenter.x + dx, y: iconCenter.y + dy)
+    }
+
+    // MARK: - Hover tooltip
+
+    /// Hover 防抖逻辑：
+    ///   - 首次出现 → 250ms 延迟（避免扫鼠标无意触发）
+    ///   - tooltip 已在显示时切换 orb → 立即 swap（无延迟）
+    ///   - 离开 orb → 50ms grace（防止从 orb 飞到 tooltip 文字时误抹）
+    private func handleHover(showIndex: Int, hovering: Bool) {
+        hoverTask?.cancel()
+        if hovering {
+            if hoveredOrbIndex != nil {
+                withAnimation(.easeOut(duration: 0.14)) {
+                    hoveredOrbIndex = showIndex
+                }
+            } else {
+                hoverTask = Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 250_000_000)
+                    guard !Task.isCancelled else { return }
+                    withAnimation(.spring(response: 0.28, dampingFraction: 0.78)) {
+                        hoveredOrbIndex = showIndex
+                    }
+                }
+            }
+        } else {
+            hoverTask = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 50_000_000)
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeOut(duration: 0.14)) {
+                    hoveredOrbIndex = nil
+                }
+            }
+        }
+    }
+
+    private func tooltipText(for index: Int) -> String {
+        if index >= stamps.count {
+            return appState.language == .zh ? "更多" : "More"
+        }
+        let stamp = stamps[index]
+        return stamp.title.isEmpty ? String(stamp.body.prefix(40)) : stamp.title
+    }
+
+    private func tooltipBubble(text: String) -> some View {
+        Text(text)
+            .font(.piloSerifCaption)
+            .italic()
+            .foregroundStyle(Color.inkPrimary)
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(Color.piloPaper)
+                    .overlay(
+                        Capsule().stroke(Color.piloGoldDark.opacity(0.45), lineWidth: 0.5)
+                    )
+            )
+            .shadow(color: .black.opacity(0.14), radius: 3, x: 0, y: 1)
+            .frame(maxWidth: 130)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

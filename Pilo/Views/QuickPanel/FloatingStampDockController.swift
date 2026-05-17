@@ -41,9 +41,12 @@ final class FloatingStampDockController {
     private var globalClickMonitor: Any?
     private weak var dockViewBox: FloatingDockViewBox?
 
-    static let panelSize: CGFloat = 220
+    /// Panel 视觉/可绘制尺寸。**v9 起 320**（v6-v8 是 220）—— 加大透明边距给
+    /// hover tooltip 留外伸空间（orb 外缘 r=93，tooltip 落在 r=110 处）。
+    /// Hit testing 仍只在 iconRect 接收 click，透明区域 click-through 不受影响。
+    static let panelSize: CGFloat = 320
     /// Icon 在 panel 内的中心偏移（icon 视觉中心永远在 panel 正中）
-    static let iconCenterInPanelOffset: CGFloat = panelSize / 2  // 110
+    static let iconCenterInPanelOffset: CGFloat = panelSize / 2  // 160
     /// Icon 视觉半径（44pt icon → 22pt half）—— 用作 clamp 边界（icon 边缘最多贴屏幕边）
     static let iconHalfSize: CGFloat = 22
 
