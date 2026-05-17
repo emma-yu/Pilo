@@ -52,6 +52,7 @@
 		46C80E210B40DF2B1F654C8A /* PostalContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = E197D0F0D4782B0B6AF5F1DC /* PostalContextMenu.swift */; };
 		46D020C0E664D11AF6B1A2C6 /* PiloChip.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF558DE48A0E93A22420D9A /* PiloChip.swift */; };
 		46F2E5A4EE580FC935423CEF /* CommitSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D2A9ADDE4DD19B2703E320E /* CommitSummary.swift */; };
+		471C759954D0A0D7D7702180 /* PiloMascotVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 322C5DDEBACBABCED8DB922F /* PiloMascotVideo.swift */; };
 		49A4509863B0B0D43791ACC0 /* OnboardingWelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */; };
 		49C36AAC4321706D27F95F7F /* PushReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E456950F8860CE112F3A249B /* PushReport.swift */; };
 		4D4EEDC70D697AFB0294C959 /* IdentityValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18FB813772CBA19631847E17 /* IdentityValidatorTests.swift */; };
@@ -114,6 +115,7 @@
 		8FF4DA132472F527B5E480C2 /* UncommittedFileParsingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C5B37440B334B6D98141BE2 /* UncommittedFileParsingTests.swift */; };
 		9194E5D6EC23243FE854C5E9 /* RepoDoc.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC91E39A53092AC90E49BC40 /* RepoDoc.swift */; };
 		9393DA5C1346CD914EB98299 /* MarkdownRendererTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 899A4CE54EEAD3D91FA884BA /* MarkdownRendererTests.swift */; };
+		948086FD22654231CBE4AEAF /* pilo-mascot.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 22F7B345773BB93B9F3FE0FF /* pilo-mascot.mp4 */; };
 		94F1467CFD126B4D77E1EE35 /* AICommitDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4C9E61A9BD4272EF5FB41F /* AICommitDetector.swift */; };
 		9514737609E4AA9A0389A177 /* CardContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396601D98F4B17ECA50E2B49 /* CardContainer.swift */; };
 		9C0B1ADFF2857765911A42D7 /* MarkdownPreviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C0963CE1804A146CAABE56E /* MarkdownPreviewSheet.swift */; };
@@ -206,6 +208,7 @@
 		20E05A4CA192EA6913C4E82F /* SecretScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretScanner.swift; sourceTree = "<group>"; };
 		21E585BC45736BD031CCC12B /* DailyDigestServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyDigestServiceTests.swift; sourceTree = "<group>"; };
 		22B33530C2EE3B2C9D8F4B10 /* PiloSounds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloSounds.swift; sourceTree = "<group>"; };
+		22F7B345773BB93B9F3FE0FF /* pilo-mascot.mp4 */ = {isa = PBXFileReference; path = "pilo-mascot.mp4"; sourceTree = "<group>"; };
 		231AF0568E988D86699B2EE4 /* RepoDocsIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoDocsIndexer.swift; sourceTree = "<group>"; };
 		24350EC29C81DF1D56726155 /* RepoMoodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RepoMoodTests.swift; sourceTree = "<group>"; };
 		25317FA8D7CC9A8FFA9FB091 /* OnboardingWelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingWelcomeView.swift; sourceTree = "<group>"; };
@@ -222,6 +225,7 @@
 		2F3AAACB3FDAEC5E46763D44 /* AIToolDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIToolDetector.swift; sourceTree = "<group>"; };
 		315388AC4F7E19C725A91670 /* MarkdownDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownDocument.swift; sourceTree = "<group>"; };
 		31E96811F1373FC128B2603A /* UpdateAvailableReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateAvailableReaderView.swift; sourceTree = "<group>"; };
+		322C5DDEBACBABCED8DB922F /* PiloMascotVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PiloMascotVideo.swift; sourceTree = "<group>"; };
 		329FE34277A4F2C52BAE2CA5 /* DailyDigestCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyDigestCard.swift; sourceTree = "<group>"; };
 		336C113AFFAFDC6D0F309D53 /* DiffHunk.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiffHunk.swift; sourceTree = "<group>"; };
 		380A5E5AC634AED7E85559A2 /* GitignoreActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GitignoreActionSheet.swift; sourceTree = "<group>"; };
@@ -359,6 +363,7 @@
 				D5496247C53277353150F011 /* AIToolStamp.swift */,
 				CA96DDB971AA6FC2B95B6C20 /* ColophonAttribution.swift */,
 				F16B037F569F8B168CAFE426 /* PiloMascot.swift */,
+				322C5DDEBACBABCED8DB922F /* PiloMascotVideo.swift */,
 				E197D0F0D4782B0B6AF5F1DC /* PostalContextMenu.swift */,
 				8A2B7B319C83FCB9F85FF0EA /* PostalScanIndicator.swift */,
 				93197952F28259984E04A5F2 /* PromptStampChip.swift */,
@@ -548,6 +553,7 @@
 			isa = PBXGroup;
 			children = (
 				707C36571A6F9C184754C4BB /* Assets.xcassets */,
+				22F7B345773BB93B9F3FE0FF /* pilo-mascot.mp4 */,
 				FBB9FEFC0473258F3D520F74 /* release-notes.json */,
 				930E45B5488623F43A9DDDCC /* secret-rules.json */,
 				9DA38AA427B1D76AEE94CC06 /* studio-letters.json */,
@@ -755,6 +761,7 @@
 				1C20B760E25A38121F50E35E /* Assets.xcassets in Resources */,
 				D30DBD935F24496CEA9A3DA2 /* README.md in Resources */,
 				75358BB2026E8661270C9884 /* letterArrived.caf in Resources */,
+				948086FD22654231CBE4AEAF /* pilo-mascot.mp4 in Resources */,
 				A2FB161B013AF658D5FDCE00 /* pushInFlight.caf in Resources */,
 				8F3AC8516FD9836CB6F97DF8 /* pushSuccess.caf in Resources */,
 				E4A7CCF587AFCCC0A5B2E0EF /* release-notes.json in Resources */,
@@ -876,6 +883,7 @@
 				46D020C0E664D11AF6B1A2C6 /* PiloChip.swift in Sources */,
 				1DF9A378983101EAFF83DC27 /* PiloHero.swift in Sources */,
 				22311B6C337E38ACD1C17146 /* PiloMascot.swift in Sources */,
+				471C759954D0A0D7D7702180 /* PiloMascotVideo.swift in Sources */,
 				6387644381FD5CC4D752ACB8 /* PiloProgressBar.swift in Sources */,
 				0C019E0732F579484DCB2999 /* PiloSounds.swift in Sources */,
 				46C80E210B40DF2B1F654C8A /* PostalContextMenu.swift in Sources */,

@@ -16,7 +16,7 @@ struct OnboardingWelcomeView: View {
             OrnamentDivider(width: 240)
                 .padding(.bottom, PiloSpacing.xs)
 
-            PiloMascot(mood: .happy, size: 120, breathing: true)
+            PiloMascotVideo(size: 120)
 
             VStack(spacing: PiloSpacing.xs) {
                 Text(lang == .zh ? "Pilo 邮局" : "Pilo Post Office")

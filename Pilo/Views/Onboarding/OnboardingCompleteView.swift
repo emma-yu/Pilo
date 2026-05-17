@@ -13,7 +13,7 @@ struct OnboardingCompleteView: View {
             Spacer(minLength: PiloSpacing.s)
 
             ZStack(alignment: .topTrailing) {
-                PiloMascot(mood: .happy, size: 140, breathing: true)
+                PiloMascotVideo(size: 140)
                 WaxSeal(size: 48, label: "READY")
                     .offset(x: 8, y: -4)
             }
