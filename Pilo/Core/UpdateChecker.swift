@@ -93,7 +93,9 @@ actor UpdateChecker {
             detectedAt: Date(),
             readAt: nil,
             title: m.title,
+            enTitle: m.enTitle,
             highlights: m.highlights,
+            enHighlights: m.enHighlights,
             downloadURL: m.downloadURL,
             releaseNotesURL: m.releaseNotesURL
         )

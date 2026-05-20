@@ -785,8 +785,11 @@ final class AppState {
                 deliveredAt: now,
                 readAt: nil,
                 title: release.title,
+                enTitle: release.enTitle,
                 highlights: release.highlights,
-                bodyParagraphs: release.body
+                enHighlights: release.enHighlights,
+                bodyParagraphs: release.body,
+                enBodyParagraphs: release.enBody
             )
         }
 
@@ -1214,19 +1217,11 @@ final class AppState {
             let advised: String
             switch finding.kind {
             case .envFile, .privateKey:
-                advised = """
-                ⚠️ 重要：.gitignore 只阻止**未来**的提交。这次 push 里已经存在的文件不会因此消失——它一旦上 GitHub，全世界都能看到。
-
-                建议：
-                  1. 立即在密钥服务商后台 revoke 涉及的 token / 密钥
-                  2. 重新生成新 key，放到 .env 而非源码
-                  3. 如果需要把这个文件从历史中彻底抹掉，请在终端运行：
-                     git filter-repo --path \(finding.filePath) --invert-paths
-                """
+                advised = Copy.Guard.gitignoreAddedCriticalAdvised(language, filePath: finding.filePath)
             case .buildArtifact, .dsStore, .publicKey:
-                advised = "已加入 .gitignore——未来不会再误推。如果想从历史中也清理，可在终端用 git filter-repo。"
+                advised = Copy.Guard.gitignoreAddedNormalAdvised(language)
             case .largeFile, .oversizeBlocked:
-                advised = "大文件建议走 Git LFS：\n  brew install git-lfs\n  git lfs install\n  git lfs track \"\(finding.filePath)\""
+                advised = Copy.Guard.gitignoreAddedLFSAdvised(language, filePath: finding.filePath)
             }
             self.lastGitignoreAction = GitignoreActionState(
                 kind: finding.kind,
@@ -1245,8 +1240,8 @@ final class AppState {
                 filePath: finding.filePath,
                 addedLines: [],
                 alreadyPresent: [],
-                gitignorePath: "(写入失败)",
-                advisedAction: "写不进去 .gitignore：\(error.localizedDescription)\n建议手动编辑仓库根的 .gitignore。"
+                gitignorePath: Copy.Guard.gitignoreWriteFailedPath(language),
+                advisedAction: Copy.Guard.gitignoreWriteFailedAdvised(language, errorDescription: error.localizedDescription)
             )
         }
     }

@@ -25,13 +25,13 @@ struct FalsePositiveScopeSheet: View {
             VStack(spacing: 8) {
                 scopeButton(
                     title: Copy.Scan.markFPHere(lang),
-                    subtitle: "\(finding.filePath):\(finding.lineNumber) 的这个匹配不再提示",
+                    subtitle: lang == .zh ? "\(finding.filePath):\(finding.lineNumber) 的这个匹配不再提示" : "Mute this match at \(finding.filePath):\(finding.lineNumber)",
                     symbol: "doc.text",
                     action: { onPick(.thisFileOnly) }
                 )
                 scopeButton(
                     title: Copy.Scan.markFPRule(lang),
-                    subtitle: finding.ruleName + "（整个仓库都跳过）",
+                    subtitle: finding.ruleName + (lang == .zh ? "（整个仓库都跳过）" : " (Skip in entire repo)"),
                     symbol: "xmark.circle",
                     action: { onPick(.thisRule) }
                 )

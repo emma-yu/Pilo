@@ -18,12 +18,40 @@ struct ReleaseLetter: Codable, Sendable, Identifiable, Hashable {
     /// 用户阅读的时间。nil = 未读
     var readAt: Date?
 
-    /// 标题，如 "AI 工具识别 + 文档阅读体验升级"
     let title: String
+    let enTitle: String?
     /// 短 bullet 高亮（3-6 条最舒适）
     let highlights: [String]
+    let enHighlights: [String]?
     /// 长段落（可选）—— 给愿意细读的人扩写细节
     let bodyParagraphs: [String]
+    let enBodyParagraphs: [String]?
+
+    init(
+        id: UUID = UUID(),
+        version: String,
+        releaseDate: Date,
+        deliveredAt: Date = Date(),
+        readAt: Date? = nil,
+        title: String,
+        enTitle: String? = nil,
+        highlights: [String],
+        enHighlights: [String]? = nil,
+        bodyParagraphs: [String] = [],
+        enBodyParagraphs: [String]? = nil
+    ) {
+        self.id = id
+        self.version = version
+        self.releaseDate = releaseDate
+        self.deliveredAt = deliveredAt
+        self.readAt = readAt
+        self.title = title
+        self.enTitle = enTitle
+        self.highlights = highlights
+        self.enHighlights = enHighlights
+        self.bodyParagraphs = bodyParagraphs
+        self.enBodyParagraphs = enBodyParagraphs
+    }
 
     var isUnread: Bool { readAt == nil }
 }

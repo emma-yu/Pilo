@@ -5,12 +5,20 @@
       "version": "0.5.0",
       "releaseDate": "2026-05-15",
       "title": "邮局正式开门 · v0.5 通告",
+      "enTitle": "The Post Office is Open · v0.5 Release",
       "highlights": [
         "邮票本走到了屏幕边——菜单栏「邮票本召唤」打开，一枚小邮票浮在桌面边缘，拖到任意位置都记得住",
         "点小邮票 → 常用邮票围成一圈展开。icon 在屏幕中央时是完整圆，贴边时朝屏幕内开半圆",
         "右键邮票可「钉到首位 ✦」——加急邮戳，让最常用的 prompt 永远排在第一位",
         "所有右键菜单换成了邮局风——cream paper + 金线 + 衬线字，告别系统蓝色高亮",
         "项目文档行右键多了「复制路径」——跟邮票誊抄共享同一个邮戳音"
+      ],
+      "enHighlights": [
+        "The stamp book has moved to the screen edge — toggle it via the 'Summon Stamp Book' menu bar item. A tiny stamp will float at the edge of your screen, remembering its position.",
+        "Click the stamp → your most used stamps fan out in a circle. It forms a full circle in the center of the screen, or a semi-circle when docked at the edge.",
+        "Right-click a stamp to 'Pin to Top ✦' — an expedited postmark that keeps your most frequently used prompts first in line.",
+        "All context menus have been given the post office treatment — cream paper + gold lines + serif fonts, replacing the default system blue.",
+        "Project documents now have a 'Copy Path' option in their right-click menu — sharing the same wax seal sound as stamp copying."
       ],
       "body": [
         "亲爱的朋友，",
@@ -21,12 +29,23 @@
         "如果你用着不顺手、或者觉得 Pilo 应该长得不一样——欢迎来信。GitHub issue 或者 PR 都行。",
         "慢慢攒，攒成你跟这些项目一起走过的路。",
         "——Pilo 邮局总局，于 v0.5 开门日"
+      ],
+      "enBody": [
+        "Dear friend,",
+        "Today marks Pilo's first step out into the world.",
+        "For the past few months, it has been a quiet little carrier pigeon growing up in Emma's computer — watching over repository security by day, and writing a work summary at 6:00 PM. Today, it officially meets the public.",
+        "If this is your first time meeting Pilo — it's a Git repository companion that lives in your macOS menu bar. No LLM API calls, no code transmission, no uploads. Just serif fonts and delicate gold lines, turning the act of 'seeing what code you wrote today' into a daily letter.",
+        "Version 0.5 introduces three main updates: moving the 'stamp book' to the screen edge (via 'Summon Stamp Book' in the menu bar), adding an expedited 'Pin to Top ✦' feature for your favorite prompts, and redesigning all context menus with the post office aesthetic — bidding farewell to the system default blue highlights.",
+        "If something doesn't feel right, or if you think Pilo should look different — we welcome your letters. GitHub issues or PRs are both fine.",
+        "Take it slow, and let these letters accumulate into the journey you share with your projects.",
+        "— Pilo General Post Office, on v0.5 Opening Day"
       ]
     },
     {
       "version": "0.4.0",
       "releaseDate": "2026-05-12",
       "title": "AI 时代的小邮局 · v0.4 通告",
+      "enTitle": "A Small Post Office for the AI Era · v0.4 Release",
       "highlights": [
         "仓库里的 AI 工具配置自动盖邮戳 —— CLAUDE.md / .cursorrules / GEMINI.md / AGENTS.md / CONVENTIONS.md 都能识别",
         "长文档左侧多了一份目录，⌘F 也能全文搜，上次读到哪开关之间自动记住",
@@ -34,6 +53,14 @@
         "任意仓库有新 commit 想知道？设置 → 通用 → 「新邮件提醒」打开（opt-in，默认关）",
         "「待寄出的小信」按时间排序，最近动过的在最前",
         "所有 loading 都换成了金色波浪 dots，告别系统菊花"
+      ],
+      "enHighlights": [
+        "AI tool configurations in your repositories now get an automatic postmark — CLAUDE.md, .cursorrules, GEMINI.md, AGENTS.md, and CONVENTIONS.md are all recognized.",
+        "Long documents now have a table of contents on the left, ⌘F full-text search, and it remembers where you left off reading.",
+        "Every document row now has a 'Copy Full Text' button, also available in the preview header.",
+        "Want to know when there are new commits in any repo? Enable 'New Mail Alert' in Settings -> General (opt-in, default off).",
+        "'Letters to send' are now sorted by time, with the most recently touched repos at the top.",
+        "All loading spinners have been replaced with golden wavy dots, retiring the system beachball."
       ],
       "body": [
         "亲爱的朋友，",
@@ -43,6 +70,15 @@
         "如果你在某个仓库里 commit 了新东西，又怕 Pilo 错过——可以去设置里打开「新邮件提醒」。60 秒防扰窗口，连续 commit 不会刷屏。",
         "慢慢攒，攒成你跟这些项目一起走过的路。",
         "——Pilo 邮局总局"
+      ],
+      "enBody": [
+        "Dear friend,",
+        "This is the first 'Post Office Notice' Pilo is sending you. From now on, whenever there's a new version, the news will be delivered from this mailbox — alongside the work summaries you receive every evening.",
+        "This version of Pilo solidifies its role as 'your coding companion in the AI era': repositories with CLAUDE.md will automatically receive a Claude Code postmark, and those with .cursorrules will get a Cursor postmark. You can instantly see which projects are collaborating with which AI.",
+        "Reading your own long documents (like IMPLEMENTATION.md) is also much more comfortable now — left-side table of contents, ⌘F full-text search, and it automatically remembers where you last stopped.",
+        "If you committed something new in a repo but are worried Pilo might miss it — you can turn on 'New Mail Alert' in settings. There's a 60-second anti-disturbance window so continuous commits won't flood your screen.",
+        "Take it slow, and let these letters accumulate into the journey you share with your projects.",
+        "— Pilo General Post Office"
       ]
     }
   ]

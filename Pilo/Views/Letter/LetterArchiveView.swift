@@ -111,7 +111,7 @@ struct LetterArchiveView: View {
                             .font(.system(size: 14, weight: letter.isUnread ? .semibold : .medium, design: .rounded))
                             .foregroundStyle(Color.inkPrimary)
                         Spacer()
-                        Text(Self.relativeFormatter.localizedString(for: letter.date, relativeTo: Date()))
+                        Text(Self.relativeFormatter(for: lang).localizedString(for: letter.date, relativeTo: Date()))
                             .font(.piloSerifCaption)
                             .italic()
                             .foregroundStyle(Color.inkTertiary)
@@ -150,12 +150,12 @@ struct LetterArchiveView: View {
                             .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
                             .foregroundStyle(Color.inkPrimary)
                         Spacer()
-                        Text(Self.relativeFormatter.localizedString(for: letter.releaseDate, relativeTo: Date()))
+                        Text(Self.relativeFormatter(for: lang).localizedString(for: letter.releaseDate, relativeTo: Date()))
                             .font(.piloSerifCaption)
                             .italic()
                             .foregroundStyle(Color.inkTertiary)
                     }
-                    Text(letter.title)
+                    Text(lang == .zh ? letter.title : (letter.enTitle ?? letter.title))
                         .font(.piloSerifCaption)
                         .italic()
                         .foregroundStyle(Color.inkSecondary)
@@ -196,12 +196,12 @@ struct LetterArchiveView: View {
                             .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
                             .foregroundStyle(Color.inkPrimary)
                         Spacer()
-                        Text(Self.relativeFormatter.localizedString(for: letter.detectedAt, relativeTo: Date()))
+                        Text(Self.relativeFormatter(for: lang).localizedString(for: letter.detectedAt, relativeTo: Date()))
                             .font(.piloSerifCaption)
                             .italic()
                             .foregroundStyle(Color.inkTertiary)
                     }
-                    Text(letter.title)
+                    Text(lang == .zh ? letter.title : (letter.enTitle ?? letter.title))
                         .font(.piloSerifCaption)
                         .italic()
                         .foregroundStyle(Color.inkSecondary)
@@ -245,7 +245,7 @@ struct LetterArchiveView: View {
                             .font(.custom("Songti SC", size: 14).weight(letter.isUnread ? .semibold : .medium))
                             .foregroundStyle(Color.inkPrimary)
                         Spacer()
-                        Text(Self.relativeFormatter.localizedString(for: letter.sentDate, relativeTo: Date()))
+                        Text(Self.relativeFormatter(for: lang).localizedString(for: letter.sentDate, relativeTo: Date()))
                             .font(.piloSerifCaption)
                             .italic()
                             .foregroundStyle(Color.inkTertiary)
@@ -288,9 +288,10 @@ struct LetterArchiveView: View {
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
-    private static let relativeFormatter: RelativeDateTimeFormatter = {
+    private static func relativeFormatter(for lang: Language) -> RelativeDateTimeFormatter {
         let f = RelativeDateTimeFormatter()
+        f.locale = Locale(identifier: lang == .zh ? "zh_Hans_CN" : "en_US")
         f.unitsStyle = .full
         return f
-    }()
+    }
 }

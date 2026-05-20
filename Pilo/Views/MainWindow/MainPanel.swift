@@ -158,7 +158,7 @@ private struct PanelHeader: View {
                 .font(.system(size: 15))
                 .foregroundStyle(Color.piloGold)
 
-            Text(lang == .zh ? "Pilo · 我的小邮局" : "Pilo · My Post Office")
+            Text(Copy.RepoList.signatureHeaderTitle(lang))
                 .font(.piloSerifTitle)
                 .foregroundStyle(Color.inkPrimary)
                 .tracking(0.5)
@@ -217,9 +217,7 @@ private struct PanelHeader: View {
         let healthy = appState.gitExecutablePath != nil
         // 注意：Pilo 只检测了 git 二进制是否存在，没真的验证 SSH key / GitHub PAT
         // / 网络。所以这里只能诚实说"Git 就绪"，不能假装 SSH/Token 都验证过。
-        let text = healthy
-            ? (lang == .zh ? "Git 就绪" : "Git ready")
-            : (lang == .zh ? "未找到 git" : "git missing")
+        let text = healthy ? Copy.MainPanel.gitReady(lang) : Copy.MainPanel.gitMissing(lang)
         let tint: Color = healthy ? .stampMint : .roseDanger
 
         return HStack(spacing: 5) {
@@ -451,7 +449,7 @@ private struct PanelDetail: View {
         Button {
             isStampPickerOpen.toggle()
         } label: {
-            StampBadge(category: repo.category, size: 60, style: .illustrated)
+            StampBadge(category: repo.category, size: 60, lang: lang, style: .illustrated)
                 .opacity(repo.category == .unset ? 1.0 : 0.62)      // 水印淡透
                 .blendMode(repo.category == .unset ? .normal : .multiply)  // 跟纸融合
                 .contentShape(Circle())
@@ -533,7 +531,7 @@ private struct PanelDetail: View {
                             .stroke(Color.piloGold, lineWidth: 1.5)
                             .frame(width: 72, height: 72)
                     }
-                    StampBadge(category: cat, size: 64)
+                    StampBadge(category: cat, size: 64, lang: lang)
                 }
                 .frame(width: 72, height: 72)
 
@@ -667,13 +665,13 @@ private struct PanelDetail: View {
     private func bodyContent(for repo: Repository) -> some View {
         if repo.aheadCount > 0 {
             // 状态 1：有待推 commit
-            SectionDivider(label: lang == .zh ? "— 待寄出的小信 —" : "— letters to send —")
+            SectionDivider(label: Copy.MenuBar.groupLabelLetters(lang))
                 .padding(.top, 26)
                 .padding(.bottom, 12)
             commitsList(for: repo)
         } else if repo.uncommittedCount > 0 {
             // 状态 2：只有未提交
-            SectionDivider(label: lang == .zh ? "— 等待 commit 的草稿 —" : "— drafts waiting to commit —")
+            SectionDivider(label: Copy.MainPanel.draftsHeader(lang))
                 .padding(.top, 26)
                 .padding(.bottom, 12)
             uncommittedCard(for: repo)
@@ -685,9 +683,7 @@ private struct PanelDetail: View {
     }
 
     private func uncommittedCard(for repo: Repository) -> some View {
-        let text = lang == .zh
-            ? "有 \(repo.uncommittedCount) 个未提交的修改 · 请在编辑器里 commit 后再回来推送"
-            : "\(repo.uncommittedCount) uncommitted change\(repo.uncommittedCount == 1 ? "" : "s") · commit them in your editor, then come back to push"
+        let text = Copy.MainPanel.uncommittedChangesPrompt(lang, count: repo.uncommittedCount)
         return Text(text)
             .font(.piloSerifSubtitle)
             .foregroundStyle(Color.roseDanger.opacity(0.85))
@@ -707,10 +703,10 @@ private struct PanelDetail: View {
     private var syncedEmptyState: some View {
         VStack(spacing: PiloSpacing.s) {
             PiloMascot(mood: .sleeping, size: 80, breathing: true)
-            Text(lang == .zh ? "这个仓库一切都好" : "All good here")
+            Text(Copy.MainPanel.repoAllGood(lang))
                 .font(.piloSection)
                 .foregroundStyle(Color.inkPrimary)
-            Text(lang == .zh ? "没什么要寄出的" : "nothing to send")
+            Text(Copy.MainPanel.repoNothingToSend(lang))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkSecondary)
         }
@@ -728,7 +724,7 @@ private struct PanelDetail: View {
     @ViewBuilder
     private func commitsList(for repo: Repository) -> some View {
         if appState.currentCommits.isEmpty {
-            Text(lang == .zh ? "正在拉取 commit..." : "Loading commits...")
+            Text(Copy.MainPanel.loadingCommits(lang))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkTertiary)
                 .padding(.vertical, PiloSpacing.s)
@@ -738,9 +734,7 @@ private struct PanelDetail: View {
                     commitRow(c)
                 }
                 if appState.currentCommits.count > 8 {
-                    Text(lang == .zh
-                         ? "…还有 \(appState.currentCommits.count - 8) 个"
-                         : "…and \(appState.currentCommits.count - 8) more")
+                    Text(Copy.MenuBar.moreReposCount(lang, count: appState.currentCommits.count - 8))
                         .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.inkTertiary)
                 }
@@ -759,7 +753,7 @@ private struct PanelDetail: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 8)
-            Text(RepoCard.relativeFormatter.localizedString(for: c.date, relativeTo: Date()))
+            Text(RepoCard.relativeFormatter(for: appState.language).localizedString(for: c.date, relativeTo: Date()))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkTertiary)
         }
@@ -784,7 +778,7 @@ private struct PanelDetail: View {
                 HStack(spacing: 5) {
                     Image(systemName: "paperplane.fill")
                         .font(.system(size: 13))
-                    Text(lang == .zh ? "推送" : "Push")
+                    Text(Copy.MainPanel.pushButtonLabel(lang))
                 }
                 .font(.system(size: 14, weight: .medium))
             }
@@ -796,7 +790,7 @@ private struct PanelDetail: View {
             aiLauncherButton(for: repo)
 
             // 在终端打开（ghost）
-            Button(lang == .zh ? "在终端打开" : "Open in Terminal") {
+            Button(Copy.RepoDetail.openInTerminalButton(lang)) {
                 openTerminal(at: repo.path)
             }
             .buttonStyle(MiniGhostButtonStyle())
@@ -827,7 +821,7 @@ private struct PanelDetail: View {
         VStack(spacing: PiloSpacing.l) {
             Spacer()
             PiloMascot(mood: .sleeping, size: 96, breathing: true)
-            Text(lang == .zh ? "选一个仓库吧 ✨" : "Pick a repo ✨")
+            Text(Copy.MainPanel.selectRepoPrompt(lang))
                 .font(.piloSerifSubtitle)
                 .foregroundStyle(Color.inkSecondary)
             Spacer()
@@ -892,6 +886,7 @@ private struct StampBadge: View {
 
     let category: RepoCategory
     let size: CGFloat
+    let lang: Language
     var style: Style = .illustrated
 
     var body: some View {
@@ -979,12 +974,7 @@ private struct StampBadge: View {
 
     /// 简笔字戳：楷书单字
     private var stampGlyph: String {
-        switch category {
-        case .work:       return "工"
-        case .personal:   return "私"
-        case .experiment: return "试"
-        case .unset:      return ""
-        }
+        Copy.Inventory.categoryStamp(category, lang)
     }
 
     /// 简笔字戳的背景色（跟 sidebar dot / health pill 类别色一致）
@@ -1066,7 +1056,7 @@ private struct SidebarRepoRow: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .help(lang == .zh ? "更多操作" : "More actions")
+                    .help(Copy.MainPanel.moreActionsTooltip(lang))
                     .transition(.opacity.combined(with: .scale(scale: 0.85)))
                     .popover(isPresented: $isMenuOpen, arrowEdge: .leading) {
                         PostalContextMenu(items: menuItems)
@@ -1112,14 +1102,14 @@ private struct SidebarRepoRow: View {
     /// PostalContextMenu 的 item 数组 —— 跟系统 contextMenu 内容保持一致
     private var menuItems: [PostalContextMenu.Item] {
         [
-            .init(icon: "folder", label: lang == .zh ? "在 Finder 中显示" : "Show in Finder",
+            .init(icon: "folder", label: Copy.RepoList.revealInFinder(lang),
                   isDestructive: false, action: { closeAnd(openInFinder) }),
-            .init(icon: "terminal", label: lang == .zh ? "在终端打开" : "Open in Terminal",
+            .init(icon: "terminal", label: Copy.RepoList.openInTerminal(lang),
                   isDestructive: false, action: { closeAnd(openInTerminal) }),
-            .init(icon: "doc.on.doc", label: lang == .zh ? "复制路径" : "Copy path",
+            .init(icon: "doc.on.doc", label: Copy.MainPanel.copyPathLabel(lang),
                   isDestructive: false, action: { closeAnd(copyPath) }),
             .separator(),
-            .init(icon: "eye.slash", label: lang == .zh ? "隐藏此仓库" : "Hide this repo",
+            .init(icon: "eye.slash", label: Copy.RepoList.hideRepository(lang),
                   isDestructive: true, action: { closeAnd(hideRepo) }),
         ]
     }

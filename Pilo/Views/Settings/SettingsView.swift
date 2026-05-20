@@ -295,14 +295,15 @@ struct SettingsView: View {
     }
 
     private func categoryStamp(for cat: RepoCategory) -> some View {
-        let (text, color): (String, Color) = {
+        let color: Color = {
             switch cat {
-            case .work:       return ("工", .piloBlue)
-            case .personal:   return ("私", .piloGold)
-            case .experiment: return ("试", .lavenderInfo)
-            case .unset:      return ("", .clear)
+            case .work:       return .piloBlue
+            case .personal:   return .piloGold
+            case .experiment: return .lavenderInfo
+            case .unset:      return .clear
             }
         }()
+        let text = Copy.Inventory.categoryStamp(cat, lang)
         return Text(text)
             .font(.custom("Songti SC", size: 13).weight(.semibold))
             .foregroundStyle(color.opacity(0.9))

@@ -110,7 +110,7 @@ struct ReleaseLetterReaderView: View {
 
             // 副标题（letter.title） + 版本日期
             VStack(alignment: .leading, spacing: 4) {
-                Text(letter.title)
+                Text(lang == .zh ? letter.title : (letter.enTitle ?? letter.title))
                     .font(.custom("Songti SC", size: 20).weight(.medium))
                     .foregroundStyle(Color.inkPrimary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -129,7 +129,8 @@ struct ReleaseLetterReaderView: View {
                         .tracking(1.5)
                         .padding(.top, 8)
                     VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(letter.highlights.enumerated()), id: \.offset) { _, line in
+                        let lines = lang == .zh ? letter.highlights : (letter.enHighlights ?? letter.highlights)
+                        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Text("·")
                                     .font(.system(size: 16, weight: .bold))
@@ -148,9 +149,10 @@ struct ReleaseLetterReaderView: View {
             }
 
             // Body 段落
-            if !letter.bodyParagraphs.isEmpty {
+            let paragraphs = lang == .zh ? letter.bodyParagraphs : (letter.enBodyParagraphs ?? letter.bodyParagraphs)
+            if !paragraphs.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
-                    ForEach(Array(letter.bodyParagraphs.enumerated()), id: \.offset) { _, para in
+                    ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, para in
                         Text(para)
                             .font(.custom("Songti SC", size: 16))
                             .foregroundStyle(Color.inkPrimary)

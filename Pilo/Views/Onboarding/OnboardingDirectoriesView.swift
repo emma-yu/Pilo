@@ -120,7 +120,7 @@ struct OnboardingDirectoriesView: View {
                     .foregroundStyle(Color.roseDanger)
             }
             .buttonStyle(.borderless)
-            .accessibilityLabel("移除目录")
+            .accessibilityLabel(lang == .zh ? "移除目录" : "Remove directory")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -136,8 +136,8 @@ struct OnboardingDirectoriesView: View {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
-        panel.message = "选择 Pilo 要扫描的根目录"
-        panel.prompt = "选择"
+        panel.message = lang == .zh ? "选择 Pilo 要扫描的根目录" : "Choose root directories for Pilo to scan"
+        panel.prompt = lang == .zh ? "选择" : "Choose"
         if panel.runModal() == .OK {
             for url in panel.urls {
                 appState.addWatchDirectory(url)

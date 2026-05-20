@@ -162,7 +162,7 @@ struct ResumeWorkCard: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 8)
-            Text(RepoCard.relativeFormatter.localizedString(for: commit.date, relativeTo: Date()))
+            Text(RepoCard.relativeFormatter(for: appState.language).localizedString(for: commit.date, relativeTo: Date()))
                 .font(.piloSerifCaption)
                 .foregroundStyle(Color.inkTertiary)
                 .frame(minWidth: 70, alignment: .trailing)

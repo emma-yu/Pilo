@@ -20,13 +20,13 @@ struct StatusBadge: View {
             }
         }
 
-        var label: String {
+        func label(lang: Language) -> String {
             switch self {
             case .ahead(let n):        "\(n)"
             case .behind(let n):       "\(n)"
-            case .uncommitted(let n):  "\(n) 待提交"
-            case .synced:              "已同步"
-            case .offline:             "离线"
+            case .uncommitted(let n):  lang == .zh ? "\(n) 待提交" : "\(n) uncommitted"
+            case .synced:              lang == .zh ? "已同步" : "Synced"
+            case .offline:             lang == .zh ? "离线" : "Offline"
             }
         }
 
@@ -40,23 +40,24 @@ struct StatusBadge: View {
             }
         }
 
-        var accessibilityLabel: String {
+        func accessibilityLabel(lang: Language) -> String {
             switch self {
-            case .ahead(let n):        "比远端多 \(n) 个 commit"
-            case .behind(let n):       "比远端少 \(n) 个 commit"
-            case .uncommitted(let n):  "\(n) 个未提交文件"
-            case .synced:              "已同步"
-            case .offline:             "离线"
+            case .ahead(let n):        lang == .zh ? "比远端多 \(n) 个 commit" : "\(n) commits ahead"
+            case .behind(let n):       lang == .zh ? "比远端少 \(n) 个 commit" : "\(n) commits behind"
+            case .uncommitted(let n):  lang == .zh ? "\(n) 个未提交文件" : "\(n) uncommitted files"
+            case .synced:              lang == .zh ? "已同步" : "Synced"
+            case .offline:             lang == .zh ? "离线" : "Offline"
             }
         }
     }
 
     let kind: Kind
+    @Environment(AppState.self) private var appState
 
     var body: some View {
-        PiloChip(icon: kind.icon, text: kind.label, tint: kind.tint, style: .tinted, size: .small)
+        PiloChip(icon: kind.icon, text: kind.label(lang: appState.language), tint: kind.tint, style: .tinted, size: .small)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(kind.accessibilityLabel)
+            .accessibilityLabel(kind.accessibilityLabel(lang: appState.language))
     }
 }
 

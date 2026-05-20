@@ -77,7 +77,7 @@ struct StampQuickPanelView: View {
             }
             .buttonStyle(.plain)
             .keyboardShortcut(.cancelAction)  // 试 Esc 触发（panel 是 key 时生效）
-            .help("关闭")
+            .help(lang == .zh ? "关闭" : "Close")
         }
     }
 

@@ -28,7 +28,7 @@ struct BypassConfirmDialog: View {
                     Text(Copy.Scan.bypassConfirmTitle(lang))
                         .font(.piloTitle)
                         .foregroundStyle(Color.inkPrimary)
-                    Text("发现 \(criticalCount) 项高危内容仍未处理")
+                    Text(lang == .zh ? "发现 \(criticalCount) 项高危内容仍未处理" : "Found \(criticalCount) critical findings unresolved")
                         .font(.piloBody)
                         .foregroundStyle(Color.roseDanger)
                 }

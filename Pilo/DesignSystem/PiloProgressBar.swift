@@ -9,7 +9,12 @@ struct PiloProgressBar: View {
     var width: CGFloat = 240
     var height: CGFloat = 4
 
+    @Environment(AppState.self) private var appState: AppState?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var lang: Language {
+        appState?.language ?? .zh
+    }
 
     var body: some View {
         HStack(spacing: 4) {
@@ -25,7 +30,7 @@ struct PiloProgressBar: View {
                          : .spring(response: 0.4, dampingFraction: 0.85),
             value: currentStep
         )
-        .accessibilityLabel("第 \(currentStep + 1) 步，共 \(totalSteps) 步")
+        .accessibilityLabel(Copy.Onboarding.progressBarStep(lang, step: currentStep + 1, total: totalSteps))
     }
 }
 

@@ -9,12 +9,15 @@ struct GitignoreActionSheet: View {
     let action: AppState.GitignoreActionState
     let onDismiss: () -> Void
 
+    @Environment(AppState.self) private var appState
+    private var lang: Language { appState.language }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top, spacing: 12) {
                 PiloMascot(mood: action.kind.isCritical ? .worried : .alert, size: 56, breathing: true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(Copy.Guard.actionSheetTitle)
+                    Text(Copy.Guard.actionSheetTitle(lang))
                         .font(.piloTitle)
                         .foregroundStyle(Color.inkPrimary)
                     Text(action.filePath)
@@ -43,13 +46,13 @@ struct GitignoreActionSheet: View {
                 )
 
             HStack(spacing: 10) {
-                Button(Copy.Guard.actionSheetOpen) {
+                Button(Copy.Guard.actionSheetOpen(lang)) {
                     NSWorkspace.shared.open(URL(fileURLWithPath: action.gitignorePath))
                 }
                 .buttonStyle(.piloSecondary)
 
                 if action.kind == .envFile || action.kind == .privateKey {
-                    Button(Copy.Guard.actionSheetCopyFilterCmd) {
+                    Button(Copy.Guard.actionSheetCopyFilterCmd(lang)) {
                         let cmd = "git filter-repo --path \(action.filePath) --invert-paths"
                         let pb = NSPasteboard.general
                         pb.clearContents()
@@ -60,7 +63,7 @@ struct GitignoreActionSheet: View {
 
                 Spacer()
 
-                Button(Copy.Guard.actionSheetDone, action: onDismiss)
+                Button(Copy.Guard.actionSheetDone(lang), action: onDismiss)
                     .buttonStyle(.piloPrimary)
                     .keyboardShortcut(.defaultAction)
             }
@@ -77,7 +80,7 @@ struct GitignoreActionSheet: View {
                 HStack(spacing: 4) {
                     Image(systemName: "plus.circle.fill")
                         .foregroundStyle(Color.mintSafe)
-                    Text("已追加 \(action.addedLines.count) 条规则到 .gitignore：")
+                    Text(lang == .zh ? "已追加 \(action.addedLines.count) 条规则到 .gitignore：" : "Appended \(action.addedLines.count) rules to .gitignore:")
                         .font(.piloCaption)
                         .foregroundStyle(Color.inkSecondary)
                 }
@@ -92,7 +95,7 @@ struct GitignoreActionSheet: View {
             HStack(spacing: 4) {
                 Image(systemName: "checkmark.circle")
                     .foregroundStyle(Color.inkTertiary)
-                Text(".gitignore 里已经有这些规则了，未重复追加")
+                Text(lang == .zh ? ".gitignore 里已经有这些规则了，未重复追加" : "These rules are already in .gitignore")
                     .font(.piloCaption)
                     .foregroundStyle(Color.inkTertiary)
             }

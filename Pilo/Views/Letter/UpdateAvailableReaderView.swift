@@ -107,9 +107,12 @@ struct UpdateAvailableReaderView: View {
             }
             .padding(.bottom, 4)
 
-            // 副标题：letter.title
+            // 副标题：letter.title / letter.enTitle
+            let displayTitle = (lang == .en ? letter.enTitle : nil) ?? letter.title
+            let displayHighlights = (lang == .en ? letter.enHighlights : nil) ?? letter.highlights
+
             VStack(alignment: .leading, spacing: 4) {
-                Text(letter.title)
+                Text(displayTitle)
                     .font(.custom("Songti SC", size: 20).weight(.medium))
                     .foregroundStyle(Color.inkPrimary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -123,7 +126,7 @@ struct UpdateAvailableReaderView: View {
             ctaButtons
 
             // Highlights bullets
-            if !letter.highlights.isEmpty {
+            if !displayHighlights.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text(Copy.Letter.releaseHighlightsLabel(lang))
                         .font(.piloSerifLabel)
@@ -131,7 +134,7 @@ struct UpdateAvailableReaderView: View {
                         .tracking(1.5)
                         .padding(.top, 8)
                     VStack(alignment: .leading, spacing: 8) {
-                        ForEach(Array(letter.highlights.enumerated()), id: \.offset) { _, line in
+                        ForEach(Array(displayHighlights.enumerated()), id: \.offset) { _, line in
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Text("·")
                                     .font(.system(size: 16, weight: .bold))

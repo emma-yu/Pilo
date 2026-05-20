@@ -164,6 +164,12 @@ enum Copy {
     // MARK: - Onboarding
 
     enum Onboarding {
+        static func progressBarStep(_ lang: Language = .zh, step: Int, total: Int) -> String {
+            Loc(
+                zh: "第 \(step) 步，共 \(total) 步",
+                en: "Step \(step) of \(total)"
+            ).text(lang)
+        }
 
         static func welcomeTitle(_ lang: Language = .zh) -> String {
             Loc(zh: "咕咕～", en: "Coo coo~").text(lang)
@@ -820,55 +826,121 @@ enum Copy {
     // MARK: - 误提交防护（Phase 7）
 
     enum Guard {
-        static let criticalGroupTitle = "高危 · 阻断推送"
-        static let warningGroupTitle  = "提示 · 可以推但建议处理"
+        static func criticalGroupTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "高危 · 阻断推送", en: "Critical · Blocks push").text(lang)
+        }
+        static func warningGroupTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "提示 · 可以推但建议处理", en: "Warning · Recommended fix").text(lang)
+        }
 
-        static func summaryAllClear(_ tone: Tone) -> [String] {
+        static func summaryAllClear(_ tone: Tone, _ lang: Language = .zh) -> [String] {
             // 不要 ✅ emoji —— UI 里已有 checkmark.circle.fill SF 复选圆作为视觉标记
             // 在文本里再加 emoji 是同语义重复 + 跟 Pilo Songti 美学冲突
             switch tone {
             case .friendly:
-                return ["没有发现敏感信息", "没有可疑文件", "文件大小都正常"]
+                return lang == .zh
+                    ? ["没有发现敏感信息", "没有可疑文件", "文件大小都正常"]
+                    : ["No secrets found", "No suspicious files", "File sizes are normal"]
             case .minimal:
-                return ["敏感信息扫描通过", "文件类型检查通过", "文件大小检查通过"]
+                return lang == .zh
+                    ? ["敏感信息扫描通过", "文件类型检查通过", "文件大小检查通过"]
+                    : ["Secret scan passed", "File type check passed", "File size check passed"]
             }
         }
 
-        static let addToGitignoreButton = "加入 .gitignore"
-        static let showInFinderButton   = "在 Finder 中显示"
-        static let learnLFSButton       = "了解 Git LFS"
-        static let ignoreOnceButton     = "仅本次忽略"
-        static let markSafeButton       = "已确认安全"
-        static let jumpToCodeButton     = "跳转到代码"
-        static let actionSheetTitle = "已加入 .gitignore"
-        static let actionSheetOpen  = "用编辑器打开 .gitignore"
-        static let actionSheetCopyFilterCmd = "复制 filter-repo 命令"
-        static let actionSheetDone  = "知道了"
+        static func addToGitignoreButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "加入 .gitignore", en: "Add to .gitignore").text(lang)
+        }
+        static func showInFinderButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "在 Finder 中显示", en: "Show in Finder").text(lang)
+        }
+        static func learnLFSButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "了解 Git LFS", en: "Learn Git LFS").text(lang)
+        }
+        static func ignoreOnceButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "仅本次忽略", en: "Ignore once").text(lang)
+        }
+        static func markSafeButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "已确认安全", en: "Mark as safe").text(lang)
+        }
+        static func jumpToCodeButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "跳转到代码", en: "Go to code").text(lang)
+        }
+        static func actionSheetTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "已加入 .gitignore", en: "Added to .gitignore").text(lang)
+        }
+        static func actionSheetOpen(_ lang: Language = .zh) -> String {
+            Loc(zh: "用编辑器打开 .gitignore", en: "Open .gitignore in Editor").text(lang)
+        }
+        static func actionSheetCopyFilterCmd(_ lang: Language = .zh) -> String {
+            Loc(zh: "复制 filter-repo 命令", en: "Copy filter-repo command").text(lang)
+        }
+        static func actionSheetDone(_ lang: Language = .zh) -> String {
+            Loc(zh: "知道了", en: "Got it").text(lang)
+        }
 
-        static func pushDisabledByCritical(_ tone: Tone) -> String {
+        static func gitignoreAddedCriticalAdvised(_ lang: Language = .zh, filePath: String) -> String {
+            Loc(
+                zh: "⚠️ 重要：.gitignore 只阻止**未来**的提交。这次 push 里已经存在的文件不会因此消失——它一旦上 GitHub，全世界都能看到。\n\n建议：\n  1. 立即在密钥服务商后台 revoke 涉及的 token / 密钥\n  2. 重新生成新 key，放到 .env 而非源码\n  3. 如果需要把这个文件从历史中彻底抹掉，请在终端运行：\n     git filter-repo --path \(filePath) --invert-paths",
+                en: "⚠️ Important: .gitignore only affects FUTURE commits. Files already in this push will not disappear — once on GitHub, they are visible to the world.\n\nRecommended:\n  1. Immediately revoke the token/secret on your provider's dashboard\n  2. Regenerate a new key and place it in .env instead of source code\n  3. To wipe this file completely from your git history, run in Terminal:\n     git filter-repo --path \(filePath) --invert-paths"
+            ).text(lang)
+        }
+
+        static func gitignoreAddedNormalAdvised(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "已加入 .gitignore——未来不会再误推。如果想从历史中也清理，可在终端用 git filter-repo。",
+                en: "Added to .gitignore — won't be committed in the future. To purge it from history as well, use git filter-repo in Terminal."
+            ).text(lang)
+        }
+
+        static func gitignoreAddedLFSAdvised(_ lang: Language = .zh, filePath: String) -> String {
+            Loc(
+                zh: "大文件建议走 Git LFS：\n  brew install git-lfs\n  git lfs install\n  git lfs track \"\(filePath)\"",
+                en: "Large files are recommended to use Git LFS:\n  brew install git-lfs\n  git lfs install\n  git lfs track \"\(filePath)\""
+            ).text(lang)
+        }
+
+        static func gitignoreWriteFailedPath(_ lang: Language = .zh) -> String {
+            Loc(zh: "(写入失败)", en: "(Write failed)").text(lang)
+        }
+
+        static func gitignoreWriteFailedAdvised(_ lang: Language = .zh, errorDescription: String) -> String {
+            Loc(
+                zh: "写不进去 .gitignore：\(errorDescription)\n建议手动编辑仓库根的 .gitignore。",
+                en: "Failed to write .gitignore: \(errorDescription)\nPlease manually edit the .gitignore file at the repository root."
+            ).text(lang)
+        }
+
+        static func pushDisabledByCritical(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
-            case .friendly: "处理高危项后才能推送"
-            case .minimal:  "请先处理高危项"
+            case .friendly:
+                return Loc(zh: "处理高危项后才能推送", en: "Resolve critical findings to push").text(lang)
+            case .minimal:
+                return Loc(zh: "请先处理高危项", en: "Resolve critical findings first").text(lang)
             }
         }
-        static func pushBypassLink(_ tone: Tone) -> String {
+        static func pushBypassLink(_ tone: Tone, _ lang: Language = .zh) -> String {
             switch tone {
-            case .friendly: "了解风险，仍然推送 →"
-            case .minimal:  "强制推送 →"
+            case .friendly:
+                return Loc(zh: "了解风险，仍然推送 →", en: "Understand risks, push anyway →").text(lang)
+            case .minimal:
+                return Loc(zh: "强制推送 →", en: "Force push anyway →").text(lang)
             }
         }
-        static func sectionTitle(_ tone: Tone) -> String {
+        static func sectionTitle(_ tone: Tone, _ lang: Language = .zh) -> String {
             // 不要 emoji 🛡️ —— SF 盾牌 icon 在 view 里已经存在
             switch tone {
-            case .friendly: "推送前检查"
-            case .minimal:  "推送前检查"
+            case .friendly, .minimal:
+                return Loc(zh: "推送前检查", en: "Preflight check").text(lang)
             }
         }
-        static func sectionSummaryClear(_ tone: Tone) -> String {
+        static func sectionSummaryClear(_ tone: Tone, _ lang: Language = .zh) -> String {
             // 不要 ✨ —— 邮局美学不用 emoji 装饰
             switch tone {
-            case .friendly: "全部通过"
-            case .minimal:  "通过"
+            case .friendly:
+                return Loc(zh: "全部通过", en: "All passed").text(lang)
+            case .minimal:
+                return Loc(zh: "通过", en: "Passed").text(lang)
             }
         }
     }
@@ -1963,4 +2035,174 @@ enum Copy {
             lang == .zh ? "访问 xinxinmingde.com" : "Visit xinxinmingde.com"
         }
     }
+
+    enum MenuBar {
+        static func heroTitlePaused(_ lang: Language = .zh) -> String {
+            Loc(zh: "安全检查暂停", en: "Watch mode paused").text(lang)
+        }
+        static func heroTitleGitNotFound(_ lang: Language = .zh) -> String {
+            Loc(zh: "找不到 git", en: "Can't find git").text(lang)
+        }
+        static func heroTitleScanning(_ lang: Language = .zh) -> String {
+            Loc(zh: "找你的仓库中...", en: "Finding your repos...").text(lang)
+        }
+        static func heroTitleEmpty(_ lang: Language = .zh) -> String {
+            Loc(zh: "咕咕～", en: "Coo coo~").text(lang)
+        }
+        static func heroTitleSynced(_ lang: Language = .zh) -> String {
+            Loc(zh: "都同步啦", en: "All caught up").text(lang)
+        }
+        
+        static func heroSubtitleAutoRestore(_ lang: Language = .zh, hours: Int) -> String {
+            Loc(
+                zh: "\(hours) 小时后自动恢复",
+                en: "Auto-restoring in \(hours)h"
+            ).text(lang)
+        }
+        static func heroSubtitleAlmostThere(_ lang: Language = .zh) -> String {
+            Loc(zh: "马上就好", en: "Almost there").text(lang)
+        }
+        static func groupLabelLetters(_ lang: Language = .zh) -> String {
+            Loc(zh: "— 待寄出的小信 —", en: "— letters to send —").text(lang)
+        }
+        static func moreReposCount(_ lang: Language = .zh, count: Int) -> String {
+            Loc(
+                zh: "…还有 \(count) 个",
+                en: "…and \(count) more"
+            ).text(lang)
+        }
+        static func repoUncommittedCount(_ lang: Language = .zh, count: Int) -> String {
+            Loc(
+                zh: "\(count) 待提交",
+                en: "\(count) uncommitted"
+            ).text(lang)
+        }
+    }
+
+    enum RepoList {
+        static func listHeaderTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "代码仓库", en: "Repositories").text(lang)
+        }
+        static func emptyTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "没有找到 Git 仓库", en: "No Git Repositories Found").text(lang)
+        }
+        static func emptySubtitle(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "如果你刚配置了扫描目录，稍等几秒；\n或者可以去 设置 -> 仓库 调整扫描范围。",
+                en: "If you just configured directories, please wait a few seconds;\nor go to Settings -> Repositories to adjust the search paths."
+            ).text(lang)
+        }
+        static func repoUncommittedCount(_ lang: Language = .zh, count: Int) -> String {
+            Loc(
+                zh: "\(count) 待提交",
+                en: "\(count) uncommitted"
+            ).text(lang)
+        }
+        static func signatureHeaderTitle(_ lang: Language = .zh) -> String {
+            Loc(zh: "PILO · 我的小邮局", en: "PILO · My Post Office").text(lang)
+        }
+        static func headerSubtitlePending(_ lang: Language = .zh, total: Int, pending: Int) -> String {
+            Loc(
+                zh: "\(total) 仓库 · 待寄出 \(pending)",
+                en: "\(total) repos · \(pending) to send"
+            ).text(lang)
+        }
+        static func headerSubtitleSynced(_ lang: Language = .zh, total: Int) -> String {
+            Loc(
+                zh: "\(total) 仓库都同步啦",
+                en: "\(total) repos, all delivered"
+            ).text(lang)
+        }
+        static func revealInFinder(_ lang: Language = .zh) -> String {
+            Loc(zh: "在 Finder 中显示", en: "Reveal in Finder").text(lang)
+        }
+        static func openInTerminal(_ lang: Language = .zh) -> String {
+            Loc(zh: "在终端打开", en: "Open in Terminal").text(lang)
+        }
+        static func hideRepository(_ lang: Language = .zh) -> String {
+            Loc(zh: "隐藏此仓库", en: "Hide Repository").text(lang)
+        }
+    }
+
+    enum RepoDetail {
+        static func editedAtLabel(_ lang: Language = .zh, timeString: String) -> String {
+            Loc(zh: "修改于 \(timeString)", en: "edited \(timeString)").text(lang)
+        }
+        static func commitDetailsFetchedAtPush(_ lang: Language = .zh) -> String {
+            Loc(
+                zh: "（commit 详情会在推送时拉取）",
+                en: "(commit details fetched at push time)"
+            ).text(lang)
+        }
+        static func uncommittedCountLabel(_ lang: Language = .zh, count: Int) -> String {
+            Loc(
+                zh: "有 \(count) 个改动还没 commit",
+                en: "\(count) change\(count == 1 ? "" : "s") not committed yet"
+            ).text(lang)
+        }
+        static func noRemoteConfigured(_ lang: Language = .zh) -> String {
+            Loc(zh: "还没有配置 remote", en: "No remote configured").text(lang)
+        }
+        static func allCaughtUp(_ lang: Language = .zh) -> String {
+            Loc(zh: "都同步啦 ✨", en: "All caught up ✨").text(lang)
+        }
+        
+        static func openInTerminalButton(_ lang: Language = .zh) -> String {
+            Loc(zh: "在终端打开", en: "Open in Terminal").text(lang)
+        }
+        
+        // Disabled reasons
+        static func reasonDetachedHEAD(_ lang: Language = .zh) -> String {
+            "detached HEAD"
+        }
+        static func reasonNoRemote(_ lang: Language = .zh) -> String {
+            Loc(zh: "未配置 remote", en: "no remote").text(lang)
+        }
+        static func reasonCommitFirst(_ lang: Language = .zh) -> String {
+            Loc(zh: "先 git commit", en: "git commit first").text(lang)
+        }
+        static func reasonNothingToPush(_ lang: Language = .zh) -> String {
+            Loc(zh: "无可推送", en: "nothing to push").text(lang)
+        }
+    }
+
+    enum MainPanel {
+        static func gitReady(_ lang: Language = .zh) -> String {
+            Loc(zh: "Git 就绪", en: "Git ready").text(lang)
+        }
+        static func gitMissing(_ lang: Language = .zh) -> String {
+            Loc(zh: "未找到 git", en: "git missing").text(lang)
+        }
+        static func selectRepoPrompt(_ lang: Language = .zh) -> String {
+            Loc(zh: "选一个仓库吧 ✨", en: "Pick a repo ✨").text(lang)
+        }
+        static func loadingCommits(_ lang: Language = .zh) -> String {
+            Loc(zh: "正在拉取 commit...", en: "Loading commits...").text(lang)
+        }
+        static func pushButtonLabel(_ lang: Language = .zh) -> String {
+            Loc(zh: "推送", en: "Push").text(lang)
+        }
+        static func draftsHeader(_ lang: Language = .zh) -> String {
+            Loc(zh: "— 等待 commit 的草稿 —", en: "— drafts waiting to commit —").text(lang)
+        }
+        static func uncommittedChangesPrompt(_ lang: Language = .zh, count: Int) -> String {
+            Loc(
+                zh: "有 \(count) 个未提交的修改 · 请在编辑器里 commit 后再回来推送",
+                en: "\(count) uncommitted change\(count == 1 ? "" : "s") · commit them in your editor, then come back to push"
+            ).text(lang)
+        }
+        static func repoAllGood(_ lang: Language = .zh) -> String {
+            Loc(zh: "这个仓库一切都好", en: "All good here").text(lang)
+        }
+        static func repoNothingToSend(_ lang: Language = .zh) -> String {
+            Loc(zh: "没什么要寄出的", en: "nothing to send").text(lang)
+        }
+        static func moreActionsTooltip(_ lang: Language = .zh) -> String {
+            Loc(zh: "更多操作", en: "More actions").text(lang)
+        }
+        static func copyPathLabel(_ lang: Language = .zh) -> String {
+            Loc(zh: "复制路径", en: "Copy path").text(lang)
+        }
+    }
 }
+

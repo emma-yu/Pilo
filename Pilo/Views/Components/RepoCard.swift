@@ -34,7 +34,7 @@ struct RepoCard: View {
             Button {
                 NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: repo.path)])
             } label: {
-                Label("在 Finder 中显示", systemImage: "folder")
+                Label(Copy.RepoList.revealInFinder(appState.language), systemImage: "folder")
             }
             Button {
                 NSWorkspace.shared.open([URL(fileURLWithPath: repo.path)],
@@ -42,13 +42,13 @@ struct RepoCard: View {
                                         configuration: NSWorkspace.OpenConfiguration(),
                                         completionHandler: nil)
             } label: {
-                Label("在终端打开", systemImage: "terminal")
+                Label(Copy.RepoList.openInTerminal(appState.language), systemImage: "terminal")
             }
             Divider()
             Button(role: .destructive) {
                 appState.setHidden(true, repoId: repo.id)
             } label: {
-                Label("隐藏此仓库", systemImage: "eye.slash")
+                Label(Copy.RepoList.hideRepository(appState.language), systemImage: "eye.slash")
             }
         }
         .hoverable(highlight: isSelected ? .clear : Color.piloBlue.opacity(0.05),
@@ -62,7 +62,7 @@ struct RepoCard: View {
         var parts: [String] = []
         if repo.aheadCount > 0      { parts.append("↑ \(repo.aheadCount)") }
         if repo.behindCount > 0     { parts.append("↓ \(repo.behindCount)") }
-        if repo.uncommittedCount > 0 { parts.append("\(repo.uncommittedCount) 待提交") }
+        if repo.uncommittedCount > 0 { parts.append(Copy.RepoList.repoUncommittedCount(appState.language, count: repo.uncommittedCount)) }
         if let b = repo.currentBranch, parts.isEmpty {
             parts.append(b)   // 没有需要处理的时显示分支
         }
@@ -79,10 +79,10 @@ struct RepoCard: View {
     }
 
     /// 跨视图共享的相对时间格式器
-    static let relativeFormatter: RelativeDateTimeFormatter = {
+    static func relativeFormatter(for lang: Language) -> RelativeDateTimeFormatter {
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "zh_Hans_CN")
+        f.locale = Locale(identifier: lang == .zh ? "zh_Hans_CN" : "en_US")
         f.unitsStyle = .full
         return f
-    }()
+    }
 }

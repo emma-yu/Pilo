@@ -98,36 +98,34 @@ struct MenuBarView: View {
     private var heroTitle: String {
         let lang = appState.language
         if appState.isKillSwitchActive {
-            return lang == .zh ? "安全检查暂停" : "Watch mode paused"
+            return Copy.MenuBar.heroTitlePaused(lang)
         }
         if appState.gitExecutablePath == nil {
-            return lang == .zh ? "找不到 git" : "Can't find git"
+            return Copy.MenuBar.heroTitleGitNotFound(lang)
         }
         if !appState.isInitialScanComplete && appState.repositories.isEmpty {
-            return lang == .zh ? "找你的仓库中..." : "Finding your repos..."
+            return Copy.MenuBar.heroTitleScanning(lang)
         }
         if appState.repositories.isEmpty {
-            return lang == .zh ? "咕咕～" : "Coo coo~"
+            return Copy.MenuBar.heroTitleEmpty(lang)
         }
         if appState.pendingRepos.isEmpty {
-            return lang == .zh ? "都同步啦" : "All caught up"
+            return Copy.MenuBar.heroTitleSynced(lang)
         }
-        return lang == .zh ? "咕咕～" : "Coo coo~"
+        return Copy.MenuBar.heroTitleEmpty(lang)
     }
 
     private var heroSubtitle: String {
         let lang = appState.language
         let tone = appState.tone
         if appState.isKillSwitchActive {
-            return lang == .zh
-                ? "\(appState.killSwitchRemainingHours) 小时后自动恢复"
-                : "Auto-restoring in \(appState.killSwitchRemainingHours)h"
+            return Copy.MenuBar.heroSubtitleAutoRestore(lang, hours: appState.killSwitchRemainingHours)
         }
         if appState.gitExecutablePath == nil {
             return Copy.gitNotFound(tone, lang).components(separatedBy: "\n").last ?? ""
         }
         if !appState.isInitialScanComplete && appState.repositories.isEmpty {
-            return lang == .zh ? "马上就好" : "Almost there"
+            return Copy.MenuBar.heroSubtitleAlmostThere(lang)
         }
         if appState.repositories.isEmpty {
             return Copy.emptyNoRepos(tone, lang).components(separatedBy: "\n").last ?? ""
@@ -151,9 +149,7 @@ struct MenuBarView: View {
                         .interpolation(.high)
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 22, height: 22)
-                    Text(lang == .zh
-                         ? "— 待寄出的小信 —"
-                         : "— letters to send —")
+                    Text(Copy.MenuBar.groupLabelLetters(lang))
                         .font(.piloSerifLabel)
                         .foregroundStyle(Color.piloGoldDark)
                         .tracking(0.5)
@@ -175,9 +171,7 @@ struct MenuBarView: View {
                         pendingRepoRow(repo)
                     }
                     if appState.pendingRepos.count > 4 {
-                        Text(lang == .zh
-                             ? "…还有 \(appState.pendingRepos.count - 4) 个"
-                             : "…and \(appState.pendingRepos.count - 4) more")
+                        Text(Copy.MenuBar.moreReposCount(lang, count: appState.pendingRepos.count - 4))
                             .font(.piloSerifSubtitle)
                             .foregroundStyle(Color.inkTertiary)
                             .padding(.top, PiloSpacing.xs)
@@ -221,7 +215,9 @@ struct MenuBarView: View {
         var bits: [String] = []
         if repo.aheadCount > 0      { bits.append("↑ \(repo.aheadCount)") }
         if repo.behindCount > 0     { bits.append("↓ \(repo.behindCount)") }
-        if repo.uncommittedCount > 0 { bits.append("\(repo.uncommittedCount) 待提交") }
+        if repo.uncommittedCount > 0 {
+            bits.append(Copy.MenuBar.repoUncommittedCount(lang, count: repo.uncommittedCount))
+        }
         return bits.joined(separator: " · ")
     }
 

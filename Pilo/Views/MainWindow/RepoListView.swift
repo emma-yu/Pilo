@@ -44,7 +44,7 @@ struct RepoListView: View {
                 Image(systemName: "star.fill")
                     .font(.system(size: 9))
                     .foregroundStyle(Color.piloGold)
-                Text(appState.language == .zh ? "PILO · 我的小邮局" : "PILO · My Post Office")
+                Text(Copy.RepoList.signatureHeaderTitle(appState.language))
                     .font(.piloLabel)
                     .tracking(2.0)
                     .foregroundStyle(Color.piloBlue)
@@ -61,13 +61,9 @@ struct RepoListView: View {
         let pending = appState.pendingRepos.count
         let lang = appState.language
         if pending > 0 {
-            return lang == .zh
-                ? "\(total) 仓库 · 待寄出 \(pending)"
-                : "\(total) repos · \(pending) to send"
+            return Copy.RepoList.headerSubtitlePending(lang, total: total, pending: pending)
         }
-        return lang == .zh
-            ? "\(total) 仓库都同步啦"
-            : "\(total) repos, all delivered"
+        return Copy.RepoList.headerSubtitleSynced(lang, total: total)
     }
 
     private var hairline: some View {

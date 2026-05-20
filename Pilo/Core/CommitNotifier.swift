@@ -213,10 +213,19 @@ actor CommitNotifier {
     /// 它就是个"路过看一眼"的系统消息，所以用「新消息」而非「新邮件」避免跟信箱混淆。
     /// 通知文案**永远中文为主**，因为 macOS 通知中心宽度有限，混用 lang 太啰嗦
     static func titleText(count: Int, repoName: String) -> String {
-        if count == 1 {
-            return "\(repoName) · 一条新消息"
+        let langStr = UserDefaults.standard.string(forKey: SettingsKey.language.rawValue)
+        let lang = Language(rawValue: langStr ?? "") ?? .zh
+        if lang == .zh {
+            if count == 1 {
+                return "\(repoName) · 一条新消息"
+            }
+            return "\(repoName) · \(count) 条新消息"
+        } else {
+            if count == 1 {
+                return "\(repoName) · 1 new message"
+            }
+            return "\(repoName) · \(count) new messages"
         }
-        return "\(repoName) · \(count) 条新消息"
     }
 
     /// body：用第一封 commit 的 subject + （多于一封时）"…等 N 封"
@@ -228,7 +237,13 @@ actor CommitNotifier {
         if commits.count == 1 {
             return subject
         }
-        return "\(subject)（等 \(commits.count) 封）"
+        let langStr = UserDefaults.standard.string(forKey: SettingsKey.language.rawValue)
+        let lang = Language(rawValue: langStr ?? "") ?? .zh
+        if lang == .zh {
+            return "\(subject)（等 \(commits.count) 封）"
+        } else {
+            return "\(subject) (and \(commits.count - 1) more)"
+        }
     }
 
     // MARK: - 测试 / debug

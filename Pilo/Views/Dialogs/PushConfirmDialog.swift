@@ -287,14 +287,14 @@ struct PushConfirmDialog: View {
 
     private func sectionHeader(_ pre: PushSession.Preflight) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(Copy.Guard.sectionTitle(tone))
+            Text(Copy.Guard.sectionTitle(tone, lang))
                 .font(.piloSection)
                 .foregroundStyle(Color.inkPrimary)
             Spacer()
             if pre.scanSkippedByKillSwitch {
                 EmptyView()
             } else if !pre.hasAnyIssue {
-                Text(Copy.Guard.sectionSummaryClear(tone))
+                Text(Copy.Guard.sectionSummaryClear(tone, lang))
                     .font(.piloCaption)
                     .foregroundStyle(Color.mintSafe)
             } else {
@@ -310,7 +310,7 @@ struct PushConfirmDialog: View {
 
     private func severityChip(count: Int, severity: FindingSeverity) -> some View {
         let tint: Color = severity == .critical ? .roseDanger : .amberWarn
-        let label: String = severity == .critical ? "高危 \(count)" : "提示 \(count)"
+        let label: String = severity == .critical ? (lang == .zh ? "高危 \(count)" : "Critical \(count)") : (lang == .zh ? "提示 \(count)" : "Info \(count)")
         return Text(label)
             .font(.piloCaption)
             .fontWeight(.semibold)
@@ -322,7 +322,7 @@ struct PushConfirmDialog: View {
 
     private var cleanChecklist: some View {
         VStack(alignment: .leading, spacing: 6) {
-            ForEach(Copy.Guard.summaryAllClear(tone), id: \.self) { line in
+            ForEach(Copy.Guard.summaryAllClear(tone, lang), id: \.self) { line in
                 HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(Color.mintSafe)
@@ -363,7 +363,7 @@ struct PushConfirmDialog: View {
             VStack(alignment: .leading, spacing: 14) {
                 if pre.totalCriticalCount > 0 {
                     issueGroup(
-                        title: Copy.Guard.criticalGroupTitle,
+                        title: Copy.Guard.criticalGroupTitle(lang),
                         severity: .critical,
                         scanFindings: pre.criticalFindings,
                         guardFindings: pre.criticalGuardFindings
@@ -371,7 +371,7 @@ struct PushConfirmDialog: View {
                 }
                 if pre.totalWarningCount > 0 {
                     issueGroup(
-                        title: Copy.Guard.warningGroupTitle,
+                        title: Copy.Guard.warningGroupTitle(lang),
                         severity: .warning,
                         scanFindings: pre.warningFindings,
                         guardFindings: pre.warningGuardFindings
@@ -442,15 +442,15 @@ struct PushConfirmDialog: View {
                         .fill(Color.cloudDivider.opacity(0.4))
                 )
             actionRow {
-                iconButton("arrow.up.right.square", Copy.Guard.jumpToCodeButton) {
+                iconButton("arrow.up.right.square", Copy.Guard.jumpToCodeButton(lang)) {
                     revealScanFinding(finding)
                 }
                 if finding.severity == .warning {
-                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton) {
+                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton(lang)) {
                         appState.ignoreOnce(findingId: finding.id)
                     }
                 }
-                iconButton("checkmark.shield", Copy.Guard.markSafeButton) {
+                iconButton("checkmark.shield", Copy.Guard.markSafeButton(lang)) {
                     appState.falsePositivePickerTarget = finding
                 }
             }
@@ -465,7 +465,7 @@ struct PushConfirmDialog: View {
                 Image(systemName: iconForGuardKind(finding.kind))
                     .foregroundStyle(tint)
                     .font(.system(size: 13))
-                Text(finding.displayKind)
+                Text(finding.displayKind(lang: lang))
                     .font(.piloSection)
                     .foregroundStyle(Color.inkPrimary)
                 Spacer()
@@ -487,28 +487,28 @@ struct PushConfirmDialog: View {
                     RoundedRectangle(cornerRadius: 4, style: .continuous)
                         .fill(Color.cloudDivider.opacity(0.4))
                 )
-            Text(finding.explanation)
+            Text(finding.explanation(lang: lang))
                 .font(.piloCaption)
                 .foregroundStyle(Color.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             actionRow {
-                iconButton("folder", Copy.Guard.showInFinderButton) {
+                iconButton("folder", Copy.Guard.showInFinderButton(lang)) {
                     revealGuardFinding(finding)
                 }
                 if case .addToGitignore = finding.suggestion {
-                    iconButton("doc.badge.plus", Copy.Guard.addToGitignoreButton) {
+                    iconButton("doc.badge.plus", Copy.Guard.addToGitignoreButton(lang)) {
                         appState.addToGitignore(for: finding)
                     }
                 }
                 if case .useLFS = finding.suggestion {
-                    iconButton("arrow.up.doc", Copy.Guard.learnLFSButton) {
+                    iconButton("arrow.up.doc", Copy.Guard.learnLFSButton(lang)) {
                         if let url = URL(string: "https://git-lfs.com") {
                             NSWorkspace.shared.open(url)
                         }
                     }
                 }
                 if finding.severity == .warning {
-                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton) {
+                    iconButton("eye.slash", Copy.Guard.ignoreOnceButton(lang)) {
                         appState.ignoreOnce(findingId: finding.id)
                     }
                 }
@@ -604,7 +604,7 @@ struct PushConfirmDialog: View {
                     Button {
                         // 不可达；按钮已 disabled
                     } label: {
-                        Text(Copy.Guard.pushDisabledByCritical(tone))
+                        Text(Copy.Guard.pushDisabledByCritical(tone, lang))
                             .frame(minWidth: 140)
                     }
                     .buttonStyle(.piloPrimary)
@@ -639,7 +639,7 @@ struct PushConfirmDialog: View {
                 Button {
                     showBypassDialog = true
                 } label: {
-                    Text(Copy.Guard.pushBypassLink(tone))
+                    Text(Copy.Guard.pushBypassLink(tone, lang))
                         .font(.piloCaption)
                         .foregroundStyle(Color.inkTertiary)
                         .underline()

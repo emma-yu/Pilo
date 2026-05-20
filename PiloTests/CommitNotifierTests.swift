@@ -3,8 +3,24 @@ import XCTest
 
 /// CommitNotifier 单测：聚焦 throttle / coalesce / 文案，
 /// **不**走真 UNUserNotificationCenter（dryRun = true 拦截）
-@MainActor
 final class CommitNotifierTests: XCTestCase {
+
+    private var originalLanguage: String?
+
+    override func setUp() {
+        super.setUp()
+        originalLanguage = UserDefaults.standard.string(forKey: SettingsKey.language.rawValue)
+        UserDefaults.standard.set("zh", forKey: SettingsKey.language.rawValue)
+    }
+
+    override func tearDown() {
+        if let original = originalLanguage {
+            UserDefaults.standard.set(original, forKey: SettingsKey.language.rawValue)
+        } else {
+            UserDefaults.standard.removeObject(forKey: SettingsKey.language.rawValue)
+        }
+        super.tearDown()
+    }
 
     private func makeCommit(_ hash: String, _ subject: String) -> CommitSummary {
         CommitSummary(
@@ -155,5 +171,29 @@ final class CommitNotifierTests: XCTestCase {
         )
         let pending = await n.pendingCountForTest
         XCTAssertEqual(pending, 0)
+    }
+
+    // MARK: - 英文通知测试
+
+    func testEnglishNotifierTitleAndBody() {
+        UserDefaults.standard.set("en", forKey: SettingsKey.language.rawValue)
+
+        let titleSingle = CommitNotifier.titleText(count: 1, repoName: "pilo")
+        XCTAssertEqual(titleSingle, "pilo · 1 new message")
+
+        let titleMultiple = CommitNotifier.titleText(count: 3, repoName: "pilo")
+        XCTAssertEqual(titleMultiple, "pilo · 3 new messages")
+
+        let bodySingle = CommitNotifier.bodyText(commits: [
+            CommitSummary(hash: "abc", subject: "fix: resolve a bug", date: Date(), author: "Emma")
+        ])
+        XCTAssertEqual(bodySingle, "fix: resolve a bug")
+
+        let bodyMultiple = CommitNotifier.bodyText(commits: [
+            CommitSummary(hash: "abc", subject: "feat: add feature", date: Date(), author: "Emma"),
+            CommitSummary(hash: "def", subject: "chore: clean code", date: Date(), author: "Emma")
+        ])
+        XCTAssertTrue(bodyMultiple.contains("feat: add feature"))
+        XCTAssertTrue(bodyMultiple.contains("and 1 more"))
     }
 }

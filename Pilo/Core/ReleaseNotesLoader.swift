@@ -66,6 +66,29 @@ struct BundledRelease: Codable, Sendable, Hashable {
     let version: String          // "0.4.0"
     let releaseDate: Date        // 解码自 "2026-05-12"
     let title: String
+    let enTitle: String?
     let highlights: [String]
+    let enHighlights: [String]?
     let body: [String]
+    let enBody: [String]?
+
+    init(
+        version: String,
+        releaseDate: Date,
+        title: String,
+        enTitle: String? = nil,
+        highlights: [String],
+        enHighlights: [String]? = nil,
+        body: [String],
+        enBody: [String]? = nil
+    ) {
+        self.version = version
+        self.releaseDate = releaseDate
+        self.title = title
+        self.enTitle = enTitle
+        self.highlights = highlights
+        self.enHighlights = enHighlights
+        self.body = body
+        self.enBody = enBody
+    }
 }

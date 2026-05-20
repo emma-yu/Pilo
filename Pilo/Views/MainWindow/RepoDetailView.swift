@@ -16,8 +16,7 @@ struct RepoDetailView: View {
                 heroSection
                     .padding(.top, PiloSpacing.xl)
 
-                SectionDivider(label: lang == .zh ? "— 待寄出的小信 —"
-                                                  : "— letters to send —")
+                SectionDivider(label: Copy.MenuBar.groupLabelLetters(lang))
 
                 commitsList
 
@@ -64,8 +63,9 @@ struct RepoDetailView: View {
         var parts: [String] = [repo.path.replacingOccurrences(of: NSHomeDirectory(), with: "~")]
         if let b = repo.currentBranch { parts.append(b) }
         if let d = repo.lastCommitDate {
-            let formatter = RepoCard.relativeFormatter
-            parts.append((lang == .zh ? "修改于 " : "edited ") + formatter.localizedString(for: d, relativeTo: Date()))
+            let formatter = RepoCard.relativeFormatter(for: appState.language)
+            let timeString = formatter.localizedString(for: d, relativeTo: Date())
+            parts.append(Copy.RepoDetail.editedAtLabel(lang, timeString: timeString))
         }
         return parts.joined(separator: " · ")
     }
@@ -83,8 +83,7 @@ struct RepoDetailView: View {
                     commitPlaceholderRow(index: i)
                 }
                 if repo.aheadCount > 3 {
-                    Text(lang == .zh ? "…还有 \(repo.aheadCount - 3) 个"
-                                     : "…and \(repo.aheadCount - 3) more")
+                    Text(Copy.MenuBar.moreReposCount(lang, count: repo.aheadCount - 3))
                         .font(.piloSerifCaption)
                         .foregroundStyle(Color.inkTertiary)
                         .padding(.top, PiloSpacing.xs)
@@ -98,8 +97,7 @@ struct RepoDetailView: View {
             Text(String(format: "%07x", repo.pathHash.hashValue & 0xFFFFFFF).prefix(7))
                 .font(.piloMono)
                 .foregroundStyle(Color.piloGoldDark)
-            Text(lang == .zh ? "（commit 详情会在推送时拉取）"
-                              : "(commit details fetched at push time)")
+            Text(Copy.RepoDetail.commitDetailsFetchedAtPush(lang))
                 .font(.piloBody)
                 .foregroundStyle(Color.inkSecondary)
                 .lineLimit(1)
@@ -117,17 +115,15 @@ struct RepoDetailView: View {
             Spacer()
             VStack(spacing: PiloSpacing.s) {
                 if repo.uncommittedCount > 0 {
-                    Text(lang == .zh
-                        ? "有 \(repo.uncommittedCount) 个改动还没 commit"
-                        : "\(repo.uncommittedCount) change\(repo.uncommittedCount == 1 ? "" : "s") not committed yet")
+                    Text(Copy.RepoDetail.uncommittedCountLabel(lang, count: repo.uncommittedCount))
                         .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.inkSecondary)
                 } else if repo.remotes.isEmpty {
-                    Text(lang == .zh ? "还没有配置 remote" : "No remote configured")
+                    Text(Copy.RepoDetail.noRemoteConfigured(lang))
                         .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.inkSecondary)
                 } else {
-                    Text(lang == .zh ? "都同步啦 ✨" : "All caught up ✨")
+                    Text(Copy.RepoDetail.allCaughtUp(lang))
                         .font(.piloSerifSubtitle)
                         .foregroundStyle(Color.mintSafe)
                 }
@@ -161,7 +157,7 @@ struct RepoDetailView: View {
                     completionHandler: nil
                 )
             } label: {
-                Text(lang == .zh ? "在终端打开" : "Open in Terminal")
+                Text(Copy.RepoDetail.openInTerminalButton(lang))
             }
             .buttonStyle(.piloSecondary)
 
@@ -180,13 +176,13 @@ struct RepoDetailView: View {
     }
 
     private var disabledReason: String? {
-        if repo.currentBranch == nil { return lang == .zh ? "detached HEAD" : "detached HEAD" }
-        if repo.remotes.isEmpty { return lang == .zh ? "未配置 remote" : "no remote" }
+        if repo.currentBranch == nil { return Copy.RepoDetail.reasonDetachedHEAD(lang) }
+        if repo.remotes.isEmpty { return Copy.RepoDetail.reasonNoRemote(lang) }
         if repo.aheadCount == 0 && repo.uncommittedCount > 0 {
-            return lang == .zh ? "先 git commit" : "git commit first"
+            return Copy.RepoDetail.reasonCommitFirst(lang)
         }
         if repo.aheadCount == 0 {
-            return lang == .zh ? "无可推送" : "nothing to push"
+            return Copy.RepoDetail.reasonNothingToPush(lang)
         }
         return nil
     }
