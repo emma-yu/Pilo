@@ -56,8 +56,6 @@ targets:
         INFOPLIST_KEY_NSHighResolutionCapable: YES
         CODE_SIGN_ENTITLEMENTS: Pilo/Pilo.entitlements
         ENABLE_PREVIEWS: YES
-        MARKETING_VERSION: '0.1.0'
-        CURRENT_PROJECT_VERSION: '1'
 
   PiloTests:
     type: bundle.unit-test
