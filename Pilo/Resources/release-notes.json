@@ -2,6 +2,38 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "0.5.1",
+      "releaseDate": "2026-06-25",
+      "title": "小鸽子做了个体检 · v0.5.1",
+      "enTitle": "A Little Checkup · v0.5.1",
+      "highlights": [
+        "后台不打扰——你去写代码时，菜单栏小鸽子的呼吸自动安静下来，CPU 占用大幅降低",
+        "修复一处会在升级后悄悄弄丢历史信件的隐患",
+        "git 子进程出错时不再无声无息（留下诊断痕迹）"
+      ],
+      "enHighlights": [
+        "Stays out of your way — when you switch to coding, the menu-bar pigeon's breathing quiets down, sharply cutting background CPU",
+        "Fixed a flaw that could silently lose your saved letters after an upgrade",
+        "Git subprocess failures are no longer swallowed silently — they now leave a diagnostic trace"
+      ],
+      "body": [
+        "亲爱的朋友，",
+        "这封很短。v0.5.1 没有新功能——是我带小鸽子去做了个体检。",
+        "它在后台待着的时候，呼吸一直没停下来，悄悄费着你的电。现在你一转头去写代码，它就安静地歇着；等你回来看它，再继续呼吸。",
+        "还顺手堵了两个看不见但要紧的洞：一个会在某些情况下，把你攒下的旧信悄悄弄丢；一个让 git 出错时连个响都没有。都补上了。",
+        "没有新邮票，也没有新功能。只是让它更稳一点、更省心一点地，陪着你。",
+        "——Pilo 邮局总局，于一次安静的体检日"
+      ],
+      "enBody": [
+        "Dear friend,",
+        "This one's short. v0.5.1 has no new features — I just took the little pigeon in for a checkup.",
+        "While it sat in the background, it kept breathing, quietly draining your battery. Now, the moment you turn to write code, it settles down and rests; when you come back to look, it breathes again.",
+        "I also sealed two invisible-but-important holes: one could, in certain cases, quietly lose the old letters you'd saved up; the other let git fail without making a sound. Both patched.",
+        "No new stamps, no new features. Just a little steadier, a little more carefree, keeping you company.",
+        "— Pilo General Post Office, on a quiet checkup day"
+      ]
+    },
+    {
       "version": "0.5.0",
       "releaseDate": "2026-05-15",
       "title": "邮局正式开门 · v0.5 通告",

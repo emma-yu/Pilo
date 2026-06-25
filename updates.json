@@ -1,17 +1,15 @@
 {
   "latest": {
-    "version": "0.5.0",
-    "releaseDate": "2026-05-15",
-    "title": "邮局正式开门 · v0.5 通告",
+    "version": "0.5.1",
+    "releaseDate": "2026-06-25",
+    "title": "小鸽子做了个体检 · v0.5.1",
     "highlights": [
-      "邮票本走到了屏幕边——浮动小邮票拖到任意位置",
-      "钉到首位 ✦——常用 prompt 永远排第一",
-      "所有右键菜单换成邮局风——告别系统蓝色高亮",
-      "项目文档行右键加「复制路径」",
-      "macOS「减弱动态效果」偏好支持"
+      "后台不打扰——不看时小鸽子的呼吸自动安静，CPU 占用大幅降低",
+      "修复升级后可能悄悄弄丢历史信件的隐患",
+      "git 出错时不再无声无息"
     ],
     "downloadURL": "https://github.com/emma-yu/Pilo/releases/latest",
-    "releaseNotesURL": "https://github.com/emma-yu/Pilo/releases/tag/v0.5.0",
+    "releaseNotesURL": "https://github.com/emma-yu/Pilo/releases/tag/v0.5.1",
     "minimumSystemVersion": "14.0"
   }
 }
