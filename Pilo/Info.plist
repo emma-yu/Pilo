@@ -17,9 +17,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.5.0</string>
+	<string>0.5.1</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>2</string>
 	<key>NSDesktopFolderUsageDescription</key>
 	<string>Pilo 需要读取你选择的目录里的 Git 仓库信息。代码不会离开你的电脑。</string>
 	<key>NSDocumentsFolderUsageDescription</key>
