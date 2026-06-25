@@ -518,6 +518,10 @@ actor GitClient {
             do {
                 try process.run()
             } catch {
+                // 不 silent —— git 子进程起不来是核心操作失败,留 console 痕迹便于诊断
+                // (与 CommitNotifier P12 同策略)。只记 subcommand,不打全 args 防 URL/凭证入日志。
+                // 仍返回 nil,调用方各自降级处理(行为不变)。
+                print("[GitClient] failed to launch git \(args.first ?? "?"): \(error.localizedDescription)")
                 box.resume(nil)
                 return
             }

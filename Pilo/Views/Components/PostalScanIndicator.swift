@@ -17,9 +17,12 @@ struct PostalWaveDots: View {
     var tint: Color = .piloGoldDark
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.controlActiveState) private var controlActiveState
 
     var body: some View {
-        if reduceMotion {
+        // 窗口失活时冻结成静态点 —— 与 PiloMascot 呼吸同款可见性门控(P0 一条线),
+        // 避免扫盘期间 App 切后台,TimelineView 仍 60fps 空转烧电。
+        if reduceMotion || controlActiveState == .inactive {
             HStack(spacing: spacing) {
                 ForEach(0..<3, id: \.self) { _ in
                     Circle()

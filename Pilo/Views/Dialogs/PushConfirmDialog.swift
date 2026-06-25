@@ -8,6 +8,7 @@ struct PushConfirmDialog: View {
     @Environment(AppState.self) private var appState
     @Environment(\.tone) private var tone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.controlActiveState) private var controlActiveState
 
     private var lang: Language { appState.language }
 
@@ -700,7 +701,8 @@ struct PushConfirmDialog: View {
     ///   - reduce motion → 静态 PiloMascot，不抛弃 motion-sensitive 用户
     @ViewBuilder
     private var animatedLoadingMascot: some View {
-        if reduceMotion {
+        // 窗口失活时冻结成静态 mascot —— 同 P0 可见性门控,避免 loading 期间切后台仍 60fps。
+        if reduceMotion || controlActiveState == .inactive {
             PiloMascot(mood: .alert, size: 80, breathing: false)
         } else {
             TimelineView(.animation) { context in
@@ -943,6 +945,7 @@ struct PushConfirmDialog: View {
 /// 取代了原来的 FlyingPiloAnimation（鸽子飞翔）—— 飞机更直接对应"信件正在投递路径"
 /// 的视觉传统，PAR AVION 旗帜本身就是国际邮件标识。Mascot 鸽子保留给品牌情感时刻。
 private struct FlyingPiloAnimation: View {
+    @Environment(\.controlActiveState) private var controlActiveState
     @State private var phase: CGFloat = 0
 
     var body: some View {
@@ -959,7 +962,10 @@ private struct FlyingPiloAnimation: View {
             // 飞机略微歪向飞行方向（-3° 到 +3° 来回）
             .rotationEffect(.degrees(Double(sin(phase * .pi * 4) * 3)))
             .shadow(color: Color.piloBlueDark.opacity(0.15), radius: 4, y: 4)
-            .task {
+            // .task(id:) 让窗口失活时整条 60fps 推进循环停下(active 再续上),避免 push 期间
+            // App 切后台仍空转。reduceMotion 由父视图(PushConfirmDialog:658)换静态图标处理。
+            .task(id: controlActiveState) {
+                guard controlActiveState != .inactive else { return }
                 while !Task.isCancelled {
                     try? await Task.sleep(nanoseconds: 16_000_000)
                     phase += 0.012

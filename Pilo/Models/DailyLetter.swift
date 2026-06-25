@@ -75,6 +75,37 @@ struct DailyLetter: Codable, Sendable, Identifiable, Hashable {
     var isUnread: Bool { readAt == nil }
 }
 
+// MARK: - 向后兼容解码
+//
+// linesAdded / linesRemoved / topFiles 是后加字段。旧 letters.json 缺这些 key 时,
+// 自动合成的 init(from:) 会对**非可选**字段 throw keyNotFound → LetterStore.load() 的
+// catch 把整本档案吞成 .empty(用户**静默丢失全部历史信**)。用 decodeIfPresent ?? 默认值
+// 兜旧档。放 extension 以保留各结构体的 memberwise init(LetterComposer 等构造端不受影响)。
+// 家规:新 Codable 字段 = decodeIfPresent + 回归测试(见 DailyLetterCodableTests)。
+extension DailyLetter.RepoSummary {
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        repoName = try c.decode(String.self, forKey: .repoName)
+        repoPath = try c.decode(String.self, forKey: .repoPath)
+        commitCount = try c.decode(Int.self, forKey: .commitCount)
+        pushed = try c.decode(Bool.self, forKey: .pushed)
+        remote = try c.decodeIfPresent(String.self, forKey: .remote)
+        commits = try c.decode([DailyLetter.LetterCommit].self, forKey: .commits)
+        linesAdded = try c.decodeIfPresent(Int.self, forKey: .linesAdded) ?? 0
+        linesRemoved = try c.decodeIfPresent(Int.self, forKey: .linesRemoved) ?? 0
+    }
+}
+
+extension DailyLetter.DraftSummary {
+    init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        repoName = try c.decode(String.self, forKey: .repoName)
+        repoPath = try c.decode(String.self, forKey: .repoPath)
+        uncommittedCount = try c.decode(Int.self, forKey: .uncommittedCount)
+        topFiles = try c.decodeIfPresent([String].self, forKey: .topFiles) ?? []
+    }
+}
+
 /// 今日"邮局合作社" —— 跨 AI 工具的活跃度摘要。
 /// 数据来自 `AICompanionDetector` 扫各工具数据目录的文件 mtime（不读内容）。
 struct AICompanionSummary: Codable, Sendable, Hashable {

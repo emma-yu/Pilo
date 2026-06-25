@@ -15,7 +15,15 @@ struct PiloMascot: View {
 
     @Environment(\.tone) private var tone
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.controlActiveState) private var controlActiveState
     @State private var breathPhase: Bool = false
+
+    /// 呼吸仅在三者同时成立时进行：调用方要求 + 未开 reduce-motion + 窗口当前活跃。
+    /// 切到别的 App / 窗口进入后台 → controlActiveState == .inactive → 暂停，避免
+    /// repeatForever 把 SwiftUI 渲染循环钉在满刷新率空转烧 CPU（仅前台可见时才呼吸）。
+    private var shouldBreathe: Bool {
+        breathing && !reduceMotion && controlActiveState != .inactive
+    }
 
     var body: some View {
         ZStack {
@@ -34,10 +42,15 @@ struct PiloMascot: View {
         }
         .scaleEffect(currentScale)
         .shadow(color: .black.opacity(0.10), radius: size * 0.06, y: size * 0.04)
-        .onAppear {
-            guard breathing, !reduceMotion else { return }
-            withAnimation(.piloBreathing) {
-                breathPhase = true
+        // 单个 .task(id:)：appear 时按初始 shouldBreathe 起停，之后每次翻转自动重跑。
+        // 一条代码路径，无双触发/漏触发/首帧闪。窗口失活 → 收敛到静止 → 渲染循环 idle。
+        .task(id: shouldBreathe) {
+            if shouldBreathe {
+                withAnimation(.piloBreathing) { breathPhase = true }
+            } else {
+                // 有限动画把 breathPhase 收敛回 false(scale→1.0)，替换正在跑的
+                // repeatForever transaction；0.25s 后无动画在跑 → display link idle。
+                withAnimation(.easeOut(duration: 0.25)) { breathPhase = false }
             }
         }
         .accessibilityLabel(Copy.MascotA11y.label(for: mood, tone: tone))
